@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="et_dev2\allTypes.h" />
+    <ClInclude Include="et_dev2\all_gl.h" />
+    <ClInclude Include="et_dev2\cameraTrackBall.h" />
+    <ClInclude Include="et_dev2\commonTypes.h" />
+    <ClInclude Include="et_dev2\commonUtils.h" />
+    <ClInclude Include="et_dev2\drawable.h" />
+    <ClInclude Include="et_dev2\geometryRepresentation.h" />
+    <ClInclude Include="et_dev2\glUtils.h" />
+    <ClInclude Include="et_dev2\graphDiffusion.h" />
+    <ClInclude Include="et_dev2\graphWeights.h" />
+    <ClInclude Include="et_dev2\hybridSkeleton.h" />
+    <ClInclude Include="et_dev2\io.h" />
+    <ClInclude Include="et_dev2\IsoContourOnMA.h" />
+    <ClInclude Include="et_dev2\isoSurfaceFrom2Manifold.h" />
+    <ClInclude Include="et_dev2\iso_contour.h" />
+    <ClInclude Include="et_dev2\linearAlg.h" />
+    <ClInclude Include="et_dev2\lineDrawer.h" />
+    <ClInclude Include="et_dev2\meshDrawer.h" />
+    <ClInclude Include="et_dev2\mymesh.h" />
+    <ClInclude Include="et_dev2\origGraph.h" />
+    <ClInclude Include="et_dev2\pointDrawer.h" />
+    <ClInclude Include="et_dev2\sphereDrawer.h" />
+    <ClInclude Include="et_dev2\StdAfx.h" />
+    <ClInclude Include="et_dev2\steinerSubdivision.h" />
+    <ClInclude Include="et_dev2\steinerSubdivision_inline.h" />
+    <ClInclude Include="et_dev2\surfaceFunc.h" />
+    <ClInclude Include="et_dev2\triangulation.h" />
+    <ClInclude Include="GeneratedFiles\ui_compact.h" />
+    <ClInclude Include="geodesic\geodesic_algorithm_base.h" />
+    <ClInclude Include="geodesic\geodesic_algorithm_dijkstra.h" />
+    <ClInclude Include="geodesic\geodesic_algorithm_dijkstra_alternative.h" />
+    <ClInclude Include="geodesic\geodesic_algorithm_exact.h" />
+    <ClInclude Include="geodesic\geodesic_algorithm_exact_elements.h" />
+    <ClInclude Include="geodesic\geodesic_algorithm_graph_base.h" />
+    <ClInclude Include="geodesic\geodesic_algorithm_subdivision.h" />
+    <ClInclude Include="geodesic\geodesic_constants_and_simple_functions.h" />
+    <ClInclude Include="geodesic\geodesic_matlab_api.h" />
+    <ClInclude Include="geodesic\geodesic_memory.h" />
+    <ClInclude Include="geodesic\geodesic_mesh.h" />
+    <ClInclude Include="geodesic\geodesic_mesh_elements.h" />
+    <ClInclude Include="ply\ply.h" />
+    <ClInclude Include="ply\plyall.h" />
+    <CustomBuild Include="et_dev2\glArea.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing glArea.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing glArea.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+    </CustomBuild>
+    <CustomBuild Include="et_dev2\ETMainWindow.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing ETMainWindow.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing ETMainWindow.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="et_dev2\commonUtil.cpp" />
+    <ClCompile Include="et_dev2\ETMainWindow.cpp" />
+    <ClCompile Include="et_dev2\geometryRepresentation.cpp" />
+    <ClCompile Include="et_dev2\glArea.cpp" />
+    <ClCompile Include="et_dev2\graphDiffusion.cpp" />
+    <ClCompile Include="et_dev2\hybridSkeleton.cpp" />
+    <ClCompile Include="et_dev2\io.cpp" />
+    <ClCompile Include="et_dev2\IsoContourOnMA.cpp" />
+    <ClCompile Include="et_dev2\isoSurfaceFrom2Manifold.cpp" />
+    <ClCompile Include="et_dev2\iso_contour.cpp" />
+    <ClCompile Include="et_dev2\lineDrawer.cpp" />
+    <ClCompile Include="et_dev2\main.cpp" />
+    <ClCompile Include="et_dev2\meshDrawer.cpp" />
+    <ClCompile Include="et_dev2\mymesh.cpp" />
+    <ClCompile Include="et_dev2\origGraph.cpp" />
+    <ClCompile Include="et_dev2\pointDrawer.cpp" />
+    <ClCompile Include="et_dev2\sphereDrawer.cpp" />
+    <ClCompile Include="et_dev2\StdAfx.h.cpp" />
+    <ClCompile Include="et_dev2\steinerSubdivision.cpp" />
+    <ClCompile Include="et_dev2\surfaceFunc.cpp" />
+    <ClCompile Include="et_dev2\triangulation.cpp" />
+    <ClCompile Include="GeneratedFiles\Debug\moc_ETMainWindow.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_glArea.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ETMainWindow.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_glArea.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="geodesic\geodesic_matlab_api.cpp" />
+    <ClCompile Include="ply\ply.cpp" />
+    <ClCompile Include="ply\plyall.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="geodesic\flat_triangular_mesh.txt" />
+    <Text Include="geodesic\hedgehog_mesh.txt" />
+    <Text Include="geodesic\readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="compact.ui">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\uic.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Uic%27ing %(Identity)...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\ui_%(Filename).h;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\uic.exe" -o ".\GeneratedFiles\ui_%(Filename).h" "%(FullPath)"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\uic.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Uic%27ing %(Identity)...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\ui_%(Filename).h;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\uic.exe" -o ".\GeneratedFiles\ui_%(Filename).h" "%(FullPath)"</Command>
+    </CustomBuild>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B12702AD-ABFB-343A-A199-8E24837244A3}</ProjectGuid>
+    <Keyword>Qt4VSv1.0</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;.\geodesic;.\ply;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
+      <AdditionalLibraryDirectories>..\third_party\trimesh\lib;..\third_party\boost\lib;..\third_party\CGAL\lib;..\third_party\glew\lib;..\third_party\gflags\lib-debug;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5OpenGLd.lib;opengl32.lib;glu32.lib;Qt5Widgetsd.lib;trimeshd.lib;libgmp-10.lib;libmpfr-4.lib;glew32.lib;gflags.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;.\geodesic;.\ply;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
+      <AdditionalLibraryDirectories>..\third_party\trimesh\lib;..\third_party\boost\lib;..\third_party\CGAL\lib;..\third_party\glew\lib;..\third_party\gflags\lib-release;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;opengl32.lib;glu32.lib;Qt5Widgets.lib;trimesh.lib;libgmp-10.lib;libmpfr-4.lib;glew32.lib;gflags.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties MocDir=".\GeneratedFiles\$(ConfigurationName)" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_x64="msvc2015_64" MocOptions="" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

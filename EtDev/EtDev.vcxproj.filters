@@ -1,0 +1,287 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>moc;h;cpp</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Debug">
+      <UniqueIdentifier>{a7a5e6cb-6fdc-417a-8034-114b3737369e}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Release">
+      <UniqueIdentifier>{77ae7db0-16cf-4879-b30a-245b5f43a082}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="et_dev2">
+      <UniqueIdentifier>{0c45a619-437b-41f6-98ae-4a50f40a03b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="geodesic">
+      <UniqueIdentifier>{4182717a-9375-4b96-b25f-10fc771d7f2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ply">
+      <UniqueIdentifier>{04eccd63-c61b-4e98-b13d-1c006bba9d89}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="et_dev2\all_gl.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\allTypes.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\cameraTrackBall.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\commonTypes.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\commonUtils.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\drawable.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\geometryRepresentation.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\glUtils.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\graphDiffusion.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\graphWeights.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\hybridSkeleton.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\io.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\iso_contour.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\IsoContourOnMA.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\isoSurfaceFrom2Manifold.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\linearAlg.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\lineDrawer.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\meshDrawer.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\mymesh.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\origGraph.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\pointDrawer.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\sphereDrawer.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\StdAfx.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\steinerSubdivision.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\steinerSubdivision_inline.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\surfaceFunc.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="et_dev2\triangulation.h">
+      <Filter>et_dev2</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_algorithm_base.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_algorithm_dijkstra.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_algorithm_dijkstra_alternative.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_algorithm_exact.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_algorithm_exact_elements.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_algorithm_graph_base.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_algorithm_subdivision.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_constants_and_simple_functions.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_matlab_api.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_memory.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_mesh.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="geodesic\geodesic_mesh_elements.h">
+      <Filter>geodesic</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_compact.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ply\ply.h">
+      <Filter>ply</Filter>
+    </ClInclude>
+    <ClInclude Include="ply\plyall.h">
+      <Filter>ply</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="et_dev2\ETMainWindow.h">
+      <Filter>et_dev2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="et_dev2\glArea.h">
+      <Filter>et_dev2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="compact.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ETMainWindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ETMainWindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_glArea.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_glArea.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\commonUtil.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\ETMainWindow.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\geometryRepresentation.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\glArea.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\graphDiffusion.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\hybridSkeleton.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\io.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\iso_contour.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\IsoContourOnMA.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\isoSurfaceFrom2Manifold.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\lineDrawer.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\main.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\meshDrawer.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\mymesh.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\origGraph.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\pointDrawer.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\sphereDrawer.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\StdAfx.h.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\steinerSubdivision.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\surfaceFunc.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="et_dev2\triangulation.cpp">
+      <Filter>et_dev2</Filter>
+    </ClCompile>
+    <ClCompile Include="geodesic\geodesic_matlab_api.cpp">
+      <Filter>geodesic</Filter>
+    </ClCompile>
+    <ClCompile Include="ply\ply.cpp">
+      <Filter>ply</Filter>
+    </ClCompile>
+    <ClCompile Include="ply\plyall.cpp">
+      <Filter>ply</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="geodesic\flat_triangular_mesh.txt">
+      <Filter>geodesic</Filter>
+    </Text>
+    <Text Include="geodesic\hedgehog_mesh.txt">
+      <Filter>geodesic</Filter>
+    </Text>
+    <Text Include="geodesic\readme.txt">
+      <Filter>geodesic</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

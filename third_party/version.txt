@@ -1,0 +1,11 @@
+gflags-master-8935ef4
+trimesh2-2.12
+Eigen3.3.0-master-26667be4f70b
+boost-1.62
+CGAL-4.9-compiled with boost-1.62
+oglplus-0.45, as it's header only, I have defined the following macros:
+	OGLPLUS_USE_GLCOREARB_H=0
+	OGLPLUS_USE_GLEW=1
+	OGLPLUS_NO_GLFUNC_CHECKS=1
+	OGLPLUS_NO_SITE_CONFIG
+glew-2.0

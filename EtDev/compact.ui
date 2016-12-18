@@ -1,0 +1,2680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1002</width>
+    <height>846</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_11">
+    <item row="0" column="0">
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QTabWidget" name="toolTabs">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>280</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="currentIndex">
+        <number>2</number>
+       </property>
+       <widget class="QWidget" name="fileTab">
+        <property name="toolTip">
+         <string>Load all required files here</string>
+        </property>
+        <attribute name="title">
+         <string>Files</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_17">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="loadFileGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string/>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_40">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>medial axis</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="maFileEdit">
+              <property name="toolTip">
+               <string>the medial axis file</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="browseMAFileBtn">
+              <property name="toolTip">
+               <string>select a medial axis file (.off)</string>
+              </property>
+              <property name="text">
+               <string>browse</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>3d shape</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="shapeFileEdit">
+              <property name="toolTip">
+               <string>the 3d shape file (optional)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="browse3DShapeFileBtn">
+              <property name="toolTip">
+               <string>select a 3d shape file (.off)</string>
+              </property>
+              <property name="text">
+               <string>browse</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>radius</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="radiusFileEdit">
+              <property name="toolTip">
+               <string>the radius file (optional)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QPushButton" name="browseRadiusFileBtn">
+              <property name="toolTip">
+               <string>(optionally) select a radius file (.r)</string>
+              </property>
+              <property name="text">
+               <string>browse</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QPushButton" name="loadFilesBtn">
+              <property name="text">
+               <string>load</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="origSurfTab">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;
+&lt;body&gt;visualizatoin options for&lt;br&gt;
+- 3d shape&lt;br&gt;
+- medial axis &lt;br&gt;
+- medial curve &lt;br&gt;
+- skeleton &lt;br&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <attribute name="title">
+         <string>Visualization</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>general</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_30">
+            <item row="3" column="1">
+             <widget class="QSpinBox" name="DPMaxRendersSpin">
+              <property name="toolTip">
+               <string>specify # layers here</string>
+              </property>
+              <property name="maximum">
+               <number>99999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="colorBGBtn">
+              <property name="toolTip">
+               <string>change background color</string>
+              </property>
+              <property name="text">
+               <string>BG color</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="drawEdge">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>show wireframe on original shape and medial axis</string>
+              </property>
+              <property name="text">
+               <string>wire-frame</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="saveViewBtn">
+              <property name="toolTip">
+               <string>Save camera &amp; viewport to file</string>
+              </property>
+              <property name="text">
+               <string>save view</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QPushButton" name="loadViewBtn">
+              <property name="toolTip">
+               <string>Load a saved view from file</string>
+              </property>
+              <property name="text">
+               <string>load view</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QCheckBox" name="useTrueTransparencyBox">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;
+&lt;body&gt;
+&lt;p&gt;use &amp;quot;ground truth&amp;quot; transparency (depth-peel) instead of opengl default alpha blending &lt;br&gt;
+(need to specify # layers for which transparency will be computed)&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>true transparency</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="origSurfViewGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>250</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>200</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>view options for 3d shape</string>
+           </property>
+           <property name="title">
+            <string>shape</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_16">
+            <item row="0" column="1">
+             <widget class="QPushButton" name="colorOrigBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>500</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Give 3d surface constant color</string>
+              </property>
+              <property name="text">
+               <string>color</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="hideOrig">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>hide/show current 3d surface</string>
+              </property>
+              <property name="text">
+               <string>hide</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>transparent</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="origTransparentSlider">
+              <property name="toolTip">
+               <string>change transparency of the 3D surface</string>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QGroupBox" name="maViewGroup">
+           <property name="minimumSize">
+            <size>
+             <width>250</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>200</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>view options for medial axis</string>
+           </property>
+           <property name="title">
+            <string>medial axis</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_6">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="hideMA">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>hide/show medial axis</string>
+              </property>
+              <property name="text">
+               <string>hide</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="turnOffLightingForMABox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>disable/enable lighting on medial axis</string>
+              </property>
+              <property name="text">
+               <string>no lighting</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="drawStPoints">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>visualize all steiner points on medial axis</string>
+              </property>
+              <property name="text">
+               <string>steiner points</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QPushButton" name="colorMABtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>500</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Give MA a constant color</string>
+              </property>
+              <property name="text">
+               <string>color</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0" colspan="2">
+             <widget class="QGroupBox" name="distVisBtnGroup">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>pick a measure to visualize on the medial axis</string>
+              </property>
+              <property name="title">
+               <string>view measure</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_37">
+               <item row="0" column="0">
+                <widget class="QComboBox" name="visMADistCombo">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>choose a distance metric to visualize on medial axis</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <layout class="QGridLayout" name="gridLayout_38">
+                 <item row="0" column="0">
+                  <widget class="QCheckBox" name="clampMADistBox">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>100</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="toolTip">
+                    <string>map the selected measure to the right range for visualization purpose</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QDoubleSpinBox" name="minVisDistMASpin">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string/>
+                   </property>
+                   <property name="decimals">
+                    <number>8</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QDoubleSpinBox" name="maxVisDistMASpin">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>500</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="toolTip">
+                    <string/>
+                   </property>
+                   <property name="decimals">
+                    <number>8</number>
+                   </property>
+                   <property name="maximum">
+                    <double>9999999.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="2">
+             <widget class="QGroupBox" name="MAAlphaGroup">
+              <property name="title">
+               <string>transparency</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_10">
+               <item row="0" column="0">
+                <widget class="QSlider" name="MATransparentSlider">
+                 <property name="toolTip">
+                  <string>MA min alpha</string>
+                 </property>
+                 <property name="maximum">
+                  <number>1000</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QSlider" name="MATransExpSlider">
+                 <property name="toolTip">
+                  <string>MA alpha exponent</string>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QGroupBox" name="mcViewGroup">
+           <property name="toolTip">
+            <string>options for viewing the MC and the measures on it</string>
+           </property>
+           <property name="title">
+            <string>medial curve</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0" colspan="2">
+             <widget class="QCheckBox" name="visBurnt">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>visualize all burn trees</string>
+              </property>
+              <property name="text">
+               <string>show burn trees</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="colorMCBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Give MC a constant color</string>
+              </property>
+              <property name="text">
+               <string>color</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="hideMC">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>hide/show medial curve</string>
+              </property>
+              <property name="text">
+               <string>hide MC</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>line width</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="MCWidthSpin">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>medial curve line width</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="3">
+             <widget class="QGroupBox" name="groupBox_2">
+              <property name="toolTip">
+               <string>pick a measure to view on medial curve here</string>
+              </property>
+              <property name="title">
+               <string>view measure</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_8">
+               <item row="0" column="0">
+                <widget class="QComboBox" name="visMCDistCombo">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>choose a measure on medial curve to visualize</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <layout class="QGridLayout" name="gridLayout_39">
+                 <item row="0" column="0">
+                  <widget class="QCheckBox" name="clampMCDistBox">
+                   <property name="toolTip">
+                    <string>map the the selected measure to the right range</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QDoubleSpinBox" name="minVisDistMCSpin">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>min of the clamp range</string>
+                   </property>
+                   <property name="decimals">
+                    <number>8</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QDoubleSpinBox" name="maxVisDistMCSpin">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>max of the clamp range</string>
+                   </property>
+                   <property name="decimals">
+                    <number>8</number>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="4" column="0" colspan="3">
+             <widget class="QGroupBox" name="MCAlphaGroup">
+              <property name="toolTip">
+               <string>make medial curve look transparent </string>
+              </property>
+              <property name="title">
+               <string>transparency</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_22">
+               <item row="1" column="0">
+                <widget class="QSlider" name="MCAlphaSlider">
+                 <property name="toolTip">
+                  <string>min alpha</string>
+                 </property>
+                 <property name="maximum">
+                  <number>1000</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QSlider" name="MCTransExpSlider">
+                 <property name="toolTip">
+                  <string>alpha exponent</string>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QGroupBox" name="hsViewGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>view options for skeleton</string>
+           </property>
+           <property name="title">
+            <string>skeleton</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_9">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="hideHS">
+              <property name="text">
+               <string>hide HS</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="MATab">
+        <property name="toolTip">
+         <string>creating and viewing erosion thickness on the medial axis</string>
+        </property>
+        <attribute name="title">
+         <string>ET</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_12">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="maBurnGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>burn</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <widget class="QDoubleSpinBox" name="nFixedSteinerSpin">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;parameter ω (distance between two steiner points)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="decimals">
+               <number>8</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="cleanTopoBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;click if you want to remove all &amp;quot;pockets&amp;quot; (closed subcomplex) from the medial axis. &lt;/p&gt;&lt;p&gt;A cleaned medial axis will be written to a file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>clean topo</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="burnBtn">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>compute burn time and ET</string>
+              </property>
+              <property name="text">
+               <string>burn</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="maMeasureGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>250</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;p&gt;This is where you can visualize measure on the medial axis, &lt;br&gt;
+or use measure to prune the medial axis&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="title">
+            <string>thresholding</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="0" column="0">
+             <widget class="QSlider" name="pruneMASlider1">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>prune MA by the specified metric</string>
+              </property>
+              <property name="maximum">
+               <number>1000000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="pruneMADistCombo1">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>choose a dist metric for medial axis thresholding</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QDoubleSpinBox" name="pruneMASpin1">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>current value of the measure</string>
+              </property>
+              <property name="decimals">
+               <number>8</number>
+              </property>
+              <property name="maximum">
+               <double>99999.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="enableFinePruneMA">
+              <property name="toolTip">
+               <string>visualize the finner medial axis whose boundary is refined by the iso-contour of the measure</string>
+              </property>
+              <property name="text">
+               <string>fine medial axis</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QGroupBox" name="exportBTGroup">
+           <property name="toolTip">
+            <string>export ET here</string>
+           </property>
+           <property name="title">
+            <string>export ET</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_32">
+            <item row="2" column="1">
+             <widget class="QPushButton" name="exportBTBtn">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>export</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="exportPerSectorBTBox">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;
+&lt;body&gt;&lt;p&gt;Instead of writing just the ET value for each vertex into a .et file, &lt;br&gt;
+export the ET value for each sector of each vertex into a .etps file&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>per-sector</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="HSTab">
+        <property name="toolTip">
+         <string>skeleton (generate, prune, etc.)</string>
+        </property>
+        <attribute name="title">
+         <string>Skeleton</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_34">
+         <item row="1" column="0" colspan="2">
+          <widget class="QGroupBox" name="mcPruneGroup">
+           <property name="toolTip">
+            <string>explore medial curve pruning parameter here</string>
+           </property>
+           <property name="title">
+            <string>thresholding medial curve</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_15">
+            <item row="2" column="0">
+             <widget class="QSlider" name="pruneMCSlider1">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QDoubleSpinBox" name="pruneMCDistSpin1">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>cur value of pruning threshold</string>
+              </property>
+              <property name="decimals">
+               <number>8</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="pruneMCDistCombo1">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>choose distance metric used for pruning</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QGroupBox" name="exportHSGroup">
+           <property name="title">
+            <string>export skeleton</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_35">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="exportHSBtn">
+              <property name="toolTip">
+               <string>click to export the current skeleton to a .sk file</string>
+              </property>
+              <property name="text">
+               <string>export</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QGroupBox" name="hsPruneGroup">
+           <property name="toolTip">
+            <string>explore pruning params (theta2 and theta1) for skeleton generation</string>
+           </property>
+           <property name="title">
+            <string>prune skeleton</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_18">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>200</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'Symbol'; font-size:12pt;&quot;&gt;q&lt;/span&gt;&lt;span style=&quot; font-size:12pt; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QCheckBox" name="removeSmallCmpnts">
+              <property name="toolTip">
+               <string>tick this if want to remove small components</string>
+              </property>
+              <property name="text">
+               <string>clean debris</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QSlider" name="hsBt2Bt3Slider">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>200</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>theta_2</string>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_7">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>200</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'Symbol'; font-size:12pt;&quot;&gt;q&lt;/span&gt;&lt;span style=&quot; font-size:12pt; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QDoubleSpinBox" name="hsFaceDiffSpin">
+              <property name="toolTip">
+               <string>theta_2</string>
+              </property>
+              <property name="decimals">
+               <number>8</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="hsBt1Bt2Slider">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>200</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>theta_1</string>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="hsCurveDiffSpin">
+              <property name="toolTip">
+               <string>theta_1</string>
+              </property>
+              <property name="decimals">
+               <number>8</number>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="0">
+             <widget class="QDoubleSpinBox" name="hsFaceDegenThreshold">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>specify the area threshold. Components with smaller size will be removed</string>
+              </property>
+              <property name="decimals">
+               <number>8</number>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QPushButton" name="visHSBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>update and visualize skeleton with the specified parameters</string>
+              </property>
+              <property name="text">
+               <string>create</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="hsCreateGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>precompute</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_33">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="createHSBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;precomputation: &lt;br&gt;- computing medial curve, &lt;br&gt;- dualizing subdivisions induced by medial curve, &lt;br&gt;- assemblying skeleton&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>precompute</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <spacer name="verticalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>365</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="MCTab">
+        <property name="toolTip">
+         <string>medial curve (generate, burn, prune, etc.)</string>
+        </property>
+        <attribute name="title">
+         <string>MC/MP</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_36">
+         <item row="2" column="0">
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="mcDualizeGroup">
+           <property name="toolTip">
+            <string>click the button to create medial curve and compute the 1d burn time on it</string>
+           </property>
+           <property name="title">
+            <string>dualize</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_7">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="dualizeBtn">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>create</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="mpGroup">
+           <property name="toolTip">
+            <string>medial point (the point last burned away during burning the medial curve)</string>
+           </property>
+           <property name="title">
+            <string>MP</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_21">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="showMPBox">
+              <property name="text">
+               <string>show MP</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="ExportTab">
+        <property name="toolTip">
+         <string>export (burn time, skeleton)</string>
+        </property>
+        <attribute name="title">
+         <string>Export</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_29">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="exportGroup">
+           <property name="title">
+            <string/>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_13">
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="ExportSkelBox">
+              <property name="text">
+               <string>Export Skeleton</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="exportBtn">
+              <property name="text">
+               <string>Export</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <spacer name="verticalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="SMetricTab">
+        <property name="toolTip">
+         <string>surface function</string>
+        </property>
+        <attribute name="title">
+         <string>S. Metric</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_20">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="surfFuncGroup">
+           <property name="title">
+            <string>vis</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_19">
+            <item row="5" column="0">
+             <widget class="QComboBox" name="pruneSMetricCombo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QPushButton" name="surfFuncProjectBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>project func</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QComboBox" name="surfFuncCorrespSchemeCombo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>choose which scheme to use to compute correspondence between MC and orig. surf.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QSlider" name="smoothSMetricSlider">
+              <property name="maximum">
+               <number>10000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QCheckBox" name="diffuseSurfFunc">
+              <property name="text">
+               <string>fill &quot;holes&quot;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QDoubleSpinBox" name="surfFuncRadiusEps">
+              <property name="decimals">
+               <number>8</number>
+              </property>
+              <property name="minimum">
+               <double>-1.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QPushButton" name="surfFuncSetupCorrespBtn">
+              <property name="text">
+               <string>setup corresp.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSpinBox" name="surfFuncKNN">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <spacer name="verticalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>514</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="VideoTab">
+        <property name="toolTip">
+         <string>animation (for burning, iso-surf, iso-cont, etc.)</string>
+        </property>
+        <attribute name="title">
+         <string>Video</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_23">
+         <item row="0" column="0" colspan="2">
+          <widget class="QGroupBox" name="isoSurfGroup">
+           <property name="title">
+            <string>iso surface</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_24">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="isoSurfPrecomputeBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>pre-compute</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="hideIsoSurf">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>hide</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QCheckBox" name="recursiveRefineBox">
+              <property name="text">
+               <string>recursive refine</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QSlider" name="isoSurfSlider">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
+              <property name="singleStep">
+               <number>5</number>
+              </property>
+              <property name="pageStep">
+               <number>20</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QCheckBox" name="hideSnappedFaceBox">
+              <property name="text">
+               <string>hide snapped faces</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QPushButton" name="isoSurfRefineBtn">
+              <property name="text">
+               <string>refine</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0" rowspan="2" colspan="2">
+          <widget class="QGroupBox" name="groupBox_7">
+           <property name="title">
+            <string>iso contour</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_25">
+            <item row="1" column="0">
+             <widget class="QPushButton" name="isoContPrecomputeBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>pre-compute</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="hideIsoCont">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>hide contour</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="isoContShowMC">
+              <property name="toolTip">
+               <string>show MC exposed by iso-contour</string>
+              </property>
+              <property name="text">
+               <string>show MC</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="hidePastSurfBox">
+              <property name="text">
+               <string>hide past surface</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSlider" name="isoContSlider">
+              <property name="maximum">
+               <number>9999</number>
+              </property>
+              <property name="singleStep">
+               <number>5</number>
+              </property>
+              <property name="pageStep">
+               <number>20</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0" colspan="2">
+             <widget class="QGroupBox" name="groupBox_9">
+              <property name="title">
+               <string>transparency</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_27">
+               <item row="0" column="0">
+                <widget class="QSlider" name="isoContMinAlphaSlider">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QSlider" name="isoContExpAlphaSlider">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <spacer name="verticalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="4" column="0" colspan="2">
+          <widget class="QGroupBox" name="groupBox_8">
+           <property name="title">
+            <string>play all</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_26">
+            <item row="1" column="1">
+             <widget class="QSlider" name="evolveAllSlider">
+              <property name="toolTip">
+               <string>drag this bar to evolve all iso-objects</string>
+              </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
+              <property name="singleStep">
+               <number>5</number>
+              </property>
+              <property name="pageStep">
+               <number>20</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="evolveAllPrecomputeBtn">
+              <property name="text">
+               <string>pre-compute</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="evolveAllShowEntireMC">
+              <property name="toolTip">
+               <string>Only exposed MC is shown if unchecked.</string>
+              </property>
+              <property name="text">
+               <string>show entire MC</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="MiscTab">
+        <property name="toolTip">
+         <string>debug related stuff</string>
+        </property>
+        <attribute name="title">
+         <string>Misc</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_31">
+         <item row="4" column="0">
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="preprocessGroup">
+           <property name="maximumSize">
+            <size>
+             <width>1000</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>preprocess</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="toolTip">
+               <string>closeness for 2 vts to be for them to be considered &quot;same&quot;</string>
+              </property>
+              <property name="text">
+               <string>epsilon</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QDoubleSpinBox" name="pertSpin">
+              <property name="decimals">
+               <number>15</number>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label">
+              <property name="toolTip">
+               <string>perturbation applied to &quot;same&quot; points</string>
+              </property>
+              <property name="text">
+               <string>pert</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="epsilonSpin">
+              <property name="decimals">
+               <number>15</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="miscBurntimeGroup">
+           <property name="title">
+            <string>burntime</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_28">
+            <item row="2" column="0">
+             <widget class="QPushButton" name="visSphereFromFileBtn">
+              <property name="text">
+               <string>show from file</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="visSphereSpin"/>
+            </item>
+            <item row="4" column="0">
+             <widget class="QPushButton" name="randBTBtn">
+              <property name="text">
+               <string>randomize</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QPushButton" name="printBTBtn">
+              <property name="text">
+               <string>print random</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QSlider" name="visSphereSlider">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="showSphereBox">
+              <property name="text">
+               <string>draw spheres</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QPushButton" name="printSelectVertInfoBtn">
+              <property name="text">
+               <string>print selected</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QGroupBox" name="renderParamGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>general rendering params</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_3">
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>lines offset</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="linesRenderOffsetSlider">
+              <property name="maximum">
+               <number>1000000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QGroupBox" name="qmatGroup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>qmat</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>to qmat input</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="outputWenpingBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>convert</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="readQMatMA">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>read qmat ma</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="hideQMatBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>hide</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="hiddenTab">
+        <attribute name="title">
+         <string>hidden</string>
+        </attribute>
+        <widget class="QComboBox" name="stSubdivCombo">
+         <property name="geometry">
+          <rect>
+           <x>160</x>
+           <y>10</y>
+           <width>69</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="edgeWeightCombo">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>71</x>
+           <y>6</y>
+           <width>69</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="pointSizeSpin">
+         <property name="geometry">
+          <rect>
+           <x>9</x>
+           <y>6</y>
+           <width>49</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>change size of points</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="doMAFaceScalarDiffusion">
+         <property name="geometry">
+          <rect>
+           <x>91</x>
+           <y>31</y>
+           <width>103</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>diffuse face field</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="computeAllDistBtn">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>75</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>compute/update all distance metrics</string>
+         </property>
+         <property name="text">
+          <string>compute all</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="usePerSheetBox">
+         <property name="geometry">
+          <rect>
+           <x>201</x>
+           <y>31</y>
+           <width>69</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>per sheet</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="maxPruneDistMASpin2">
+         <property name="geometry">
+          <rect>
+           <x>131</x>
+           <y>131</y>
+           <width>97</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>10</number>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="maPruneRatio">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>61</y>
+           <width>97</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>ratio: cur prune value / bbox size</string>
+         </property>
+         <property name="decimals">
+          <number>8</number>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="minPruneDistMASpin1">
+         <property name="geometry">
+          <rect>
+           <x>8</x>
+           <y>83</y>
+           <width>107</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>show/set minimal allowable dist value for pruning</string>
+         </property>
+         <property name="decimals">
+          <number>10</number>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="pruneMASpin2">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>111</y>
+           <width>107</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>30</number>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="maxPruneDistMASpin1">
+         <property name="geometry">
+          <rect>
+           <x>111</x>
+           <y>61</y>
+           <width>97</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>show/set maximal allowable dist value for pruning</string>
+         </property>
+         <property name="decimals">
+          <number>10</number>
+         </property>
+        </widget>
+        <widget class="QSlider" name="pruneMASlider2">
+         <property name="geometry">
+          <rect>
+           <x>131</x>
+           <y>81</y>
+           <width>107</width>
+           <height>19</height>
+          </rect>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="pruneMADistCombo2">
+         <property name="geometry">
+          <rect>
+           <x>131</x>
+           <y>111</y>
+           <width>97</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="minPruneDistMASpin2">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>131</y>
+           <width>107</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>10</number>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="edgeDualOptCombo">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>161</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>pick a method for dualizing edges</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="polyDualOptCombo">
+         <property name="geometry">
+          <rect>
+           <x>121</x>
+           <y>161</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>pick a method for dualizing poly regions</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="underEstimateBox">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>213</y>
+           <width>115</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>under estimate</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="onlyUnburntBox">
+         <property name="geometry">
+          <rect>
+           <x>9</x>
+           <y>190</y>
+           <width>115</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>only show unburnt part of the dual structure</string>
+         </property>
+         <property name="text">
+          <string>only unburnt</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="stopAtJuncBox">
+         <property name="geometry">
+          <rect>
+           <x>9</x>
+           <y>213</y>
+           <width>115</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>stop burning the dual line structure at junction points</string>
+         </property>
+         <property name="text">
+          <string>stop at junction</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="protectBT2Box">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>190</y>
+           <width>115</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>protect BT2</string>
+         </property>
+        </widget>
+        <widget class="QSlider" name="hsBt1Bt2RelSlider">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>260</y>
+           <width>115</width>
+           <height>19</height>
+          </rect>
+         </property>
+         <property name="maximum">
+          <number>1000</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="hsCurveRelDiffSpin">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>300</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>8</number>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="hsFaceRelDiffSpin">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>278</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>8</number>
+         </property>
+        </widget>
+        <widget class="QSlider" name="hsBt2Bt3RelSlider">
+         <property name="geometry">
+          <rect>
+           <x>131</x>
+           <y>240</y>
+           <width>115</width>
+           <height>19</height>
+          </rect>
+         </property>
+         <property name="maximum">
+          <number>1000</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_8">
+         <property name="geometry">
+          <rect>
+           <x>9</x>
+           <y>260</y>
+           <width>115</width>
+           <height>19</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>line rel diff</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_6">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>240</y>
+           <width>115</width>
+           <height>19</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>face rel diff</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="hsCmpntFaceNumTSpin">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>320</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>8</number>
+         </property>
+         <property name="maximum">
+          <double>999999.000000000000000</double>
+         </property>
+        </widget>
+        <widget class="QGroupBox" name="mcBurnGroup">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>350</y>
+           <width>71</width>
+           <height>61</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>options for burning the dual structure</string>
+         </property>
+         <property name="title">
+          <string>burn</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_14">
+          <item row="0" column="0">
+           <widget class="QPushButton" name="burnMedialCurveBtn">
+            <property name="text">
+             <string>burn</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QPushButton" name="printMCStatsBtn">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>330</y>
+           <width>115</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>print stats</string>
+         </property>
+        </widget>
+        <widget class="QSlider" name="pruneMCSlider2">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>424</y>
+           <width>115</width>
+           <height>19</height>
+          </rect>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="mcPruneRatio">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>400</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>distance value restricted to [0, max]</string>
+         </property>
+         <property name="decimals">
+          <number>10</number>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="pruneMCDistCombo2">
+         <property name="geometry">
+          <rect>
+           <x>131</x>
+           <y>424</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="pruneMCDistSpin2">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>450</y>
+           <width>115</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>10</number>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="colorPerVert">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>480</y>
+           <width>102</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>color-per-vert</string>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="colorPerFace">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>480</y>
+           <width>102</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>color-per-face</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="hsUseTypedInput">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>500</y>
+           <width>115</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>use theta_2 and theta_1 in the right fields as params</string>
+         </property>
+         <property name="text">
+          <string>use typed input</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="visBallStick">
+         <property name="geometry">
+          <rect>
+           <x>9</x>
+           <y>520</y>
+           <width>115</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>ball-stick</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="preserveMCTopo">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>520</y>
+           <width>115</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>preserve topo</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QHBoxLayout" name="glLayout" stretch="0">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="openFile">
+   <property name="text">
+    <string>&amp;Open</string>
+   </property>
+  </action>
+  <action name="saveView">
+   <property name="text">
+    <string>Save View</string>
+   </property>
+   <property name="toolTip">
+    <string>Save camera &amp; viewport to file</string>
+   </property>
+  </action>
+  <action name="loadView">
+   <property name="text">
+    <string>Load View</string>
+   </property>
+   <property name="toolTip">
+    <string>Load a saved view from file</string>
+   </property>
+  </action>
+  <action name="readRadii">
+   <property name="text">
+    <string>Read Radii</string>
+   </property>
+   <property name="toolTip">
+    <string>read radii of MA from .r file</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
