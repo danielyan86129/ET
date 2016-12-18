@@ -550,6 +550,8 @@ private:
 	std::shared_ptr<SurfaceFunc> m_surfF;
 	/// hybrid skeleton
 	std::shared_ptr<HybridSkeleton> m_hs;
+
+    bool m_glInitialized = false; // workaround for force OpenGL initialize (xlzhang)
 };
 
 #endif

@@ -12,7 +12,6 @@
 QGLFormat GLArea::getGLFormat(void)
 {
 	QGLFormat qgl_format;
-	//qgl_format.setVersion(4, 3);
 	qgl_format.setDepth(true); // depth buffer
 	cout << "qgl depth size (before request): "<<qgl_format.depthBufferSize();
 	qgl_format.setDepthBufferSize(32);
@@ -280,7 +279,10 @@ void GLArea::passToDrawable(
 {
 	/* pass MA file to its mesh drawer */
 	/* and pass orig 3d surface file to its mesh drawer */
-	assert(m_MADrawer);
+    while (!m_glInitialized) {
+        QApplication::processEvents();
+    }
+    assert(m_MADrawer);
 
 	std::shared_ptr<MyMesh> mesh_MA;
 	float eps = (float)ui->epsilonSpin->value();
@@ -3913,8 +3915,9 @@ void GLArea::initializeGL(void)
 	m_qmatEdgeDrawer = std::shared_ptr<LineDrawer>(
 		new LineDrawer(m_linesProg, track_ball)
 		);
-
+    m_glInitialized = true;
 	cout << "Done!" << endl; // debug
+    
 }
 
 void GLArea::resizeGL(int _w, int _h)
