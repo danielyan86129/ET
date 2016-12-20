@@ -1,5 +1,5 @@
 #pragma once
-#include "plyall.h"
+#include "..\include\plyall.h"
 #include <cstdio>
 
 ply::PLYreader::PLYreader()

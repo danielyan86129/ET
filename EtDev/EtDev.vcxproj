@@ -39,39 +39,25 @@
     <ClInclude Include="et_dev2\surfaceFunc.h" />
     <ClInclude Include="et_dev2\triangulation.h" />
     <ClInclude Include="GeneratedFiles\ui_compact.h" />
-    <ClInclude Include="geodesic\geodesic_algorithm_base.h" />
-    <ClInclude Include="geodesic\geodesic_algorithm_dijkstra.h" />
-    <ClInclude Include="geodesic\geodesic_algorithm_dijkstra_alternative.h" />
-    <ClInclude Include="geodesic\geodesic_algorithm_exact.h" />
-    <ClInclude Include="geodesic\geodesic_algorithm_exact_elements.h" />
-    <ClInclude Include="geodesic\geodesic_algorithm_graph_base.h" />
-    <ClInclude Include="geodesic\geodesic_algorithm_subdivision.h" />
-    <ClInclude Include="geodesic\geodesic_constants_and_simple_functions.h" />
-    <ClInclude Include="geodesic\geodesic_matlab_api.h" />
-    <ClInclude Include="geodesic\geodesic_memory.h" />
-    <ClInclude Include="geodesic\geodesic_mesh.h" />
-    <ClInclude Include="geodesic\geodesic_mesh_elements.h" />
-    <ClInclude Include="ply\ply.h" />
-    <ClInclude Include="ply\plyall.h" />
     <CustomBuild Include="et_dev2\glArea.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing glArea.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\..\third_party" "-I.\..\third_party\ply\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing glArea.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\..\third_party" "-I.\..\third_party\ply\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2"</Command>
     </CustomBuild>
     <CustomBuild Include="et_dev2\ETMainWindow.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing ETMainWindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\..\third_party" "-I.\..\third_party\ply\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing ETMainWindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2" "-I.\geodesic" "-I.\ply"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_USE_MATH_DEFINES -DOGLPLUS_USE_GLCOREARB_H=0 -DOGLPLUS_USE_GLEW=1 -DOGLPLUS_NO_GLFUNC_CHECKS=1 -DOGLPLUS_NO_SITE_CONFIG -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB  "-I.\..\third_party\glew\include" "-I.\..\third_party\oglplus\include" "-I.\..\third_party\boost\include" "-I.\..\third_party\CGAL\include" "-I.\..\third_party\eigen\include" "-I.\..\third_party\trimesh\include" "-I.\..\third_party\gflags\include" "-I.\..\third_party" "-I.\..\third_party\ply\include" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtWidgets" "-I.\et_dev2"</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -108,14 +94,6 @@
     <ClCompile Include="GeneratedFiles\Release\moc_glArea.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="geodesic\geodesic_matlab_api.cpp" />
-    <ClCompile Include="ply\ply.cpp" />
-    <ClCompile Include="ply\plyall.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="geodesic\flat_triangular_mesh.txt" />
-    <Text Include="geodesic\hedgehog_mesh.txt" />
-    <Text Include="geodesic\readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="compact.ui">
@@ -156,7 +134,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;.\geodesic;.\ply;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;..\third_party;..\third_party\ply\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -169,15 +147,15 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>..\third_party\trimesh\lib;..\third_party\boost\lib;..\third_party\CGAL\lib;..\third_party\glew\lib;..\third_party\gflags\lib-debug;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\third_party\trimesh\lib;..\third_party\boost\lib;..\third_party\CGAL\lib;..\third_party\glew\lib;..\third_party\gflags\lib-debug;..\third_party\ply\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5OpenGLd.lib;opengl32.lib;glu32.lib;Qt5Widgetsd.lib;trimeshd.lib;libgmp-10.lib;libmpfr-4.lib;glew32.lib;gflags.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5OpenGLd.lib;opengl32.lib;glu32.lib;Qt5Widgetsd.lib;trimeshd.lib;libgmp-10.lib;libmpfr-4.lib;glew32.lib;gflags.lib;plylib_64_v140d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;.\geodesic;.\ply;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;..\third_party;..\third_party\ply\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -187,9 +165,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>..\third_party\trimesh\lib;..\third_party\boost\lib;..\third_party\CGAL\lib;..\third_party\glew\lib;..\third_party\gflags\lib-release;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\third_party\trimesh\lib;..\third_party\boost\lib;..\third_party\CGAL\lib;..\third_party\glew\lib;..\third_party\gflags\lib-release;..\third_party\ply\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;opengl32.lib;glu32.lib;Qt5Widgets.lib;trimesh.lib;libgmp-10.lib;libmpfr-4.lib;glew32.lib;gflags.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;opengl32.lib;glu32.lib;Qt5Widgets.lib;trimesh.lib;libgmp-10.lib;libmpfr-4.lib;glew32.lib;gflags.lib;plylib_64_v140.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
@@ -197,7 +175,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties MocDir=".\GeneratedFiles\$(ConfigurationName)" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_x64="msvc2015_64" MocOptions="" />
+      <UserProperties MocDir=".\GeneratedFiles\$(ConfigurationName)" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_x64="qt5.7_msvc2015" MocOptions="" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
