@@ -4162,7 +4162,10 @@ void SteinerGraph::findBoundaryBurnDir(
 			// then, there is a unique neighbor face.
 			// use the normal of that face to compute dir.
 			TriEdge e = util::makeEdge(vi, *nbV_it);
-			int fi = this->m_origG->getNbFaces( e )[ 0 ];
+			auto nb_fs = this->m_origG->getNbFaces( e );
+			if ( nb_fs.empty() )
+				continue;
+			int fi = nb_fs[ 0 ];
 			const auto& f = m_origG->faces[fi];
 			const auto& p1 = m_stSubdiv.getVert(f[0]);
 			const auto& p2 = m_stSubdiv.getVert(f[1]);
