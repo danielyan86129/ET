@@ -341,21 +341,21 @@ void ETMainWindow::onLoadFilesClicked()
 
 void ETMainWindow::onBrowseMAClicked()
 {
-	QString ma_file = QFileDialog::getOpenFileName(this, "Select medial axis file", "", "*.off *.ply", 
-		NULL, QFileDialog::DontUseNativeDialog);
-	ui_compact.maFileEdit->setText(ma_file);
+	QString ma_file = QFileDialog::getOpenFileName( this, "Select medial axis file", "", "*.off *.ply",
+		NULL/*, QFileDialog::DontUseNativeDialog*/ );
+	ui_compact.maFileEdit->setText( ma_file );
 }
 void ETMainWindow::onBrowseOrigClicked()
 {
-	QString shape_file = QFileDialog::getOpenFileName(this, "Select original 3d shape file", "", "*.off", 
-		NULL, QFileDialog::DontUseNativeDialog);
-	ui_compact.shapeFileEdit->setText(shape_file);
+	QString shape_file = QFileDialog::getOpenFileName( this, "Select original 3d shape file", "", "*.off",
+		NULL/*, QFileDialog::DontUseNativeDialog*/ );
+	ui_compact.shapeFileEdit->setText( shape_file );
 }
 void ETMainWindow::onBrowseRadiusClicked()
 {
-	QString radius_file = QFileDialog::getOpenFileName(this, "Select radius file", "", "*.r", 
-		NULL, QFileDialog::DontUseNativeDialog);
-	ui_compact.radiusFileEdit->setText(radius_file);
+	QString radius_file = QFileDialog::getOpenFileName( this, "Select radius file", "", "*.r",
+		NULL/*, QFileDialog::DontUseNativeDialog*/ );
+	ui_compact.radiusFileEdit->setText( radius_file );
 }
 
 void ETMainWindow::onDrawEdgeChecked(int _state)

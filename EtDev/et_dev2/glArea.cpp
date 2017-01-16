@@ -1764,9 +1764,9 @@ void GLArea::cleanTopo(std::string _out_file /* = "" */)
 	auto trans_cpy = m_trans_mat;
 	trimesh::invert(trans_cpy);
 	trimesh::apply_xform(&meshMA_cpy, trans_cpy);
-	meshMA_cpy.write(_out_file);
+	//meshMA_cpy.write(_out_file);
+	MyMesh::write( _out_file, &meshMA_cpy );
 	cout << "writing done." << endl;
-
 }
 
 void GLArea::precomputeForMeasures()
