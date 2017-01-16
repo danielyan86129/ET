@@ -133,7 +133,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PROFILE_SPEED;_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;..\third_party;..\third_party\ply\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -154,7 +154,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PROFILE_SPEED;_USE_MATH_DEFINES;OGLPLUS_USE_GLCOREARB_H=0;OGLPLUS_USE_GLEW=1;OGLPLUS_NO_GLFUNC_CHECKS=1;OGLPLUS_NO_SITE_CONFIG;UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\third_party\glew\include;..\third_party\oglplus\include;..\third_party\boost\include;..\third_party\CGAL\include;..\third_party\eigen\include;..\third_party\trimesh\include;..\third_party\gflags\include;..\third_party;..\third_party\ply\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\et_dev2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
