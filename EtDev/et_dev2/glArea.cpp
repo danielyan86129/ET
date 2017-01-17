@@ -1449,8 +1449,8 @@ bool GLArea::burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_i
 		_scheme,
 		_steiner_param, // # steiner points placed on tri edge according to _scheme
 		_edgeWeight_idx,
-		//SteinerGraph::STEINER_ONLY
-		SteinerGraph::ORIGINAL_AND_STEINER
+		SteinerGraph::STEINER_ONLY
+		//SteinerGraph::ORIGINAL_AND_STEINER
 		) );
 #ifdef PROFILE_SPEED
 	t_duration = clock() - t_start;
@@ -3810,8 +3810,21 @@ void GLArea::exportPerSectorET()
 void GLArea::exportSkeleton()
 {
 	QString skel_name = QString(m_medialAxisFile.c_str());
-	QString ext = ".off";
-	skel_name.remove(".clean").replace(".off", ".sk");
+	skel_name.remove( ".clean" );
+	if ( 0 )
+	{
+		if ( skel_name.indexOf( ".off" ) >= 0 )
+			skel_name.replace( ".off", "_skel.sk" );
+		else if ( skel_name.indexOf( ".ply" ) >= 0 )
+			skel_name.replace( ".ply", "_skel.sk" );
+	}
+	else
+	{
+		if ( skel_name.indexOf( ".off" ) >= 0 )
+			skel_name.replace( ".off", "_skel.ply" );
+		else if ( skel_name.indexOf( ".ply" ) >= 0 )
+			skel_name.replace( ".ply", "_skel.ply" );
+	}
 	auto trans_cpy = m_trans_mat;
 	trimesh::invert(trans_cpy);
 	m_hs->exportSkeleton(skel_name.toStdString(), trans_cpy);

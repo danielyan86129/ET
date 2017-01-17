@@ -2,8 +2,8 @@
 
 using std::string;
 
-#include "mymesh.h"
 #include "plyall.h"
+#include "mymesh.h"
 
 struct internal{
 	struct Vertex { float x, y, z; };

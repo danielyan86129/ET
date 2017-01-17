@@ -3,6 +3,8 @@
 #include "origGraph.h"
 #include "steinerSubdivision.h"
 
+#include <plyall.h>
+
 #include <tuple>
 #include <iostream>
 #include <vector>
@@ -1316,30 +1318,73 @@ void HybridSkeleton::exportSkeleton(
 		f[2] = old_new_v_id_map.find(f[2])->second;
 	}
 
-	// now export everything to file
-	ofstream out_file(_skel_name);
-	// # vts # edges # faces
-	out_file << vts_remained_indices.size()<<" "<<edges_hs.size()<<" "<<tri_faces_hs.size()<<endl;
-	// vts coords...
-	for (auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it)
+	if ( _skel_name.find( ".sk" ) != std::string::npos )
 	{
-		auto v = m_vts[*it];
-		v = _transform * v;
-		out_file << v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+		// now export everything to file
+		ofstream out_file( _skel_name );
+		// # vts # edges # faces
+		out_file << vts_remained_indices.size() << " " << edges_hs.size() << " " << tri_faces_hs.size() << endl;
+		// vts coords...
+		for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+		{
+			auto v = m_vts[ *it ];
+			v = _transform * v;
+			out_file << v[ 0 ] << " " << v[ 1 ] << " " << v[ 2 ] << endl;
+		}
+		// edges...
+		for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
+		{
+			const auto& e = *it;
+			out_file << e[ 0 ] << " " << e[ 1 ] << endl;
+		}
+		// faces...
+		for ( auto it = tri_faces_hs.begin(); it != tri_faces_hs.end(); ++it )
+		{
+			const auto& f = *it;
+			out_file << f[ 0 ] << " " << f[ 1 ] << " " << f[ 2 ] << endl;
+		}
+		out_file.close();
 	}
-	// edges...
-	for (auto it = edges_hs.begin(); it != edges_hs.end(); ++it)
+	else if ( _skel_name.find( ".ply" ) != std::string::npos )
 	{
-		const auto& e = *it;
-		out_file << e[0]<<" "<<e[1]<<endl;
+		// prepare vertices, edges, and faces for output
+		vector<ply::Vertex> out_vts;
+		vector<ply::Edge> out_edges;
+		vector<ply::Face> out_faces;
+		for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+		{
+			auto v = m_vts[ *it ];
+			v = _transform * v;
+			out_vts.push_back( {v[0], v[1], v[2]} );
+		}
+		for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
+		{
+			const auto& e = *it;
+			out_edges.push_back( { e[ 0 ], e[ 1 ] } );
+		}
+		for ( auto it = tri_faces_hs.begin(); it != tri_faces_hs.end(); ++it )
+		{
+			const auto& f = *it;
+			out_faces.push_back( { 3, {f[ 0 ], f[ 1 ], f[ 2 ]} } );
+		}
+		std::map<std::string, PlyProperty> vert_props;
+		vert_props[ "x" ] = { "x", Float32, Float32, offsetof( ply::Vertex, x ), PLY_SCALAR, 0, 0, 0 };
+		vert_props[ "y" ] = { "y", Float32, Float32, offsetof( ply::Vertex, y ), PLY_SCALAR, 0, 0, 0 };
+		vert_props[ "z" ] = { "z", Float32, Float32, offsetof( ply::Vertex, z ), PLY_SCALAR, 0, 0, 0 };
+		std::map<std::string, PlyProperty> edge_props;
+		edge_props[ "vertex1" ] = { "vertex1", Int32, Int32, offsetof( ply::Edge, v1 ), PLY_SCALAR, 0, 0, 0 };
+		edge_props[ "vertex2" ] = { "vertex2", Int32, Int32, offsetof( ply::Edge, v2 ), PLY_SCALAR, 0, 0, 0 };
+		std::map<std::string, PlyProperty> face_props;
+		face_props[ "vertex_indices" ] = {
+			"vertex_indices", Int32, Int32, offsetof( ply::Face, verts ),
+			PLY_LIST, Uint8, Uint8, offsetof( ply::Face,nvts ) };
+		ply::PLYwriter ply_writer;
+		ply_writer.write( _skel_name.c_str(), true, true, true,
+			vert_props, edge_props, face_props,
+			out_vts, out_edges, out_faces );
+		/*ply::PLYwriter ply_writer;
+		ply_writer.write( _skel_name.c_str(), out_vts, out_edges, out_faces );*/
 	}
-	// faces...
-	for (auto it = tri_faces_hs.begin(); it != tri_faces_hs.end(); ++it)
-	{
-		const auto& f = *it;
-		out_file << f[0]<<" "<<f[1]<<" "<<f[2]<<endl;
-	}
-	out_file.close();
 }
 
 void HybridSkeleton::absToRatio(
