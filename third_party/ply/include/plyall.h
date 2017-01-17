@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <iostream>
 #include <vector>
 #include <string>
 #include <ply.h>
@@ -10,6 +11,25 @@ namespace ply
 	using std::vector;
 	using std::string;
 	enum status { FILE_NOT_OPEN, FAILURE, SUCCESS };
+	struct Vertex
+	{
+		float x; float y; float z;
+		unsigned char r, g, b;
+		float s; // measure
+	};
+	struct Edge
+	{
+		int v1; int v2;
+		unsigned char r, g, b;
+		float s; // measure
+	};
+	struct Face
+	{
+		unsigned char nvts;
+		int verts[ 3 ];
+		unsigned char r, g, b;
+		float s; // measure
+	};
 	class PLYreader
 	{
 	public:
@@ -66,6 +86,14 @@ namespace ply
 			const vector<V>& _vts_to_write,
 			const vector<E>& _edges_to_write,
 			const vector<F>& _faces_to_write );
+		// 
+		// simply write vts, edges, and tri angle faces to a file
+		/*status write(
+			const char* _fname,
+			const vector<ply::Vertex>& output_vts,
+			const vector<ply::Edge>& output_edges,
+			const vector<ply::Face>& output_faces
+		);*/
 		//
 		// closes the writer.
 		void close();
@@ -238,4 +266,35 @@ namespace ply
 		close();
 		return SUCCESS;
 	}
+
+	/*status PLYwriter::write(
+		const char* _fname,
+		const vector<ply::Vertex>& output_vts,
+		const vector<ply::Edge>& output_edges,
+		const vector<ply::Face>& output_faces
+	)
+	{
+		std::map<std::string, PlyProperty> vert_props;
+		vert_props[ "x" ] = { "x", Float32, Float32, offsetof( Vertex, x ), PLY_SCALAR, 0, 0, 0 };
+		vert_props[ "y" ] = { "y", Float32, Float32, offsetof( Vertex, y ), PLY_SCALAR, 0, 0, 0 };
+		vert_props[ "z" ] = { "z", Float32, Float32, offsetof( Vertex, z ), PLY_SCALAR, 0, 0, 0 };
+		std::map<std::string, PlyProperty> edge_props;
+		edge_props[ "vertex1" ] = { "vertex1", Int32, Int32, offsetof( Edge, v1 ), PLY_SCALAR, 0, 0, 0 };
+		edge_props[ "vertex2" ] = { "vertex2", Int32, Int32, offsetof( Edge, v2 ), PLY_SCALAR, 0, 0, 0 };
+		std::map<std::string, PlyProperty> face_props;
+		face_props[ "vertex_indices" ] = {
+			"vertex_indices", Int32, Int32, offsetof( Face, verts ),
+			PLY_LIST, Uint8, Uint8, offsetof( Face,nvts ) };
+
+		std::cout << "writing to ply file... " << std::endl;
+		std::cout << "# vts/edges/faces: "
+			<< output_vts.size() << "/"
+			<< output_edges.size() << "/"
+			<< output_faces.size() << std::endl;
+
+		return write( _fname, true, true, true,
+			vert_props, edge_props, face_props,
+			output_vts, output_edges, output_faces );
+	}
+*/
 }
