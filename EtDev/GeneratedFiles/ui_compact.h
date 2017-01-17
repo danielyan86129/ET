@@ -551,7 +551,7 @@ public:
         minVisDistMASpin->setObjectName(QStringLiteral("minVisDistMASpin"));
         sizePolicy3.setHeightForWidth(minVisDistMASpin->sizePolicy().hasHeightForWidth());
         minVisDistMASpin->setSizePolicy(sizePolicy3);
-        minVisDistMASpin->setDecimals(8);
+        minVisDistMASpin->setDecimals(5);
 
         gridLayout_38->addWidget(minVisDistMASpin, 0, 1, 1, 1);
 
@@ -560,7 +560,7 @@ public:
         sizePolicy3.setHeightForWidth(maxVisDistMASpin->sizePolicy().hasHeightForWidth());
         maxVisDistMASpin->setSizePolicy(sizePolicy3);
         maxVisDistMASpin->setMaximumSize(QSize(500, 16777215));
-        maxVisDistMASpin->setDecimals(8);
+        maxVisDistMASpin->setDecimals(5);
         maxVisDistMASpin->setMaximum(1e+7);
 
         gridLayout_38->addWidget(maxVisDistMASpin, 0, 2, 1, 1);
@@ -653,7 +653,7 @@ public:
         minVisDistMCSpin->setObjectName(QStringLiteral("minVisDistMCSpin"));
         sizePolicy3.setHeightForWidth(minVisDistMCSpin->sizePolicy().hasHeightForWidth());
         minVisDistMCSpin->setSizePolicy(sizePolicy3);
-        minVisDistMCSpin->setDecimals(8);
+        minVisDistMCSpin->setDecimals(5);
 
         gridLayout_39->addWidget(minVisDistMCSpin, 0, 1, 1, 1);
 
@@ -661,7 +661,7 @@ public:
         maxVisDistMCSpin->setObjectName(QStringLiteral("maxVisDistMCSpin"));
         sizePolicy3.setHeightForWidth(maxVisDistMCSpin->sizePolicy().hasHeightForWidth());
         maxVisDistMCSpin->setSizePolicy(sizePolicy3);
-        maxVisDistMCSpin->setDecimals(8);
+        maxVisDistMCSpin->setDecimals(5);
 
         gridLayout_39->addWidget(maxVisDistMCSpin, 0, 2, 1, 1);
 
@@ -726,7 +726,7 @@ public:
         nFixedSteinerSpin->setObjectName(QStringLiteral("nFixedSteinerSpin"));
         sizePolicy4.setHeightForWidth(nFixedSteinerSpin->sizePolicy().hasHeightForWidth());
         nFixedSteinerSpin->setSizePolicy(sizePolicy4);
-        nFixedSteinerSpin->setDecimals(8);
+        nFixedSteinerSpin->setDecimals(5);
 
         gridLayout_5->addWidget(nFixedSteinerSpin, 0, 0, 1, 1);
 
@@ -779,7 +779,7 @@ public:
         pruneMASpin1 = new QDoubleSpinBox(maMeasureGroup);
         pruneMASpin1->setObjectName(QStringLiteral("pruneMASpin1"));
         pruneMASpin1->setMaximumSize(QSize(100, 16777215));
-        pruneMASpin1->setDecimals(8);
+        pruneMASpin1->setDecimals(5);
         pruneMASpin1->setMaximum(99999);
 
         gridLayout_3->addWidget(pruneMASpin1, 1, 0, 1, 1);
@@ -834,7 +834,7 @@ public:
         pruneMCDistSpin1->setObjectName(QStringLiteral("pruneMCDistSpin1"));
         sizePolicy3.setHeightForWidth(pruneMCDistSpin1->sizePolicy().hasHeightForWidth());
         pruneMCDistSpin1->setSizePolicy(sizePolicy3);
-        pruneMCDistSpin1->setDecimals(8);
+        pruneMCDistSpin1->setDecimals(5);
 
         gridLayout_15->addWidget(pruneMCDistSpin1, 4, 0, 1, 1);
 
@@ -901,7 +901,8 @@ public:
 
         hsFaceDiffSpin = new QDoubleSpinBox(hsPruneGroup);
         hsFaceDiffSpin->setObjectName(QStringLiteral("hsFaceDiffSpin"));
-        hsFaceDiffSpin->setDecimals(8);
+        hsFaceDiffSpin->setDecimals(6);
+        hsFaceDiffSpin->setMaximum(1000);
 
         gridLayout_18->addWidget(hsFaceDiffSpin, 3, 0, 1, 1);
 
@@ -917,7 +918,8 @@ public:
 
         hsCurveDiffSpin = new QDoubleSpinBox(hsPruneGroup);
         hsCurveDiffSpin->setObjectName(QStringLiteral("hsCurveDiffSpin"));
-        hsCurveDiffSpin->setDecimals(8);
+        hsCurveDiffSpin->setDecimals(6);
+        hsCurveDiffSpin->setMaximum(1000);
 
         gridLayout_18->addWidget(hsCurveDiffSpin, 3, 1, 1, 1);
 
@@ -1564,7 +1566,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        toolTabs->setCurrentIndex(2);
+        toolTabs->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);

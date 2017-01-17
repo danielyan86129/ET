@@ -52,7 +52,7 @@
         <string/>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="fileTab">
         <property name="toolTip">
@@ -507,7 +507,7 @@
                     <string/>
                    </property>
                    <property name="decimals">
-                    <number>8</number>
+                    <number>5</number>
                    </property>
                   </widget>
                  </item>
@@ -529,7 +529,7 @@
                     <string/>
                    </property>
                    <property name="decimals">
-                    <number>8</number>
+                    <number>5</number>
                    </property>
                    <property name="maximum">
                     <double>9999999.000000000000000</double>
@@ -699,7 +699,7 @@
                     <string>min of the clamp range</string>
                    </property>
                    <property name="decimals">
-                    <number>8</number>
+                    <number>5</number>
                    </property>
                   </widget>
                  </item>
@@ -715,7 +715,7 @@
                     <string>max of the clamp range</string>
                    </property>
                    <property name="decimals">
-                    <number>8</number>
+                    <number>5</number>
                    </property>
                   </widget>
                  </item>
@@ -821,7 +821,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;parameter ω (distance between two steiner points)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="decimals">
-               <number>8</number>
+               <number>5</number>
               </property>
              </widget>
             </item>
@@ -961,7 +961,7 @@ or use measure to prune the medial axis&lt;/p&gt;
                <string>current value of the measure</string>
               </property>
               <property name="decimals">
-               <number>8</number>
+               <number>5</number>
               </property>
               <property name="maximum">
                <double>99999.000000000000000</double>
@@ -1073,7 +1073,7 @@ export the ET value for each sector of each vertex into a .etps file&lt;/p&gt;
                <string>cur value of pruning threshold</string>
               </property>
               <property name="decimals">
-               <number>8</number>
+               <number>5</number>
               </property>
              </widget>
             </item>
@@ -1206,7 +1206,10 @@ export the ET value for each sector of each vertex into a .etps file&lt;/p&gt;
                <string>theta_2</string>
               </property>
               <property name="decimals">
-               <number>8</number>
+               <number>6</number>
+              </property>
+              <property name="maximum">
+               <double>1000.000000000000000</double>
               </property>
              </widget>
             </item>
@@ -1241,7 +1244,10 @@ export the ET value for each sector of each vertex into a .etps file&lt;/p&gt;
                <string>theta_1</string>
               </property>
               <property name="decimals">
-               <number>8</number>
+               <number>6</number>
+              </property>
+              <property name="maximum">
+               <double>1000.000000000000000</double>
               </property>
              </widget>
             </item>
