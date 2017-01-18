@@ -5,7 +5,7 @@
 #include <string>
 #include <ply.h>
 
-namespace ply 
+namespace ply
 {
 	using std::map;
 	using std::vector;
@@ -38,7 +38,7 @@ namespace ply
 
 		//
 		// open the file for reading
-		bool open(const char* _fname);
+		bool open( const char* _fname );
 		//
 		// try to read in a list of expected elements (e.g. "vertex", "edge", "face", etc.)
 		// @param _v/e/f_props specifies the format of an element
@@ -104,6 +104,32 @@ namespace ply
 
 namespace ply
 {
+	PLYreader::PLYreader()
+	{
+	}
+
+	PLYreader::~PLYreader()
+	{
+	}
+
+	bool PLYreader::open( const char * _fname )
+	{
+		FILE* fp = fopen( _fname, "r" );
+		if ( !fp )
+			return false;
+		m_ply = read_ply( fp );
+		return true;
+	}
+
+	void PLYreader::close()
+	{
+		if ( m_ply )
+		{
+			close_ply( m_ply );
+			free_ply( m_ply );
+		}
+	}
+
 	template<typename V, typename E, typename F>
 	status PLYreader::read( const char* _fname,
 		const map<string, PlyProperty>& _v_props,
@@ -207,6 +233,33 @@ namespace ply
 		return SUCCESS;
 	}
 
+	PLYwriter::PLYwriter()
+	{
+	}
+
+	PLYwriter::~PLYwriter()
+	{
+	}
+
+	bool PLYwriter::open( const char * _fname,
+		int _n_elems, char** _elem_names, int _mode )
+	{
+		FILE* fp = fopen( _fname, "w" );
+		if ( !fp )
+			return false;
+		m_ply = write_ply( fp, _n_elems, _elem_names, _mode );
+		return true;
+	}
+
+	void PLYwriter::close()
+	{
+		if ( m_ply )
+		{
+			close_ply( m_ply );
+			free_ply( m_ply );
+		}
+	}
+
 	template<typename V, typename E, typename F>
 	status PLYwriter::write( const char* _fname,
 		bool _export_v,
@@ -216,7 +269,7 @@ namespace ply
 		const map<string, PlyProperty>& _e_prop,
 		const map<string, PlyProperty>& _f_prop,
 		const vector<V>& _vts_to_write,
-		const vector<E>& _edges_to_write, 
+		const vector<E>& _edges_to_write,
 		const vector<F>& _faces_to_write )
 	{
 		char* names[] = {
@@ -226,7 +279,7 @@ namespace ply
 		};
 		int cnt = _export_v + _export_e + _export_f;
 
-		if (!open( _fname, cnt, names, PLY_ASCII ))
+		if ( !open( _fname, cnt, names, PLY_ASCII ) )
 			return FILE_NOT_OPEN;
 
 		const map<string, PlyProperty>* props[] = { &_v_prop, &_e_prop, &_f_prop };
@@ -234,9 +287,9 @@ namespace ply
 		// get header ready
 		for ( auto i = 0; i < 3; ++i )
 		{
-			if (!names[i])
+			if ( !names[ i ] )
 				continue;
-			describe_element_ply( m_ply, names[i], sizes[i] );
+			describe_element_ply( m_ply, names[ i ], sizes[ i ] );
 			for ( auto it = props[ i ]->begin(); it != props[ i ]->end(); ++it )
 			{
 				describe_property_ply( m_ply, &it->second );
@@ -244,21 +297,21 @@ namespace ply
 		}
 		header_complete_ply( m_ply );
 		// write data
-		if (_export_v )
+		if ( _export_v )
 		{
 			put_element_setup_ply( m_ply, names[ 0 ] );
 			for ( auto j = 0; j < _vts_to_write.size(); ++j )
 				put_element_ply( m_ply, (void*)&_vts_to_write[ j ] );
 		}
-		if (_export_e)
+		if ( _export_e )
 		{
-			put_element_setup_ply( m_ply, names[1] );
+			put_element_setup_ply( m_ply, names[ 1 ] );
 			for ( auto j = 0; j < _edges_to_write.size(); ++j )
 				put_element_ply( m_ply, (void*)&_edges_to_write[ j ] );
 		}
-		if (_export_f )
+		if ( _export_f )
 		{
-			put_element_setup_ply( m_ply, names[2] );
+			put_element_setup_ply( m_ply, names[ 2 ] );
 			for ( auto j = 0; j < _faces_to_write.size(); ++j )
 				put_element_ply( m_ply, (void*)&_faces_to_write[ j ] );
 		}
