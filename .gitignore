@@ -2,3 +2,5 @@ EtDev.VC.VC.opendb
 EtDev.VC.db
 .vs/EtDev/v14/.suo
 x64/
+EtDev/dual_cc.txt
+EtDev/dual_cycles.txt
