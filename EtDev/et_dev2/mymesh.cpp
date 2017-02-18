@@ -2,7 +2,7 @@
 
 using std::string;
 
-#include "plyall.h"
+#include <plyall.h>
 #include "mymesh.h"
 
 struct internal{
