@@ -2573,7 +2573,7 @@ void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge)
 		case BT2_BT3_MC: 
 			get_bt2(ei, e, dist_on_e);
 			get_bt3(e, dist2_on_e);
-			dist_on_e -= dist2_on_e;
+			dist_on_e = std::max(0.0f, dist_on_e - dist2_on_e);
 			break;
 		case BT2_BT3_REL_MC:
 			get_bt2(ei, e, dist_on_e);

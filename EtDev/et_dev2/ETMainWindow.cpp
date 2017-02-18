@@ -1385,12 +1385,18 @@ GLArea::DistMC ETMainWindow::get_MC_dist_type(int _idx)
 		dist_type = GLArea::BT1_BT2_REL_MC;
 		break;*/
 	case 0:
-		dist_type = GLArea::BT2_MC;
+		dist_type = GLArea::BT3_MC;
 		break;
 	case 1:
-		dist_type = GLArea::BT1_MC;
+		dist_type = GLArea::BT2_MC;
 		break;
 	case 2:
+		dist_type = GLArea::BT2_BT3_MC;
+		break; 
+	case 3:
+		dist_type = GLArea::BT1_MC;
+		break;
+	case 4:
 		dist_type = GLArea::BT1_BT2_MC;
 		break;
 	default:
@@ -2124,8 +2130,9 @@ void ETMainWindow::resetParams(FineStep _stp)
 		ui_compact.visMCDistCombo->blockSignals(true);
 		ui_compact.visMCDistCombo->clear();
 		//ui_compact.visMCDistCombo->addItems(QStringList() <<"r"<<"BT_M"<<"ET_M"<<"ET_M(rel)"<<"BT_C"<<"ET_C"<<"ET_C(rel)");
-		ui_compact.visMCDistCombo->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C");
-		ui_compact.visMCDistCombo->setCurrentIndex(0);
+		//ui_compact.visMCDistCombo->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C");
+		ui_compact.visMCDistCombo->addItems( QStringList() << "r" << "BT_M" <<"ET_M" << "BT_C" << "ET_C" );
+		ui_compact.visMCDistCombo->setCurrentIndex( 0 );
 		ui_compact.visMCDistCombo->blockSignals(false);
 		ui_compact.pruneMCSlider1->setMaximum(10000);
 		ui_compact.pruneMCDistCombo1->blockSignals(true);
