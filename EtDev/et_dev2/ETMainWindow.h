@@ -32,7 +32,8 @@ public:
 	//
 	void setInputs( 
 		const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
-		float _omega );
+		float _omega,
+		const std::string& _mc_meas );
 
 public slots:
 	void onSaveView();
@@ -162,6 +163,9 @@ public slots:
 	void onExportHSBtnClicked();
 	void onExportBtnClicked();
 
+protected:
+	void handle_extra_params();
+
 private:
 	//
 	// steps that are usually referred to internally
@@ -248,6 +252,8 @@ private:
 	std::string m_r_file;
 	// sampling rate
 	float m_omega;
+	// the measure on mc to output
+	std::string m_mc_meas_to_output;
 };
 
 #endif // QTPUREGL_H

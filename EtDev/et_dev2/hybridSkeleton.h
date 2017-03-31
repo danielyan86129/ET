@@ -84,6 +84,7 @@ public:
 	// from different space
 	void getEdgeDiffValColor(float* edge_color);
 	void getEdgeRelDiffValColor(float* edge_color);
+	void getRemainedEdgesColor( vector<TriColor>& _e_colors ) const;
 	// get per face color
 	void getTriColor(float* tri_color);
 
@@ -250,7 +251,7 @@ private:
 	vector<int> m_ref_vert_const; 
 	vector<int> m_ref_edge_const;
 	vector<vector<unsigned>> m_nb_faces_for_edge;
-	vector<vector<unsigned>> nb_edges_for_vert;
+	vector<vector<unsigned>> m_nb_edges_for_vert;
 	// prune-specific ref count
 	// valid after each prune
 	vector<int> m_ref_vert_per_prune; 

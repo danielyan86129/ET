@@ -77,13 +77,14 @@ private:
 	void get_shape_width(vector<float>& _scalar_vals, float _eps);
 	void get_shape_width_extremity(vector<float>& _scalar_vals, float _eps);
 	
-private:
+protected:
 	// compute gaussian with given params
 	inline float gaussian( float _x, float _mu, float _sigma )
 	{
 		return 1.0f / (_sigma*std::sqrt(2.0f*M_PI)) * 
 			std::exp( -0.5f * (_x-_mu)*(_x-_mu) / (_sigma*_sigma) );
 	}
+
 	// obtain smoothed field _scalars using the medial curve
 	void obtain_smooth_field_using_mc(
 		SurfFuncType _type, 

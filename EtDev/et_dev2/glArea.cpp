@@ -7,7 +7,9 @@
 #include "io.h"
 
 #include <queue>
+#include <unordered_set>
 #include <float.h>
+#include <QFileInfo>
 
 QGLFormat GLArea::getGLFormat(void)
 {
@@ -2462,7 +2464,7 @@ void GLArea::colorMAVertBy(
 	updateGL();
 }
 
-void GLArea::getMCDistMetric(DistMC _type, vector<float>& _dist)
+void GLArea::getMCDistMetric(DistMC _type, vector<float>& _dist) const
 {
 	switch (_type)
 	{
@@ -2518,7 +2520,7 @@ void GLArea::getMCDistMetric(DistMC _type, vector<float>& _dist)
 	}
 }
 
-void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge)
+void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge) const
 {
 	_dist_by_edge.clear();
 	trimesh::vec2 dist_on_e(0.0f, 0.0f), dist2_on_e(0.0f, 0.0f);
@@ -2942,6 +2944,67 @@ void GLArea::visMP()
 	updateGL();
 }
 
+void GLArea::outputMCwMeasure( const std::string & _meas_name ) const
+{
+	auto meas_name = _meas_name;
+	std::unordered_set<string> valid_meas( { "bt2", "bt3" } );
+	if ( valid_meas.count( meas_name ) == 0 )
+		meas_name = "BT3";
+	std::string mc_file_name = 
+		m_medialAxisFile.substr( 0, m_medialAxisFile.find_last_of( '.' ) ) + ".mc";
+	std::string meas_file_name =
+		m_medialAxisFile.substr( 0, m_medialAxisFile.find_last_of( '.' ) ) + "." + meas_name + ".msure";
+	std::string mc_v_order_filename =
+		m_medialAxisFile.substr( 0, m_medialAxisFile.find_last_of( '.' ) ) + ".mcorder";
+
+	// output mc
+	//stg->outputMC( mc_file_name );
+	auto trans_cpy = m_trans_mat;
+	trimesh::invert( trans_cpy );
+	const auto& mc_vts = stg->getDualVts();
+	const auto& mc_edges = stg->dual_edges;
+	std::ofstream mc_os( mc_file_name );
+	mc_os << mc_vts.size() << std::endl;
+	for ( auto v : mc_vts )
+	{
+		v = trans_cpy * v;
+		mc_os << v[ 0 ] << " " << v[ 1 ] << " " << v[ 2 ] << std::endl;
+	}
+	mc_os.close();
+	cout << "Done: MC geometry output to file " << mc_file_name << endl;
+
+	// output measure
+	auto meas_type = DistMC::BT2_MC;
+	vector<float> meas_per_mc_vert;
+	if ( meas_name == "bt2" )
+		meas_type = DistMC::BT2_MC;
+	else if ( meas_name == "bt3" )
+		meas_type = DistMC::BT3_MC;
+	else if ( meas_name == "bt1" )
+		meas_type = DistMC::BT1_MC;
+	getMCDistMetric( meas_type, meas_per_mc_vert );
+	std::ofstream meas_os( meas_file_name );
+	meas_os << meas_per_mc_vert.size() << std::endl;
+	for ( auto s : meas_per_mc_vert )
+	{
+		meas_os << s << std::endl;
+	}
+	meas_os.close();
+	cout << "Done: MC measure output to file " << meas_file_name << endl;
+
+	// output mc vert order defined by burning
+	const auto& mc_v_order = stg->burnNext_medialCurve;
+	std::ofstream mc_v_order_os( mc_v_order_filename );
+	//mc_v_order_os << "# each pair of two verts a, b defines an order (from a to b)" << std::endl;
+	mc_v_order_os << mc_v_order.size() << std::endl;
+	for ( auto i = 0; i < mc_v_order.size(); ++i )
+	{
+		mc_v_order_os << i << " " << ( mc_v_order[ i ] < 0 ? i : mc_v_order[ i ] ) << std::endl;
+	}
+	mc_v_order_os.close();
+	cout << "Done: MC verts order output to file " << mc_v_order_filename << endl;
+}
+
 void GLArea::usePerFaceRender(bool _is_perFace)
 {
 	//_is_perFace ? 
@@ -3035,9 +3098,11 @@ void GLArea::uploadHS()
 	//m_hs->getDualEdges( edges_hs );
 	vector<TriFace> tri_faces_hs;
 	m_hs->getRemainedFaces(tri_faces_hs);
+	vector<TriColor> edge_colors;
+	m_hs->getRemainedEdgesColor( edge_colors );
 
 	//this->m_drawHS = true;
-	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, m_hsLineDrawer, m_hsFaceDrawer);
+	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, &edge_colors, nullptr, m_hsLineDrawer, m_hsFaceDrawer);
 }
 
 //void GLArea::uploadHS()
@@ -3769,7 +3834,7 @@ bool GLArea::readQMATFile(std::string _filename)
 	// draw this simplicial complex
 	cout << "uploading qmat data to GPU for rendering..."<<endl;
 	this->m_drawQMAT = true;
-	uploadSimplicialComplex(vts, isolated_edges, faces, m_qmatEdgeDrawer, m_qmatFaceDrawer);
+	uploadSimplicialComplex(vts, isolated_edges, faces, nullptr, nullptr, m_qmatEdgeDrawer, m_qmatFaceDrawer);
 	cout << "uploading qmat data to GPU done!"<<endl;
 	
 	vts.clear();
@@ -3783,8 +3848,8 @@ bool GLArea::readQMATFile(std::string _filename)
 void GLArea::exportPerVertexET()
 {
 	QString bt_name = QString(m_medialAxisFile.c_str());
-	QString ext = ".off";
-	bt_name.remove(".clean").replace(".off", ".et");
+	bt_name.remove( ".clean" );
+	bt_name = QFileInfo( bt_name ).baseName() + ".et";
 	stg->exportPerVertexET(bt_name.toStdString());
 }
 
@@ -4955,6 +5020,7 @@ void GLArea::pickingPhaseSVP()
 
 void GLArea::uploadSimplicialComplex( 
 	const vector<TriPoint>& _vts, const vector<TriEdge>& _edges, const vector<TriFace>& _faces,
+	const vector<TriColor>* _e_colors, const vector<TriColor>* _f_colors,
 	shared_ptr<Drawable>& _edge_drawer, shared_ptr<Drawable>& _face_drawer )
 {
 	cout << "uploading simplicial complex to GPU..." << endl;
@@ -4970,12 +5036,13 @@ void GLArea::uploadSimplicialComplex(
 	// TODO: color the HS face and line according to the cur dist metrics
 	// now just use default uniform color
 	
-	const TriColor face_color(1.0f, 98.0f/255.0f, 0.0f);
-	const TriColor edge_color(0.0f, 0.0f, 0.0f);
+	const TriColor const_face_color(1.0f, 98.0f/255.0f, 0.0f);
+	const TriColor const_edge_color(0.0f, 0.0f, 0.0f);
 	// setup HS faces
 	float* color_data = new float[tri_faces_hs.size()*3];
 	for (unsigned i = 0; i < tri_faces_hs.size()*3; i += 3)
 	{
+		const auto& face_color = _f_colors ? ( *_f_colors )[ i ] : const_face_color;
 		color_data[i+0] = face_color[0];
 		color_data[i+1] = face_color[1];
 		color_data[i+2] = face_color[2];
@@ -5016,12 +5083,16 @@ void GLArea::uploadSimplicialComplex(
 	uploadLinesToDrawer(vts_hs, edges_hs, hs_line_drawer_ptr);
 	cout << "setPoints & setLines done!"<<endl;
 
-	color_data = new float[edges_hs.size() * 2 * 3];
-	for (unsigned i = 0; i < edges_hs.size() * 2 * 3; i += 3)
+	color_data = new float[ edges_hs.size() * 2 * 3 ];
+	for ( unsigned i = 0; i < edges_hs.size(); i++ )
 	{
-		color_data[i + 0] = edge_color[0];
-		color_data[i + 1] = edge_color[1];
-		color_data[i + 2] = edge_color[2];
+		const auto& edge_color = _e_colors ? ( *_e_colors )[ i ] : const_edge_color;
+		color_data[ i * 2 * 3 + 0 ] = edge_color[ 0 ];
+		color_data[ i * 2 * 3 + 1 ] = edge_color[ 1 ];
+		color_data[ i * 2 * 3 + 2 ] = edge_color[ 2 ];
+		color_data[ i * 2 * 3 + 3 + 0 ] = edge_color[ 0 ];
+		color_data[ i * 2 * 3 + 3 + 1 ] = edge_color[ 1 ];
+		color_data[ i * 2 * 3 + 3 + 2 ] = edge_color[ 2 ];
 	}
 	//stg->m_hs.getEdgeDiffValColor(color_data);
 	cout << "GLArea::setting line color ..."<<endl;

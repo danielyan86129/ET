@@ -78,8 +78,8 @@ void HybridSkeleton::reset()
 	m_ref_edge_const.shrink_to_fit();
 	m_nb_faces_for_edge.clear();
 	m_nb_faces_for_edge.shrink_to_fit();
-	nb_edges_for_vert.clear();
-	nb_edges_for_vert.shrink_to_fit();
+	m_nb_edges_for_vert.clear();
+	m_nb_edges_for_vert.shrink_to_fit();
 	// prune specific ref count
 	// valid after each prune
 	m_ref_vert_per_prune.clear(); 
@@ -205,15 +205,15 @@ void HybridSkeleton::preprocess()
 	m_ref_vert_const.assign(m_vts.size(), 0);
 	m_ref_edge_const.assign(m_edges.size(), 0);
 	m_nb_faces_for_edge.assign(m_edges.size(), vector<unsigned>());
-	nb_edges_for_vert.assign(m_vts.size(), vector<unsigned>());
+	m_nb_edges_for_vert.assign(m_vts.size(), vector<unsigned>());
 	// ref count/nb edges for vts
 	for (auto e_it = m_edges.begin(); e_it != m_edges.end(); ++e_it)
 	{
 		//cout << *e_it << endl;
 		m_ref_vert_const[(*e_it)[0]] ++;
 		m_ref_vert_const[(*e_it)[1]] ++;
-		nb_edges_for_vert[(*e_it)[0]].push_back(e_it - m_edges.begin());
-		nb_edges_for_vert[(*e_it)[1]].push_back(e_it - m_edges.begin());
+		m_nb_edges_for_vert[(*e_it)[0]].push_back(e_it - m_edges.begin());
+		m_nb_edges_for_vert[(*e_it)[1]].push_back(e_it - m_edges.begin());
 	}
 	cout << "skeleton: ref count/nb-edges for vts prepared." << endl;
 
@@ -812,6 +812,43 @@ void HybridSkeleton::getEdgeRelDiffValColor(float* edge_color)
 	}
 }
 
+void HybridSkeleton::getRemainedEdgesColor( vector<TriColor>& _e_colors ) const
+{
+	// obtain orig edge value scale
+	float max_val_orig = numeric_limits<float>::min(), min_val_orig = numeric_limits<float>::max();
+	float max_val_dual = max_val_orig, min_val_dual = min_val_orig;
+	for ( unsigned i = 0; i < m_edges.size(); ++i )
+	{
+		/*if ( part_of_orig_edge( i ) )
+		{
+			min_val_orig = std::min( edges_measure[ i ], min_val_orig );
+			max_val_orig = std::max( edges_measure[ i ], max_val_orig );
+		}
+		else*/
+		{
+			min_val_dual = std::min( edges_measure[ i ], min_val_dual );
+			max_val_dual = std::max( edges_measure[ i ], max_val_dual );
+		}
+	}
+
+	_e_colors.reserve( m_edges.size() );
+	unsigned k = 0;
+	for ( unsigned i = 0; i < m_edges.size(); ++i )
+	{
+		if ( m_removed[ 0 ][ i ] )
+			continue;
+
+		TriColor c;
+		/*if ( part_of_orig_edge( i ) )
+			c = util::GetColour( edges_measure[ i ], min_val_orig, max_val_orig );
+		else*/
+			c = util::GetColour( edges_measure[ i ], min_val_dual, max_val_dual );
+
+		_e_colors.push_back( c );
+	}
+	_e_colors.shrink_to_fit();
+}
+
 void HybridSkeleton::getTriColor(float* tri_color)
 {
 	float max_val_orig = -1.0f, min_val_orig = numeric_limits<float>::max();
@@ -1040,19 +1077,29 @@ void HybridSkeleton::prune(
 	// for now no faces will be removed
 	m_to_remove_face.assign( m_tri_faces.size(), false);
 
-	/*02. init q: find all simple pairs whose simple cell has a value below threshold
-	   initially, there is only face-edge simple pair since all edges are closed */
+	/* 02. init q: find all simple pairs whose simple cell has a value below threshold */
 	cout << "init.ing q ..." << endl;
 	for (unsigned ei = 0; ei < m_edges.size(); ++ei)
 	{
-		if (m_ref_edge_per_prune[ei] == 1)
+		if ( m_ref_edge_per_prune[ ei ] == 1 )
 		{
-			unsigned nb_f = m_nb_faces_for_edge[ei][0];
+			unsigned nb_f = m_nb_faces_for_edge[ ei ][ 0 ];
 			/*float val_bt2bt3 = edges_diff[ei];
 			float val_bt2bt3rel = edges_reldiff[ei];*/
-			if (face_edge_below_threshold(nb_f, ei, bt2bt3_t, bt2bt3rel_t, bt1bt2_t, bt1bt2rel_t))
+			if ( face_edge_below_threshold( nb_f, ei, bt2bt3_t, bt2bt3rel_t, bt1bt2_t, bt1bt2rel_t ) )
 			{
-				q.push(simple_pair(1, nb_f, ei));
+				q.push( simple_pair( 1, nb_f, ei ) );
+			}
+		}
+	}
+	for ( unsigned vi = 0; vi < m_vts.size(); ++vi )
+	{
+		if ( m_ref_vert_per_prune[ vi ] == 1 )
+		{
+			unsigned nb_e = m_nb_edges_for_vert[ vi ][ 0 ];
+			if ( edge_below_threshold( nb_e, bt2bt3_t, bt2bt3rel_t, bt1bt2_t, bt1bt2rel_t ) )
+			{
+				q.push( simple_pair( 0, nb_e, vi ) );
 			}
 		}
 	}
@@ -1065,7 +1112,7 @@ void HybridSkeleton::prune(
 		if (vts_to_debug.count(vi))
 		{
 			cout << "nbs of "<<vi<<": ";
-			print_int_list(nb_edges_for_vert[vi]);
+			print_int_list(m_nb_edges_for_vert[vi]);
 			cout << endl;
 		}
 	}
@@ -1081,7 +1128,7 @@ void HybridSkeleton::prune(
 	** Doing this might break topology, but removes unwanted connection,
 	** e.g. the singular touching of 2 tri faces will be removed in the pruned skeleton
 	** (appeared once in the neptune shape's MA)
-	** However, it will still be preserved when using the new dual.	*/
+	** However, it will still be preserved when using the new dual scheme. */
 	for (unsigned ei = 0; ei < m_edges.size(); ++ei)
 	{
 		if (m_ref_edge_per_prune[ei] == 0 && part_of_orig_edge(ei) && !m_removed[0][ei])
@@ -1122,7 +1169,7 @@ void HybridSkeleton::prune(
 				unsigned vi = e[i];
 				if (m_ref_vert_per_prune[vi] == 1)
 				{
-					const auto& nbEdges = nb_edges_for_vert[vi];
+					const auto& nbEdges = m_nb_edges_for_vert[vi];
 					for (auto iter = nbEdges.begin(); iter != nbEdges.end(); ++iter)
 					{
 						if (!m_removed[0][*iter] && 
@@ -1151,7 +1198,7 @@ void HybridSkeleton::prune(
 		mark_components(
 			m_removed, 
 			m_ref_edge_per_prune, m_ref_vert_per_prune, 
-			m_nb_faces_for_edge, nb_edges_for_vert, 
+			m_nb_faces_for_edge, m_nb_edges_for_vert, 
 			m_face_degen_thresh, m_cmpnt_num_faces_thresh);
 		//cout << "small components marked!" << endl;
 
@@ -1622,7 +1669,7 @@ void HybridSkeleton::prune_while_iteration(
 			unsigned other_end = e[ 0 ] != spr.idx1 ? e[ 0 ] : e[ 1 ];
 			if ( m_ref_vert_per_prune[ other_end ] == 1 )
 			{
-				const auto& nbs = nb_edges_for_vert[ other_end ];
+				const auto& nbs = m_nb_edges_for_vert[ other_end ];
 				for ( auto nb_eit = nbs.begin(); nb_eit != nbs.end(); ++nb_eit )
 				{
 					if ( !m_removed[ 0 ][ *nb_eit ] )
@@ -1735,7 +1782,7 @@ void HybridSkeleton::prune_while_iteration(
 				if ( m_ref_vert_per_prune[ vi ] == 1 )
 				{
 					// locate the only nb edge left for the vert
-					const auto& nbs = nb_edges_for_vert[ vi ];
+					const auto& nbs = m_nb_edges_for_vert[ vi ];
 					for ( auto nb_ei = nbs.begin(); nb_ei != nbs.end(); ++nb_ei )
 					{
 						if ( !m_removed[ 0 ][ *nb_ei ] )

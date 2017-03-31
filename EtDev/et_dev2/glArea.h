@@ -201,9 +201,9 @@ public:
 		float _min_alpha, float _alpha_exp, 
 		int _update_opt);
 	// get the distance value of the specified dist metric type
-	void getMCDistMetric(DistMC _type, vector<float>& _dist);
+	void getMCDistMetric(DistMC _type, vector<float>& _dist) const;
 	// _dist_by_edge : {... ei<dist. at two ends resp. w.r.t. the edge> ... }
-	void getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge);
+	void getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge) const;
 	// get ready the distance metric for MA face pruning
 	// _dist_i: among two dist metrics, which to be enabled?
 	void setupMAFacePrune(	FaceFieldType _type, float& _min, float& _max, int _dist_i);
@@ -225,6 +225,8 @@ public:
 	void usePerFaceRender(bool _is_perFace);
 	// visualize MP
 	void visMP();
+	// output MC and a specified measure on it
+	void outputMCwMeasure( const std::string& _meas ) const;
 
 	/*
 	app: HS related
@@ -391,6 +393,7 @@ private:
 	// upload a simplicial complex (containing edges and triangle faces) to GPU for rendering
 	void uploadSimplicialComplex( 
 		const vector<TriPoint>& _vts, const vector<TriEdge>& _edges, const vector<TriFace>& _faces,
+		const vector<TriColor>* _e_colors, const vector<TriColor>* _f_colors,
 		shared_ptr<Drawable>& _edge_drawer, shared_ptr<Drawable>& _face_drawer );
 
 private:

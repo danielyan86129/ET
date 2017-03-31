@@ -188,12 +188,14 @@ void ETMainWindow::setConsoleMode( bool _enabled )
 
 void ETMainWindow::setInputs(
 	const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
-	float _omega )
+	float _omega,
+	const std::string& _mc_meas)
 {
 	m_ma_file = _ma_file;
 	m_shape_file = _shape_file;
 	m_r_file = _r_file;
 	m_omega = _omega;
+	m_mc_meas_to_output = _mc_meas;
 }
 
 void ETMainWindow::onTrueTransparencyChanged(int _s)
@@ -439,6 +441,7 @@ void ETMainWindow::onBurnMCClicked()
 		prepareForStep(COMPUTE_HS);
 		ui_compact.statusbar->showMessage("Done: burning the medial curve.");
 		//enablePruneMC();
+		handle_extra_params();
 	}
 }
 
@@ -1905,6 +1908,12 @@ void ETMainWindow::onExportBtnClicked()
 		cout << "Done."<<endl;
 		cout << endl;
 	}*/
+}
+
+void ETMainWindow::handle_extra_params()
+{
+	if ( m_mc_meas_to_output != "null" )
+		glarea->outputMCwMeasure( m_mc_meas_to_output );
 }
 
 void ETMainWindow::resetWidgetsStates()
