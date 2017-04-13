@@ -127,7 +127,7 @@ public:
 	// prune the medial curve based on the specified metric and threshold
 	bool pruneMedialCurve( double _t, bool _preserve_topo );
 	// upload vts and lines data to the specified line drawer
-	bool uploadLinesToDrawer(const vector<TriPoint>& _vts, const vector<TriEdge>& _edges, shared_ptr<LineDrawer>& _line_drawer);
+	bool uploadLinesToDrawer(const vector<TriPoint>& _vts, const vector<TriEdge>& _edges, shared_ptr<LineDrawer>& _line_drawer) const;
 	// upload vts and lines of MC geometry to gpu for rendering
 	bool uploadMCCompleteGeometry(const vector<TriPoint>& _vts, const vector<TriEdge>& _edges);
 	// upload vts and line with adjacency info to gpu for the m_linesProxyDrawer
@@ -166,7 +166,7 @@ public:
 	// detect any topo. artifacts by burning the mesh, 
 	// also visualize the burn function. 
 	// a "cleaner" mesh will be output to a file.
-	void cleanTopo(std::string _out_file = "");
+	bool cleanTopo( std::string& _out_file, bool& _hasunburnt );
 	// precompute stuff for coloring and pruning MA using different measures
 	void precomputeForMeasures();
 	// get the specified face distance metric into the list

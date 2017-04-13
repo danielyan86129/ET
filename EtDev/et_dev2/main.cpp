@@ -19,7 +19,9 @@ DEFINE_double( omega, 0.004, "the sampling rate for steiner subdivision. OPTIONA
 
 DEFINE_string( mc_msure, "null", "output specified measure on medial curves. nothing to output by default. \
 							valid value: {shape-diam, shape-width, ...}. OPTIONAL." );
-DEFINE_bool( runall, false, "compute all the way to skeleton generation." );
+DEFINE_bool( export_skel, false, "compute all the way to curve skeleton generation & output skel files." );
+DEFINE_double( theta_2, 1.1, "skeleton threshold for face pruning. Assume unit bounding box. All faces purged when > 1. OPTIONAL." );
+DEFINE_double( theta_1, 0.05, "skeleton threshold for curve pruning. Assume unit bounding box. All curves purged when > 1. OPTIONAL." );
 
 int main(int argc, char *argv[])
 {
@@ -35,7 +37,10 @@ int main(int argc, char *argv[])
 	w.setDebugMode(false);
 	w.setConsoleMode( FLAGS_nogui );
 	w.setWindowTitle("erosion thickness");
-	w.setInputs( FLAGS_ma_file, FLAGS_shape_file, FLAGS_r_file, FLAGS_omega, FLAGS_mc_msure );
+	w.setInputs( 
+		FLAGS_ma_file, FLAGS_shape_file, FLAGS_r_file, FLAGS_omega, 
+		FLAGS_mc_msure, 
+		FLAGS_theta_2, FLAGS_theta_1 );
 
 	if ( FLAGS_nogui )
 	{
@@ -45,8 +50,12 @@ int main(int argc, char *argv[])
 		w.onCleanTopoBtnClicked(); // check if there is closed pockets
 		w.onExportETBtnClicked(); // export ET per-vertex on ma to a file
 		
-		if ( FLAGS_runall )
-			w.onCreateHSClicked();
+		if ( FLAGS_export_skel )
+		{
+			w.onCreateHSClicked(); // generate skeleton
+			w.onVisHSClicked(); // prune skeleton
+			w.onExportHSBtnClicked(); // export skeleton
+		}
 		else if ( !google::GetCommandLineFlagInfoOrDie( "mc_msure" ).is_default )
 			w.onDualizeClicked();
 		return 0;

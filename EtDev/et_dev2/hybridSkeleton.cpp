@@ -716,6 +716,13 @@ void HybridSkeleton::getRemainedFaces(vector<TriFace>& _tris) const
 	}
 }
 
+void HybridSkeleton::getRemainedFaces( vector<int>& _face_ids ) const
+{
+	for ( unsigned fi = 0; fi < m_tri_faces.size(); ++fi )
+		if ( !m_removed[ 1 ][ fi ] )
+			_face_ids.push_back( fi );
+}
+
 void HybridSkeleton::getDualEdges( vector<TriEdge>& _edges ) const
 {
 	_edges.clear();
@@ -943,10 +950,11 @@ void HybridSkeleton::assignElementValues(
 	// derive values for each tri face
 	face_bt2bt3.resize(m_tri_faces.size());
 	face_bt2bt3rel.resize(m_tri_faces.size());
-	for (unsigned i = 0; i < m_tri_faces.size(); ++i)
+	vector<unsigned> vts_cur_face;
+	for ( unsigned i = 0; i < m_tri_faces.size(); ++i )
 	{
 		// convert cur face from edge-rep to vert-rep
-		vector<unsigned> vts_cur_face;
+		vts_cur_face.clear();
 		const auto& f = m_tri_faces[i];
 		auto e = m_edges[f[0]];
 		vts_cur_face.push_back(e[0]);
@@ -963,7 +971,9 @@ void HybridSkeleton::assignElementValues(
 			int v = transform_skel_vert_id( vts_cur_face[ j ] );
 			if ( m_stg->isDualVertInFineTri(v, v) ) // v is a dual vert
 			{
-				if ( m_stg->m_is_face_dual[v] >= 0 )
+				// only use face dual value cuz dual on edge could be a junction 
+				// that's trickier to deal with correctly
+				if ( m_stg->m_is_face_dual[v] >= 0 ) 
 				{
 					scalar_bt2bt3 += _dual_vts_bt2bt3[v];
 					scalar_bt2bt3rel += _dual_vts_bt1bt2rel[v];
@@ -1329,17 +1339,84 @@ END_OF_POST_TEST:
 }
 
 void HybridSkeleton::exportSkeleton(
-	std::string _skel_name, const trimesh::xform& _transform)
+	const vector<std::string>& _skel_files, const trimesh::xform& _transform)
 {
 	// obtain remaining edges and faces of HS
 	vector<TriEdge> edges_hs;
 	getRemainedEdges(edges_hs);
 	vector<TriFace> tri_faces_hs;
 	getRemainedFaces(tri_faces_hs);
+	vector<int> faces_ids;
+	getRemainedFaces( faces_ids );
 	vector<int> vts_remained_indices;
 	getRemainedVts(vts_remained_indices);
 
 	//cout << "# remaining vts ( >= # connected components): "<<vts_remained_indices.size()<<endl;
+
+	// obtain measures on each vertex: bt3, bt2, bt1
+	const auto& bt3_dual = this->m_stg->bt3_MC;
+	const auto& bt2_dual = this->m_stg->bt2_MC;
+	const auto& bt1_dual = this->m_stg->bt1_medialCurve;
+	const auto& bt3_orig = this->m_stg->bt3MA_vert;
+	const auto& bt2_orig = this->m_stg->bt2MA_vert;
+	const auto& bt2_per_s = this->m_stg->bt2MA_vert_per_sheet;
+
+	// form per-edge measure
+	vector<float> bt3_edge( edges_hs.size() ), bt2_edge( edges_hs.size() ), bt1_edge( edges_hs.size() );
+	for ( auto i = 0; i< edges_hs.size(); ++i )
+	{
+		const auto& e = edges_hs[ i ];
+		if ( part_of_orig_edge( e ) )
+		{
+			cout << "Error: non-MC edge found in skeleton! Could be a bug. Exporting aborts." << endl;
+			return;
+		}
+		// compute bt3, bt2, and bt1 for edge
+		auto e_tmp = transform_skel_edge( e );
+		bool isdual_0 = m_stg->isDualVertInFineTri( e_tmp[ 0 ], e_tmp[ 0 ] );// transform vertex
+		bool isdual_1 = m_stg->isDualVertInFineTri( e_tmp[ 1 ], e_tmp[ 1 ] );
+		assert( isdual_0 && isdual_1 );
+		bt3_edge[ i ] = std::min( bt3_dual[ e_tmp[ 0 ] ], bt3_dual[ e_tmp[ 1 ] ] );
+		bt2_edge[ i ] = std::min( bt2_dual[ e_tmp[ 0 ] ], bt2_dual[ e_tmp[ 1 ] ] );
+		bt1_edge[ i ] = std::min( bt1_dual[ e_tmp[ 0 ] ], bt1_dual[ e_tmp[ 1 ] ] );
+	}
+
+	// form per-face measure
+	vector<float> bt3_face( tri_faces_hs.size() ), bt2_face( tri_faces_hs.size() );
+	TriFace f;
+	for ( auto i = 0; i < tri_faces_hs.size(); ++i )
+	{
+		auto fine_fi = faces_ids[ i ];
+		f = tri_faces_hs[ i ];
+		auto from_orig_fi = m_stg->whichOrigFaceIsDualFineFaceFrom( fine_fi );
+		float s_bt3 = 0.0f, s_bt2 = 0.0f;
+		int cnt = 0;
+		for ( auto j = 0; j < 3; ++j )
+		{
+			auto v = transform_skel_vert_id( f[ j ] );
+			if ( m_stg->isDualVertInFineTri( v, v ) )
+			{
+				if ( m_stg->isFaceDual( v ) )
+				{
+					s_bt3 += bt3_dual[ v ];
+					s_bt2 += bt2_dual[ v ];
+					cnt++;
+				}
+			}
+			else // is a steiner v
+			{
+				int res = m_stg->mapTopo( v, from_orig_fi );
+				assert( res >= 0 );
+				auto tei = ( TopoGraph::EdgeIdx )res;
+				s_bt3+= bt3_orig[ v ];
+				s_bt2 += bt2_per_s[ v ][ tei ];
+				cnt++;
+			}
+		}
+		s_bt3 /= cnt; s_bt2 /= cnt;
+		bt3_face[ i ] = s_bt3;
+		bt2_face[ i ] = s_bt2;
+	}
 
 	// compact vertex set
 	map<int, int> old_new_v_id_map;
@@ -1365,72 +1442,113 @@ void HybridSkeleton::exportSkeleton(
 		f[2] = old_new_v_id_map.find(f[2])->second;
 	}
 
-	if ( _skel_name.find( ".sk" ) != std::string::npos )
+	for ( auto _skel_name : _skel_files )
 	{
-		// now export everything to file
-		ofstream out_file( _skel_name );
-		// # vts # edges # faces
-		out_file << vts_remained_indices.size() << " " << edges_hs.size() << " " << tri_faces_hs.size() << endl;
-		// vts coords...
-		for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+		if ( _skel_name.find( ".sk" ) != std::string::npos )
 		{
-			auto v = m_vts[ *it ];
-			v = _transform * v;
-			out_file << v[ 0 ] << " " << v[ 1 ] << " " << v[ 2 ] << endl;
+			if ( _skel_name.find( ".skMsure" ) != std::string::npos ) // export skel & measure
+			{
+				// now export everything to file
+				ofstream out_file( _skel_name );
+				// # vts # edges # faces
+				out_file << vts_remained_indices.size() << " " << edges_hs.size() << " " << tri_faces_hs.size() << endl;
+				// vts coords...
+				for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+				{
+					auto v = m_vts[ *it ];
+					v = _transform * v;
+					out_file << v[ 0 ] << " " << v[ 1 ] << " " << v[ 2 ] << endl;
+				}
+				// edges...
+				for ( auto i = 0; i < edges_hs.size(); ++i )
+				{
+					const auto& e = edges_hs[ i ];
+					out_file << e[ 0 ] << " " << e[ 1 ] << " "
+						<< bt3_edge[ i ] << " " << bt2_edge[ i ] << " " << bt1_edge[ i ] << endl;
+				}
+				// faces...
+				for ( auto i = 0; i < tri_faces_hs.size(); ++i )
+				{
+					const auto& f = tri_faces_hs[ i ];
+					out_file << f[ 0 ] << " " << f[ 1 ] << " " << f[ 2 ] << " "
+						<< bt3_face[ i ] << " " << bt2_face[ i ] << endl;
+				}
+				out_file.close();
+			
+				cout << "Done: skeleton with measure exported to -> " << _skel_name << endl;
+			}
+			else
+			{
+				// now export everything to file
+				ofstream out_file( _skel_name );
+				// # vts # edges # faces
+				out_file << vts_remained_indices.size() << " " << edges_hs.size() << " " << tri_faces_hs.size() << endl;
+				// vts coords...
+				for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+				{
+					auto v = m_vts[ *it ];
+					v = _transform * v;
+					out_file << v[ 0 ] << " " << v[ 1 ] << " " << v[ 2 ] << endl;
+				}
+				// edges...
+				for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
+				{
+					const auto& e = *it;
+					out_file << e[ 0 ] << " " << e[ 1 ] << endl;
+				}
+				// faces...
+				for ( auto it = tri_faces_hs.begin(); it != tri_faces_hs.end(); ++it )
+				{
+					const auto& f = *it;
+					out_file << f[ 0 ] << " " << f[ 1 ] << " " << f[ 2 ] << endl;
+				}
+				out_file.close();
+
+				cout << "Done: skeleton exported to -> "<< _skel_name << endl;
+			}
 		}
-		// edges...
-		for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
+		else if ( _skel_name.find( ".ply" ) != std::string::npos )
 		{
-			const auto& e = *it;
-			out_file << e[ 0 ] << " " << e[ 1 ] << endl;
+			// prepare vertices, edges, and faces for output
+			vector<ply::Vertex> out_vts;
+			vector<ply::Edge> out_edges;
+			vector<ply::Face> out_faces;
+			for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+			{
+				auto v = m_vts[ *it ];
+				v = _transform * v;
+				out_vts.push_back( { v[ 0 ], v[ 1 ], v[ 2 ] } );
+			}
+			for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
+			{
+				const auto& e = *it;
+				out_edges.push_back( { e[ 0 ], e[ 1 ] } );
+			}
+			for ( auto it = tri_faces_hs.begin(); it != tri_faces_hs.end(); ++it )
+			{
+				const auto& f = *it;
+				out_faces.push_back( { 3, {f[ 0 ], f[ 1 ], f[ 2 ]} } );
+			}
+			std::map<std::string, PlyProperty> vert_props;
+			vert_props[ "x" ] = { "x", Float32, Float32, offsetof( ply::Vertex, x ), PLY_SCALAR, 0, 0, 0 };
+			vert_props[ "y" ] = { "y", Float32, Float32, offsetof( ply::Vertex, y ), PLY_SCALAR, 0, 0, 0 };
+			vert_props[ "z" ] = { "z", Float32, Float32, offsetof( ply::Vertex, z ), PLY_SCALAR, 0, 0, 0 };
+			std::map<std::string, PlyProperty> edge_props;
+			edge_props[ "vertex1" ] = { "vertex1", Int32, Int32, offsetof( ply::Edge, v1 ), PLY_SCALAR, 0, 0, 0 };
+			edge_props[ "vertex2" ] = { "vertex2", Int32, Int32, offsetof( ply::Edge, v2 ), PLY_SCALAR, 0, 0, 0 };
+			std::map<std::string, PlyProperty> face_props;
+			face_props[ "vertex_indices" ] = {
+				"vertex_indices", Int32, Int32, offsetof( ply::Face, verts ),
+				PLY_LIST, Uint8, Uint8, offsetof( ply::Face,nvts ) };
+			ply::PLYwriter ply_writer;
+			ply_writer.write( _skel_name.c_str(), true, true, true,
+				vert_props, edge_props, face_props,
+				out_vts, out_edges, out_faces );
+			/*ply::PLYwriter ply_writer;
+			ply_writer.write( _skel_name.c_str(), out_vts, out_edges, out_faces );*/
+
+			cout << "Done: skeleton exported to -> " << _skel_name << endl;
 		}
-		// faces...
-		for ( auto it = tri_faces_hs.begin(); it != tri_faces_hs.end(); ++it )
-		{
-			const auto& f = *it;
-			out_file << f[ 0 ] << " " << f[ 1 ] << " " << f[ 2 ] << endl;
-		}
-		out_file.close();
-	}
-	else if ( _skel_name.find( ".ply" ) != std::string::npos )
-	{
-		// prepare vertices, edges, and faces for output
-		vector<ply::Vertex> out_vts;
-		vector<ply::Edge> out_edges;
-		vector<ply::Face> out_faces;
-		for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
-		{
-			auto v = m_vts[ *it ];
-			v = _transform * v;
-			out_vts.push_back( {v[0], v[1], v[2]} );
-		}
-		for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
-		{
-			const auto& e = *it;
-			out_edges.push_back( { e[ 0 ], e[ 1 ] } );
-		}
-		for ( auto it = tri_faces_hs.begin(); it != tri_faces_hs.end(); ++it )
-		{
-			const auto& f = *it;
-			out_faces.push_back( { 3, {f[ 0 ], f[ 1 ], f[ 2 ]} } );
-		}
-		std::map<std::string, PlyProperty> vert_props;
-		vert_props[ "x" ] = { "x", Float32, Float32, offsetof( ply::Vertex, x ), PLY_SCALAR, 0, 0, 0 };
-		vert_props[ "y" ] = { "y", Float32, Float32, offsetof( ply::Vertex, y ), PLY_SCALAR, 0, 0, 0 };
-		vert_props[ "z" ] = { "z", Float32, Float32, offsetof( ply::Vertex, z ), PLY_SCALAR, 0, 0, 0 };
-		std::map<std::string, PlyProperty> edge_props;
-		edge_props[ "vertex1" ] = { "vertex1", Int32, Int32, offsetof( ply::Edge, v1 ), PLY_SCALAR, 0, 0, 0 };
-		edge_props[ "vertex2" ] = { "vertex2", Int32, Int32, offsetof( ply::Edge, v2 ), PLY_SCALAR, 0, 0, 0 };
-		std::map<std::string, PlyProperty> face_props;
-		face_props[ "vertex_indices" ] = {
-			"vertex_indices", Int32, Int32, offsetof( ply::Face, verts ),
-			PLY_LIST, Uint8, Uint8, offsetof( ply::Face,nvts ) };
-		ply::PLYwriter ply_writer;
-		ply_writer.write( _skel_name.c_str(), true, true, true,
-			vert_props, edge_props, face_props,
-			out_vts, out_edges, out_faces );
-		/*ply::PLYwriter ply_writer;
-		ply_writer.write( _skel_name.c_str(), out_vts, out_edges, out_faces );*/
 	}
 }
 
@@ -1480,6 +1598,15 @@ void HybridSkeleton::to_vts_list( const TriFace & _tri_e_rep, int * _vts_l ) con
 	_vts_l[ 2 ] = ( e[ 0 ] != _vts_l[ 1 ] ? e[ 0 ] : e[ 1 ] );
 }
 
+void HybridSkeleton::to_vts_list( const TriFace & _tri_e_rep, TriFace & _vts_l ) const
+{
+	auto e = m_edges[ _tri_e_rep[ 0 ] ];
+	_vts_l[ 0 ] = e[ 0 ];
+	_vts_l[ 1 ] = e[ 1 ];
+	e = m_edges[ _tri_e_rep[ 1 ] ];
+	_vts_l[ 2 ] = ( e[ 0 ] != _vts_l[ 1 ] ? e[ 0 ] : e[ 1 ] );
+}
+
 void HybridSkeleton::to_vts_list(const vector<unsigned>& _edge_l, vector<unsigned>& _vts_l) const
 {
 	_vts_l.reserve(_edge_l.size());
@@ -1511,6 +1638,11 @@ void HybridSkeleton::to_vts_list(const vector<unsigned>& _edge_l, vector<unsigne
 bool HybridSkeleton::part_of_orig_edge(unsigned _ei) const
 {
 	return !m_stg->isDualEdgeInFineTri( transform_skel_edge( m_edges[ _ei ] ) );
+}
+
+bool HybridSkeleton::part_of_orig_edge( const TriEdge& _e ) const
+{
+	return !m_stg->isDualEdgeInFineTri( transform_skel_edge( _e ) );
 }
 
 int HybridSkeleton::transform_fine_vert_id( int _vi ) const

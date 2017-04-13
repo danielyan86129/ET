@@ -189,13 +189,16 @@ void ETMainWindow::setConsoleMode( bool _enabled )
 void ETMainWindow::setInputs(
 	const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
 	float _omega,
-	const std::string& _mc_meas)
+	const std::string& _mc_meas,
+	double _theta_2, double _theta_1 )
 {
 	m_ma_file = _ma_file;
 	m_shape_file = _shape_file;
 	m_r_file = _r_file;
 	m_omega = _omega;
 	m_mc_meas_to_output = _mc_meas;
+	m_skel_theta2 = _theta_2;
+	m_skel_theta1 = _theta_1;
 }
 
 void ETMainWindow::onTrueTransparencyChanged(int _s)
@@ -237,7 +240,10 @@ void ETMainWindow::onBurnBtnClicked()
 
 void ETMainWindow::onCleanTopoBtnClicked()
 {
-	glarea->cleanTopo(/* "" */);
+	bool has_unburnt = false;
+	glarea->cleanTopo( std::string( "" ), has_unburnt );
+	if ( has_unburnt ) // need to burn again
+		this->onBurnBtnClicked();
 }
 
 
@@ -468,8 +474,7 @@ void ETMainWindow::onVisDistMCComboChanged(int _idx)
 
 void ETMainWindow::onPruneCurveSlided(int _value)
 {
-	//cout << "prune curve slider changed!" << endl;
-
+	// convert to abs value
 	double range = distMax_MC - distMin_MC;
 	double t = distMin_MC + range * ui_compact.pruneMCSlider1->value() / 
 		(ui_compact.pruneMCSlider1->maximum() - ui_compact.pruneMCSlider1->minimum());
@@ -477,12 +482,12 @@ void ETMainWindow::onPruneCurveSlided(int _value)
 	ui_compact.mcPruneRatio->setValue( glarea->toETcPruneRatio(t) );
 
 	bool success = glarea->pruneAndVisMedialCurve(t, ui_compact.preserveMCTopo->isChecked(), false);
-
 	if ( !success )
 	{
 		cout << "ERROR: failed to prune medial curves." << endl;
 	}
 
+	// update digit spin
 	ui_compact.pruneMCDistSpin1->blockSignals(true);
 	ui_compact.pruneMCDistSpin1->setValue(t);
 	ui_compact.pruneMCDistSpin1->blockSignals(false);
@@ -490,16 +495,21 @@ void ETMainWindow::onPruneCurveSlided(int _value)
 
 void ETMainWindow::onPruneCurveSpinChanged(double _val)
 {
-	//ui.pruneMCSlider1->setValue(_val);
-
-	float range = distMax_MC - distMin_MC;
-
 	_val = std::min(distMax_MC,
 		std::max(distMin_MC, (float)_val));
-	ui_compact.pruneMCSlider1->setValue( ui_compact.pruneMCSlider1->minimum() + 
+	bool success = glarea->pruneAndVisMedialCurve( _val, ui_compact.preserveMCTopo->isChecked(), false );
+	if ( !success )
+	{
+		cout << "ERROR: failed to prune medial curves." << endl;
+	}
+
+	// update the slider
+	ui_compact.pruneMCSlider1->blockSignals( true );
+	float range = distMax_MC - distMin_MC;
+	ui_compact.pruneMCSlider1->setValue( ui_compact.pruneMCSlider1->minimum() +
 		(ui_compact.pruneMCSlider1->maximum() - ui_compact.pruneMCSlider1->minimum()) * 
 		(_val - distMin_MC) / range );
-	//cout << "prune curve spin changed!" << endl;
+	ui_compact.pruneMCSlider1->blockSignals( false );
 
 }
 
@@ -1209,6 +1219,7 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		ui_compact.visMCDistCombo->setCurrentIndex(0);
 		ui_compact.visMCDistCombo->blockSignals(false);
 		ui_compact.visMCDistCombo->setCurrentIndex(2);
+		ui_compact.pruneMCDistCombo1->setCurrentIndex( 2 );
 		//onVisDistMCComboChanged(ui_compact.visMCDistCombo->currentIndex());
 		break;
 	case COMPUTE_HS:
@@ -1488,15 +1499,30 @@ void ETMainWindow::onVisHSClicked()
 		line_reldiff_ratio = (float)ui_compact.hsBt1Bt2RelSlider->value() / ui_compact.hsBt1Bt2RelSlider->maximum();
 	}
 
-	// perform pruning of HS
-	glarea->pruneHS(
-		face_diff_ratio, face_reldiff_ratio, 
-		line_diff_ratio, line_reldiff_ratio,
-		ui_compact.hsUseTypedInput->isChecked(),
-		ui_compact.removeSmallCmpnts->isChecked()
+	if ( m_consoleMode ) 
+	{
+		// override some parameters when in console mode
+		face_diff_ratio = m_skel_theta2;
+		line_diff_ratio = m_skel_theta1;
+		glarea->pruneHS(
+			face_diff_ratio, face_reldiff_ratio,
+			line_diff_ratio, line_reldiff_ratio,
+			true, /*treat values as absolute*/
+			ui_compact.removeSmallCmpnts->isChecked()
 		);
-	// upload hs geometry and associated attributes
-	glarea->uploadHS();
+	}
+	else
+	{
+		// perform pruning of HS
+		glarea->pruneHS(
+			face_diff_ratio, face_reldiff_ratio,
+			line_diff_ratio, line_reldiff_ratio,
+			ui_compact.hsUseTypedInput->isChecked(),
+			ui_compact.removeSmallCmpnts->isChecked()
+		);
+		// upload hs geometry and associated attributes
+		glarea->uploadHS();
+	}
 
 	ui_compact.statusbar->showMessage("Done: pruning the skeleton. Skeleton is updated.");
 }
@@ -1517,9 +1543,9 @@ void ETMainWindow::onHSTheta2Changed(int _val)
 		(ui_compact.hsBt2Bt3Slider->maximum() - ui_compact.hsBt2Bt3Slider->minimum());
 	float abs_t;
 	glarea->getHSTheta2Abs(ratio, abs_t);
-	ui_compact.hsFaceDiffSpin->setDisabled(true);
+	ui_compact.hsFaceDiffSpin->blockSignals(true);
 	ui_compact.hsFaceDiffSpin->setValue(abs_t);
-	ui_compact.hsFaceDiffSpin->setEnabled(true);
+	ui_compact.hsFaceDiffSpin->blockSignals( false );
 }
 
 void ETMainWindow::onHSTheta2Spun(double _val)
@@ -1527,11 +1553,11 @@ void ETMainWindow::onHSTheta2Spun(double _val)
 	float abs_t = (float)_val;
 	float ratio;
 	glarea->getHSTheta2Ratio(abs_t, ratio);
-	ui_compact.hsBt2Bt3Slider->setDisabled(true);
+	ui_compact.hsBt2Bt3Slider->blockSignals(true);
 	ui_compact.hsBt2Bt3Slider->setValue(
 		ratio * (ui_compact.hsBt2Bt3Slider->maximum() - ui_compact.hsBt2Bt3Slider->minimum())
 	);
-	ui_compact.hsBt2Bt3Slider->setEnabled(true);
+	ui_compact.hsBt2Bt3Slider->blockSignals( false );
 }
 
 void ETMainWindow::onHSTheta1Changed(int _val)
@@ -1540,9 +1566,9 @@ void ETMainWindow::onHSTheta1Changed(int _val)
 		(ui_compact.hsBt2Bt3Slider->maximum() - ui_compact.hsBt2Bt3Slider->minimum());
 	float abs_t;
 	glarea->getHSTheta1Abs(ratio, abs_t);
-	ui_compact.hsCurveDiffSpin->setDisabled(true);
+	ui_compact.hsCurveDiffSpin->blockSignals(true);
 	ui_compact.hsCurveDiffSpin->setValue(abs_t);
-	ui_compact.hsCurveDiffSpin->setEnabled(true);
+	ui_compact.hsCurveDiffSpin->blockSignals(false);
 }
 
 void ETMainWindow::onHSTheta1Spun(double _val)
@@ -1550,11 +1576,11 @@ void ETMainWindow::onHSTheta1Spun(double _val)
 	float abs_t = (float)_val;
 	float ratio;
 	glarea->getHSTheta1Ratio(abs_t, ratio);
-	ui_compact.hsBt1Bt2Slider->setDisabled(true);
+	ui_compact.hsBt1Bt2Slider->blockSignals(true);
 	ui_compact.hsBt1Bt2Slider->setValue(
 		ratio * (ui_compact.hsBt1Bt2Slider->maximum() - ui_compact.hsBt1Bt2Slider->minimum())
 		);
-	ui_compact.hsBt1Bt2Slider->setEnabled(true);
+	ui_compact.hsBt1Bt2Slider->blockSignals( false );
 }
 
 void ETMainWindow::onSurfFuncCorrespSchemeComboChanged(int _idx)
@@ -2136,7 +2162,7 @@ void ETMainWindow::resetParams(FineStep _stp)
 		ui_compact.clampMCDistBox->setChecked(false);
 	case BURN_MC:
 	case POST_BURN_MC:
-		ui_compact.visMCDistCombo->blockSignals(true);
+		ui_compact.visMCDistCombo->blockSignals( true );
 		ui_compact.visMCDistCombo->clear();
 		//ui_compact.visMCDistCombo->addItems(QStringList() <<"r"<<"BT_M"<<"ET_M"<<"ET_M(rel)"<<"BT_C"<<"ET_C"<<"ET_C(rel)");
 		//ui_compact.visMCDistCombo->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C");
@@ -2148,9 +2174,9 @@ void ETMainWindow::resetParams(FineStep _stp)
 		ui_compact.pruneMCDistCombo1->clear();
 		//ui_compact.pruneMCDistCombo1->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C"<<"ET_C(rel)");
 		ui_compact.pruneMCDistCombo1->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C");
-		ui_compact.pruneMCDistCombo1->setCurrentIndex(0);
+		ui_compact.pruneMCDistCombo1->setCurrentIndex( 0 );
 		ui_compact.pruneMCDistCombo1->blockSignals(false);
-		ui_compact.pruneMCDistSpin1->setMaximum(10000);
+		//ui_compact.pruneMCDistSpin1->setMaximum( 10000 );
 	case PRUNE_HS:
 		{
 			// make sure nothing is pruned in the beginning. 
@@ -2218,7 +2244,7 @@ void ETMainWindow::resetPruneMC()
 	ui_compact.pruneMCDistCombo1->setCurrentIndex(0);
 	ui_compact.pruneMCDistCombo1->blockSignals(false);
 
-	ui_compact.pruneMCDistSpin1->setMaximum(10000);
+	//ui_compact.pruneMCDistSpin1->setMaximum(10000);
 }
 
 void ETMainWindow::enablePruneMC()

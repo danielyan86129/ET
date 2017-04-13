@@ -6604,7 +6604,7 @@ namespace util
 			v = vmin;
 		if (v > vmax)
 			v = vmax;
-		range = vmax - vmin;
+		range = std::max( vmax - vmin, 0.0000001f );
 		dv = (1.0f / (N_KEY_COLORS - 1) );
 
 		float multiples = ( (v - vmin) / range ) / dv;

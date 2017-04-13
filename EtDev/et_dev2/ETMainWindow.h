@@ -33,7 +33,9 @@ public:
 	void setInputs( 
 		const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
 		float _omega,
-		const std::string& _mc_meas );
+		const std::string& _mc_meas,
+		double _theta_2, double _theta_1
+		);
 
 public slots:
 	void onSaveView();
@@ -254,6 +256,9 @@ private:
 	float m_omega;
 	// the measure on mc to output
 	std::string m_mc_meas_to_output;
+	// skeleton params
+	double m_skel_theta2;
+	double m_skel_theta1;
 };
 
 #endif // QTPUREGL_H

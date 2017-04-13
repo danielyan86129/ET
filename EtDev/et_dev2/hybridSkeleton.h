@@ -79,6 +79,7 @@ public:
 	void getRemainedVts(vector<int>& _vts_ids) const;
 	void getRemainedEdges(vector<TriEdge>& _edges) const;
 	void getRemainedFaces(vector<TriFace>& _tris) const;
+	void getRemainedFaces( vector<int>& _face_ids ) const;
 	void getDualEdges( vector<TriEdge>& _edges ) const;
 	// get per edge color. orig edges and dual edges are assigned color
 	// from different space
@@ -121,7 +122,7 @@ public:
 
 	/* export the currently remaining parts of the skeleton to file
 	*/
-	void exportSkeleton(std::string _skel_name, const trimesh::xform& _transform);
+	void exportSkeleton(const vector<std::string>& _skel_files, const trimesh::xform& _transform);
 
 	/* transforming threshold: given ratio -> absolute value */
 	void absToRatio(
@@ -144,11 +145,12 @@ public:
 		float* _abs_l_diff_t = nullptr,
 		float _l_reldiff_r = 0.0f,
 		float* _abs_l_reldiff_t = nullptr);
-private:
+protected:
 	//
 	// convert a edge-rep tri to a vert-rep
 	//
 	void to_vts_list( const TriFace& _tri_e_rep, int* _vts_l ) const;
+	void to_vts_list( const TriFace& _tri_e_rep, TriFace& _f_v_rep ) const;
 	//
 	// convert a list of edges to a list of verts
 	//
@@ -157,6 +159,7 @@ private:
 	// if the given edge id corresponds to a st edge on orig tri edge
 	// 
 	bool part_of_orig_edge(unsigned _ei) const;
+	bool part_of_orig_edge( const TriEdge& _e ) const;
 	//
 	// given a vert-id in fine-tri, map it to the correct id within vts list of the skeleton
 	//

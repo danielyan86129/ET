@@ -573,6 +573,7 @@ bool GLArea::setUpMCDistMetricForPruning(DistMC _metric, float& _min, float& _ma
 
 bool GLArea::visDualLineStructure(DistMC _dist_type, int _type)
 {
+	cout << "visDualLineStructure()..." << endl;
 	if (stg)
 	{
 		try {
@@ -736,6 +737,8 @@ bool GLArea::visDualLineStructure(DistMC _dist_type, int _type)
 	this->resizeGL(width(), height());
 	updateGL();
 
+	cout << "visDualLineStructure() returns." << endl;
+
 	return this->m_drawMC;
 }
 
@@ -745,6 +748,7 @@ bool GLArea::colorMCEdgeBy(
 	float _min_alpha, float _alpha_exp, 
 	int _update_opt)
 {
+	cout << "colorMCEdgeBy()... " << endl;
 	if (stg)
 	{
 		try {
@@ -899,6 +903,8 @@ bool GLArea::colorMCEdgeBy(
 
 	this->resizeGL(width(), height());
 	updateGL();
+
+	cout << "colorMCEdgeBy() returns" << endl;
 
 	return this->m_drawMC;
 }
@@ -1194,7 +1200,7 @@ void GLArea::printMAOriginalVerts(vector<unsigned> _vid_list)
 }
 
 bool GLArea::uploadLinesToDrawer(const vector<TriPoint>& _vts, const vector<TriEdge>& _edges, 
-	shared_ptr<LineDrawer>& _line_drawer)
+	shared_ptr<LineDrawer>& _line_drawer) const
 {
 	try {
 		/* give each edge a color by duplicating vts */
@@ -1719,15 +1725,19 @@ void GLArea::uploadFinerMADynamicColors(
 	delete color_data;
 }
 
-void GLArea::cleanTopo(std::string _out_file /* = "" */)
+bool GLArea::cleanTopo(std::string& _out_file /* = "" */, bool& _hasunburnt)
 {
-	if (!m_meshMA || !stg)
-		return;
+	if ( !m_meshMA || !stg )
+		return false; // check failed.
 
 	vector<int> bad_faces = stg->checkUnburnt();	
-	if (bad_faces.empty())
-		return;
+	if ( bad_faces.empty() )
+	{
+		_hasunburnt = false;
+		return true; // check succ.ed
+	}
 
+	_hasunburnt = true;
 	vector<bool> face_flags(m_meshMA->faces.size(), false);
 	for (auto itor = bad_faces.begin(); itor != bad_faces.end(); ++itor)
 		face_flags[*itor] = true;
@@ -1749,6 +1759,8 @@ void GLArea::cleanTopo(std::string _out_file /* = "" */)
 	//meshMA_cpy.write(_out_file);
 	MyMesh::write( _out_file, &meshMA_cpy );
 	cout << "writing done." << endl;
+
+	return true;
 }
 
 void GLArea::precomputeForMeasures()
@@ -3026,18 +3038,26 @@ void GLArea::setComponentFaceNumberThresh(float _t)
 
 void GLArea::getHSTheta2Abs(float _ratio, float& _abs_t)
 {
+	/*m_meshOrig->need_bbox();
+	_abs_t = m_meshOrig->bbox.size().max() * _ratio;*/
 	m_hs->ratioToAbs(_ratio, &_abs_t);
 }
 void GLArea::getHSTheta1Abs(float _ratio, float& _abs_t)
 {
+	/*m_meshOrig->need_bbox();
+	_abs_t = m_meshOrig->bbox.size().max() * _ratio;*/
 	m_hs->ratioToAbs(0.0f, nullptr, 0.0f, nullptr, _ratio, &_abs_t);
 }
 void GLArea::getHSTheta2Ratio(float _abs_t, float& _ratio)
-{	 
+{
+	/*m_meshOrig->need_bbox();
+	_ratio = _abs_t / m_meshOrig->bbox.size().max();*/
 	m_hs->absToRatio(_abs_t, &_ratio);
 }	 
 void GLArea::getHSTheta1Ratio(float _abs_t, float& _ratio)
 {
+	/*m_meshOrig->need_bbox();
+	_ratio = _abs_t / m_meshOrig->bbox.size().max();*/
 	m_hs->absToRatio(0.0f, nullptr, 0.0f, nullptr, _abs_t, &_ratio);
 }
 
@@ -3876,23 +3896,20 @@ void GLArea::exportSkeleton()
 {
 	QString skel_name = QString(m_medialAxisFile.c_str());
 	skel_name.remove( ".clean" );
-	if ( 0 )
-	{
-		if ( skel_name.indexOf( ".off" ) >= 0 )
-			skel_name.replace( ".off", "_skel.sk" );
-		else if ( skel_name.indexOf( ".ply" ) >= 0 )
-			skel_name.replace( ".ply", "_skel.sk" );
-	}
-	else
-	{
-		if ( skel_name.indexOf( ".off" ) >= 0 )
-			skel_name.replace( ".off", "_skel.ply" );
-		else if ( skel_name.indexOf( ".ply" ) >= 0 )
-			skel_name.replace( ".ply", "_skel.ply" );
-	}
+	auto skel_w_msure_name = skel_name;
+
+	if ( skel_w_msure_name.indexOf( ".off" ) >= 0 )
+		skel_w_msure_name.replace( ".off", "_skel.skMsure" );
+	else if ( skel_w_msure_name.indexOf( ".ply" ) >= 0 )
+		skel_w_msure_name.replace( ".ply", "_skel.skMsure" );
+	if ( skel_name.indexOf( ".off" ) >= 0 )
+		skel_name.replace( ".off", "_skel.ply" );
+	else if ( skel_name.indexOf( ".ply" ) >= 0 )
+		skel_name.replace( ".ply", "_skel.ply" );
+
 	auto trans_cpy = m_trans_mat;
 	trimesh::invert(trans_cpy);
-	m_hs->exportSkeleton(skel_name.toStdString(), trans_cpy);
+	m_hs->exportSkeleton( { skel_name.toStdString(), skel_w_msure_name.toStdString() }, trans_cpy );
 }
 
 void GLArea::initializeGL(void)
