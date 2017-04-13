@@ -188,12 +188,14 @@ void ETMainWindow::setConsoleMode( bool _enabled )
 
 void ETMainWindow::setInputs(
 	const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
-	float _omega )
+	float _omega,
+	int _burn_sch_id)
 {
 	m_ma_file = _ma_file;
 	m_shape_file = _shape_file;
 	m_r_file = _r_file;
 	m_omega = _omega;
+	m_burn_sch = _burn_sch_id == 0 ? SteinerGraph::ORIGINAL_AND_STEINER : SteinerGraph::STEINER_ONLY;
 }
 
 void ETMainWindow::onTrueTransparencyChanged(int _s)
@@ -219,6 +221,7 @@ void ETMainWindow::onBurnBtnClicked()
 {
 	ui_compact.statusbar->showMessage("burning medial axis...");
 	bool success = glarea->burn( 
+		m_burn_sch,
 		(GLArea::SubdivScheme)ui_compact.stSubdivCombo->currentIndex(), 
 		m_consoleMode ? m_omega : ui_compact.nFixedSteinerSpin->value(),
 		ui_compact.edgeWeightCombo->currentIndex() );

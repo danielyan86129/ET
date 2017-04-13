@@ -32,7 +32,8 @@ public:
 	//
 	void setInputs( 
 		const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
-		float _omega );
+		float _omega,
+		int _burn_sch_id = 0 /*default: steinergraph::orig-and-steiner*/ );
 
 public slots:
 	void onSaveView();
@@ -248,6 +249,8 @@ private:
 	std::string m_r_file;
 	// sampling rate
 	float m_omega;
+	// burning scheme
+	SteinerGraph::BurnScheme m_burn_sch;
 };
 
 #endif // QTPUREGL_H

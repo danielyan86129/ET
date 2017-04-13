@@ -1434,7 +1434,7 @@ void GLArea::drawMeshSubset(
 	updateGL();
 }
 
-bool GLArea::burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_idx)
+bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, double _steiner_param, int _edgeWeight_idx)
 {
 	if (!this->m_meshMA)
 		return false;
@@ -1446,8 +1446,8 @@ bool GLArea::burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_i
 	std::shared_ptr<MyGraph> graph_ptr(new MyGraph(m_meshMA->vertices, m_meshMA->lines, m_meshMA->faces));
 
 	// convert steiner param to meaningful value
-	if (_scheme == SteinerSubdivision::ADAPTIVE || 
-		_scheme == SteinerSubdivision::ADAPTIVE_MIDPOINT)
+	if (_subd_sch == SteinerSubdivision::ADAPTIVE || 
+		_subd_sch == SteinerSubdivision::ADAPTIVE_MIDPOINT)
 	{
 		m_meshOrig->need_bbox();
 		auto boxdif = m_meshOrig->bbox.max - m_meshOrig->bbox.min;
@@ -1463,14 +1463,16 @@ bool GLArea::burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_i
 	m_surfF->reset();
 	m_hs->reset();
 	stg.reset();
+	_burn_sch = SteinerGraph::STEINER_ONLY;
+	if ( _burn_sch == SteinerGraph::STEINER_ONLY )
+		cout << "burn-scheme: steiner-only." << endl;
 	stg = shared_ptr<SteinerGraph>( new SteinerGraph(
 		graph_ptr,
 		radii/*vector<float>()*/,
-		_scheme,
+		_subd_sch,
 		_steiner_param, // # steiner points placed on tri edge according to _scheme
 		_edgeWeight_idx,
-		SteinerGraph::STEINER_ONLY
-		//SteinerGraph::ORIGINAL_AND_STEINER
+		_burn_sch
 		) );
 #ifdef PROFILE_SPEED
 	t_duration = clock() - t_start;
