@@ -145,7 +145,7 @@ public:
 		const vector<unsigned>& _face_indices
 		);
 	// burn the loaded mesh and update gl to visualize the burn function
-	bool burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_idx);
+	bool burn( SteinerGraph::BurnScheme _burn_sch, SubdivScheme _scheme, double _steiner_param, int _edgeWeight_idx);
 	// upload finner triangulation of MA before interactive session like iso-countour begins
 	void uploadFinerMAStaticGeom();
 	// upload colors for finner triangulation determined by a scalar field and min/max range

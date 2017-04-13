@@ -15,6 +15,7 @@ DEFINE_string( shape_file, "", "the file for the 3d shape boundary. OPTIONAL." )
 DEFINE_string( ma_file, "", "the file for the medial axis. REQUIRED." );
 DEFINE_string( r_file, "", "the file for the radius function over medial axis. OPTIONAL." );
 DEFINE_double( omega, 0.004, "the sampling rate for steiner subdivision. OPTIONAL." );
+DEFINE_int32( burn_sch, 0, "the burning scheme (0: orig-and-steiner (default value), 1: steiner-only). OPTIONAL." );
 //DEFINE_string( et_file, "", "the output file for the computed ET value per vertex on medial axis. OPTOINAL." );
 
 DEFINE_string( mc_msure, "null", "output specified measure on medial curves. nothing to output by default. \
@@ -44,7 +45,11 @@ int main(int argc, char *argv[])
 
 	if ( FLAGS_nogui )
 	{
+<<<<<<< HEAD
 		//w.setInputs( FLAGS_ma_file, FLAGS_shape_file, FLAGS_r_file, FLAGS_omega, FLAGS_mc_msure );
+=======
+		w.setInputs( FLAGS_ma_file, FLAGS_shape_file, FLAGS_r_file, FLAGS_omega, FLAGS_burn_sch );
+>>>>>>> 6f86e81b1b6bed8274dd10cf46b3fdcde274b8f7
 		w.onLoadFilesClicked(); // load in input files
 		w.onBurnBtnClicked(); // burn the medial axis
 		w.onCleanTopoBtnClicked(); // check if there is closed pockets

@@ -395,6 +395,10 @@ bool GLArea::obtainDualLineStructure(
 	if (stg)
 	{
 		try {
+#ifdef PROFILE_SPEED
+			auto t1 = clock();
+#endif // PROFILE_SPEED
+
 			shared_ptr<LineDrawer> line_drawer = std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer);
 			/*line_drawer->setPoints(stg->st_vts);
 			line_drawer->setLines(stg->st_edges);*/
@@ -415,6 +419,12 @@ bool GLArea::obtainDualLineStructure(
 			cout << "Done! # dual vts/edges " 
 				<<stg->dual_vts.size()<<"/"<<stg->dual_edges.size()<< endl;
 			
+#ifdef PROFILE_SPEED
+			auto t2 = clock();
+			auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
+			cout << "Medial-curve creation took: " << t_ms << " ms." << endl;
+#endif // PROFILE_SPEED
+
 			// upload geometry & color of burnt st edges to drawer
 			vector<TriEdge> burnt_edges;
 			const auto& all_st_vts = stg->m_stSubdiv.getAllVts();
@@ -503,6 +513,10 @@ bool GLArea::burnCurveNetwork(
 	bool _protect_bt2, 
 	bool _underestimate_dist)
 {
+#ifdef PROFILE_SPEED
+	auto t1 = clock();
+#endif // PROFILE_SPEED
+
 	// carry out the burning process on the dual network
 	stg->burnMedialCurveNetwork(true, _stop_burn_at_junction, _protect_bt2, _underestimate_dist);
 
@@ -510,6 +524,12 @@ bool GLArea::burnCurveNetwork(
 	this->precomputeForMCPruning();
 	float dummy = 0.0f;
 	this->colorMCEdgeBy(DistMC::BT1_MC, dummy, dummy, false, 0.0f, 1.0f, 1);
+
+#ifdef PROFILE_SPEED
+	auto t2 = clock();
+	auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
+	cout << "Medial-curve burning took: " << t_ms << " ms." << endl;
+#endif // PROFILE_SPEED
 
 	return true;
 }
@@ -1422,7 +1442,7 @@ void GLArea::drawMeshSubset(
 	updateGL();
 }
 
-bool GLArea::burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_idx)
+bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, double _steiner_param, int _edgeWeight_idx)
 {
 	if (!this->m_meshMA)
 		return false;
@@ -1434,8 +1454,8 @@ bool GLArea::burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_i
 	std::shared_ptr<MyGraph> graph_ptr(new MyGraph(m_meshMA->vertices, m_meshMA->lines, m_meshMA->faces));
 
 	// convert steiner param to meaningful value
-	if (_scheme == SteinerSubdivision::ADAPTIVE || 
-		_scheme == SteinerSubdivision::ADAPTIVE_MIDPOINT)
+	if (_subd_sch == SteinerSubdivision::ADAPTIVE || 
+		_subd_sch == SteinerSubdivision::ADAPTIVE_MIDPOINT)
 	{
 		m_meshOrig->need_bbox();
 		auto boxdif = m_meshOrig->bbox.max - m_meshOrig->bbox.min;
@@ -1451,14 +1471,21 @@ bool GLArea::burn(SubdivScheme _scheme, double _steiner_param, int _edgeWeight_i
 	m_surfF->reset();
 	m_hs->reset();
 	stg.reset();
+	_burn_sch = SteinerGraph::STEINER_ONLY;
+	if ( _burn_sch == SteinerGraph::STEINER_ONLY )
+		cout << "burn-scheme: steiner-only." << endl;
 	stg = shared_ptr<SteinerGraph>( new SteinerGraph(
 		graph_ptr,
 		radii/*vector<float>()*/,
-		_scheme,
+		_subd_sch,
 		_steiner_param, // # steiner points placed on tri edge according to _scheme
 		_edgeWeight_idx,
+<<<<<<< HEAD
 		SteinerGraph::STEINER_ONLY
 		//SteinerGraph::ORIGINAL_AND_STEINER
+=======
+		_burn_sch
+>>>>>>> 6f86e81b1b6bed8274dd10cf46b3fdcde274b8f7
 		) );
 #ifdef PROFILE_SPEED
 	t_duration = clock() - t_start;
@@ -3068,6 +3095,10 @@ void GLArea::createHS()
 		return;
 	}
 
+#ifdef PROFILE_SPEED
+	auto t1 = clock();
+#endif // PROFILE_SPEED
+
 	auto& hs = m_hs;
 	cout << "Preprocessing data for hybrid skeleton..." << endl;
 	hs->preprocess();
@@ -3107,6 +3138,12 @@ void GLArea::createHS()
 		dual_vts_bt2bt3diff, dual_vts_bt2bt3reldiff,
 		dual_vts_bt1bt2diff, dual_vts_bt1bt2reldiff);
 	cout << "Done: assigning element values" << endl;
+
+#ifdef PROFILE_SPEED
+	auto t2 = clock();
+	auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
+	cout << "Skeleton preprocessing took: " << t_ms << " ms." << endl;
+#endif // PROFILE_SPEED
 }
 
 void GLArea::uploadHS()
@@ -3211,9 +3248,19 @@ void GLArea::pruneHS(
 	bool _use_inputs_directly,
 	bool _remove_small_cmpnts)
 {
+#ifdef PROFILE_SPEED
+	auto t1 = clock();
+#endif // PROFILE_SPEED
+
 	m_hs->prune(_f_diff_r, _f_reldiff_r, _l_diff_r, _l_reldiff_r, 
 		_use_inputs_directly, _remove_small_cmpnts
 		);
+
+#ifdef PROFILE_SPEED
+	auto t2 = clock();
+	auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
+	cout << "Skeleton creation took: " << t_ms << " ms." << endl;
+#endif // PROFILE_SPEED
 }
 
 void GLArea::computeSurfFuncCorrespondence(SurfFuncCorrespScheme _scheme, float _r_eps_ratio, int _k)
