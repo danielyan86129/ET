@@ -1484,7 +1484,7 @@ bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, do
 		) );
 #ifdef PROFILE_SPEED
 	t_duration = clock() - t_start;
-	cout << "PROFIELING SPEED: SteinerGraph() took " << t_duration * 1000.0f / CLOCKS_PER_SEC << "ms."<<endl;
+	cout << "PROFIELING SPEED: SteinerGraph() took " << t_duration * 1000.0f / CLOCKS_PER_SEC << " ms."<<endl;
 #endif
 
 	cout << "estimating radii for all faces..."<<endl;

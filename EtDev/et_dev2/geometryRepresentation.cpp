@@ -1652,7 +1652,9 @@ void SteinerGraph::setEdgeWeightFunc(int _edgeWeight_idx)
 void SteinerGraph::burn()
 {
 	// start timing
+#ifdef PROFILE_SPEED
 	auto t_start = clock();
+#endif
 
 #ifdef _DEBUG_BURN
 	unsigned iter_limit = 20;
@@ -2152,8 +2154,10 @@ void SteinerGraph::burn()
 	}
 
 	// end timing
+#ifdef PROFILE_SPEED
 	auto t_duration = clock() - t_start;
-	cout << "burn() finished within " << t_duration * 1000.0f / CLOCKS_PER_SEC << "ms."<<endl;
+	cout << "burn() took " << t_duration * 1000.0f / CLOCKS_PER_SEC << " ms."<<endl;
+#endif // PROFILE_SPEED
 
 	//// post-checks
 	//auto vi_debug = 7149;
