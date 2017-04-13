@@ -20,7 +20,7 @@ DEFINE_int32( burn_sch, 1, "the burning scheme (0: orig-and-steiner, 1: steiner-
 
 DEFINE_string( mc_msure, "null", "output specified measure on medial curves. nothing to output by default. \
 							valid value: {shape-diam, shape-width, ...}. OPTIONAL." );
-DEFINE_bool( run_all, false, "compute all the way to skeleton generation." );
+DEFINE_bool( runall, false, "compute all the way to skeleton generation." );
 DEFINE_bool( export_skel, false, "compute all the way to curve skeleton generation & output skel files." );
 DEFINE_double( theta_2, 1.1, "skeleton threshold for face pruning. Assume unit bounding box. All faces purged when > 1. OPTIONAL." );
 DEFINE_double( theta_1, 0.05, "skeleton threshold for curve pruning. Assume unit bounding box. All curves purged when > 1. OPTIONAL." );
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 		w.onCleanTopoBtnClicked(); // check if there is closed pockets
 		w.onExportETBtnClicked(); // export ET per-vertex on ma to a file
 		
-		if ( FLAGS_export_skel || FLAGS_run_all )
+		if ( FLAGS_export_skel || FLAGS_runall )
 		{
 			w.onCreateHSClicked(); // generate skeleton
 			w.onVisHSClicked(); // prune skeleton
