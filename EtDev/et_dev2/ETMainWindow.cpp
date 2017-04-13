@@ -189,24 +189,18 @@ void ETMainWindow::setConsoleMode( bool _enabled )
 void ETMainWindow::setInputs(
 	const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
 	float _omega,
-<<<<<<< HEAD
 	const std::string& _mc_meas,
-	double _theta_2, double _theta_1 )
-=======
+	double _theta_2, double _theta_1,
 	int _burn_sch_id)
->>>>>>> 6f86e81b1b6bed8274dd10cf46b3fdcde274b8f7
 {
 	m_ma_file = _ma_file;
 	m_shape_file = _shape_file;
 	m_r_file = _r_file;
 	m_omega = _omega;
-<<<<<<< HEAD
 	m_mc_meas_to_output = _mc_meas;
 	m_skel_theta2 = _theta_2;
 	m_skel_theta1 = _theta_1;
-=======
 	m_burn_sch = _burn_sch_id == 0 ? SteinerGraph::ORIGINAL_AND_STEINER : SteinerGraph::STEINER_ONLY;
->>>>>>> 6f86e81b1b6bed8274dd10cf46b3fdcde274b8f7
 }
 
 void ETMainWindow::onTrueTransparencyChanged(int _s)

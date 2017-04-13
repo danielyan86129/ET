@@ -1480,12 +1480,7 @@ bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, do
 		_subd_sch,
 		_steiner_param, // # steiner points placed on tri edge according to _scheme
 		_edgeWeight_idx,
-<<<<<<< HEAD
-		SteinerGraph::STEINER_ONLY
-		//SteinerGraph::ORIGINAL_AND_STEINER
-=======
 		_burn_sch
->>>>>>> 6f86e81b1b6bed8274dd10cf46b3fdcde274b8f7
 		) );
 #ifdef PROFILE_SPEED
 	t_duration = clock() - t_start;

@@ -33,13 +33,9 @@ public:
 	void setInputs( 
 		const std::string& _ma_file, const std::string& _shape_file, const std::string& _r_file,
 		float _omega,
-<<<<<<< HEAD
 		const std::string& _mc_meas,
-		double _theta_2, double _theta_1
-		);
-=======
+		double _theta_2, double _theta_1,
 		int _burn_sch_id = 0 /*default: steinergraph::orig-and-steiner*/ );
->>>>>>> 6f86e81b1b6bed8274dd10cf46b3fdcde274b8f7
 
 public slots:
 	void onSaveView();
@@ -258,16 +254,13 @@ private:
 	std::string m_r_file;
 	// sampling rate
 	float m_omega;
-<<<<<<< HEAD
 	// the measure on mc to output
 	std::string m_mc_meas_to_output;
 	// skeleton params
 	double m_skel_theta2;
 	double m_skel_theta1;
-=======
 	// burning scheme
 	SteinerGraph::BurnScheme m_burn_sch;
->>>>>>> 6f86e81b1b6bed8274dd10cf46b3fdcde274b8f7
 };
 
 #endif // QTPUREGL_H
