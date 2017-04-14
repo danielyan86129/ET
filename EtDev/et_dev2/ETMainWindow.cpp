@@ -1941,6 +1941,7 @@ void ETMainWindow::onExportBtnClicked()
 
 void ETMainWindow::handle_extra_params()
 {
+	cout << "measure to output: " << m_mc_meas_to_output << endl;
 	if ( m_mc_meas_to_output != "null" )
 		glarea->outputMCwMeasure( m_mc_meas_to_output );
 }

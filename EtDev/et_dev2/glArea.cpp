@@ -2983,7 +2983,7 @@ void GLArea::outputMCwMeasure( const std::string & _meas_name ) const
 	auto meas_name = _meas_name;
 	std::unordered_set<string> valid_meas( { "bt2", "bt3" } );
 	if ( valid_meas.count( meas_name ) == 0 )
-		meas_name = "BT3";
+		return; // meas_name = "BT3";
 	std::string mc_file_name = 
 		m_medialAxisFile.substr( 0, m_medialAxisFile.find_last_of( '.' ) ) + ".mc";
 	std::string meas_file_name =
