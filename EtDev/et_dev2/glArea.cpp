@@ -1471,7 +1471,7 @@ bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, do
 	m_surfF->reset();
 	m_hs->reset();
 	stg.reset();
-	_burn_sch = SteinerGraph::STEINER_ONLY;
+	//_burn_sch = SteinerGraph::STEINER_ONLY;
 	if ( _burn_sch == SteinerGraph::STEINER_ONLY )
 		cout << "burn-scheme: steiner-only." << endl;
 	stg = shared_ptr<SteinerGraph>( new SteinerGraph(
@@ -3150,11 +3150,11 @@ void GLArea::uploadHS()
 	//m_hs->getDualEdges( edges_hs );
 	vector<TriFace> tri_faces_hs;
 	m_hs->getRemainedFaces(tri_faces_hs);
-	vector<TriColor> edge_colors;
-	m_hs->getRemainedEdgesColor( edge_colors );
+	/*vector<TriColor> edge_colors;
+	m_hs->getRemainedEdgesColor( edge_colors );*/
 
 	//this->m_drawHS = true;
-	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, &edge_colors, nullptr, m_hsLineDrawer, m_hsFaceDrawer);
+	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, /*&edge_colors*/nullptr, nullptr, m_hsLineDrawer, m_hsFaceDrawer);
 }
 
 //void GLArea::uploadHS()
@@ -3542,14 +3542,24 @@ bool GLArea::changeOrigColor(float * _color)
 	if ( !m_meshOrig )
 		return false;
 
-	float* color_data = new float[m_meshOrig->vertices.size() * 3];
-	for (unsigned i = 0; i < m_meshOrig->vertices.size(); ++i)
+	auto& orig_drawer = std::dynamic_pointer_cast<MeshDrawer>( m_origDrawer );
+	//float* color_data = new float[m_meshOrig->vertices.size() * 3];
+	auto color_data = new float[ m_meshOrig->faces.size() * 3 ];
+	for ( unsigned i = 0; i < m_meshOrig->faces.size(); ++i )
+	{
+		color_data[ 3 * i + 0 ] = _color[ 0 ];
+		color_data[ 3 * i + 1 ] = _color[ 1 ];
+		color_data[ 3 * i + 2 ] = _color[ 2 ];
+	}
+	orig_drawer->setRenderMode( MeshDrawer::PER_FACE );
+	orig_drawer->setPerFaceColor( color_data, m_meshOrig->faces.size() );
+	/*for (unsigned i = 0; i < m_meshOrig->vertices.size(); ++i)
 	{
 		color_data[3*i+0] = _color[0];
 		color_data[3*i+1] = _color[1];
 		color_data[3*i+2] = _color[2];
 	}
-	m_origDrawer->setPerVertColor(color_data, m_meshOrig->vertices.size());
+	m_origDrawer->setPerVertColor(color_data, m_meshOrig->vertices.size());*/
 	delete [] color_data;
 
 	updateGL();
@@ -3699,7 +3709,8 @@ bool GLArea::changeOrigTransparency(float _alpha)
 	else
 	{
 		m_OrigTransparent = true;
-		drawer->setPerVertConstantSaliency(_alpha, this->m_meshOrig->vertices.size());
+		/*drawer->setPerVertConstantSaliency(_alpha, this->m_meshOrig->vertices.size());*/
+		drawer->setPerVertConstantSaliency( _alpha, this->m_meshOrig->faces.size()*3 );
 	}
 	drawer->setTransparencyEnabled(m_OrigTransparent);
 

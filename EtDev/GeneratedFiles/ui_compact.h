@@ -561,6 +561,7 @@ public:
         maxVisDistMASpin->setSizePolicy(sizePolicy3);
         maxVisDistMASpin->setMaximumSize(QSize(500, 16777215));
         maxVisDistMASpin->setDecimals(5);
+        maxVisDistMASpin->setMinimum(1e-5);
         maxVisDistMASpin->setMaximum(1e+7);
 
         gridLayout_38->addWidget(maxVisDistMASpin, 0, 2, 1, 1);
@@ -662,6 +663,8 @@ public:
         sizePolicy3.setHeightForWidth(maxVisDistMCSpin->sizePolicy().hasHeightForWidth());
         maxVisDistMCSpin->setSizePolicy(sizePolicy3);
         maxVisDistMCSpin->setDecimals(5);
+        maxVisDistMCSpin->setMinimum(1e-5);
+        maxVisDistMCSpin->setMaximum(1e+9);
 
         gridLayout_39->addWidget(maxVisDistMCSpin, 0, 2, 1, 1);
 
@@ -835,6 +838,7 @@ public:
         sizePolicy3.setHeightForWidth(pruneMCDistSpin1->sizePolicy().hasHeightForWidth());
         pruneMCDistSpin1->setSizePolicy(sizePolicy3);
         pruneMCDistSpin1->setDecimals(5);
+        pruneMCDistSpin1->setMaximum(1e+9);
 
         gridLayout_15->addWidget(pruneMCDistSpin1, 4, 0, 1, 1);
 
@@ -919,7 +923,7 @@ public:
         hsCurveDiffSpin = new QDoubleSpinBox(hsPruneGroup);
         hsCurveDiffSpin->setObjectName(QStringLiteral("hsCurveDiffSpin"));
         hsCurveDiffSpin->setDecimals(6);
-        hsCurveDiffSpin->setMaximum(1000);
+        hsCurveDiffSpin->setMaximum(1e+9);
 
         gridLayout_18->addWidget(hsCurveDiffSpin, 3, 1, 1, 1);
 
@@ -1566,7 +1570,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        toolTabs->setCurrentIndex(0);
+        toolTabs->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);

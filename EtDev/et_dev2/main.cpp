@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 	w.setDebugMode(false);
 	w.setConsoleMode( FLAGS_nogui );
 	w.setWindowTitle("erosion thickness");
+	cout << "input burn_sch = " << FLAGS_burn_sch << endl;
 	w.setInputs( 
 		FLAGS_ma_file, FLAGS_shape_file, FLAGS_r_file, FLAGS_omega, 
 		FLAGS_mc_msure, 

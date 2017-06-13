@@ -281,9 +281,8 @@ void ETMainWindow::onLoadView()
 	/*auto sizes = this->size();
 	this->resize(sizes.width() * 0.8f, sizes.height() * 0.8f);*/
 	QString ini_file_name = QFileDialog::getOpenFileName(
-		this, "Open a .ini file to load view", "", "", NULL, QFileDialog::DontUseNativeDialog
+		this, "Open a .ini file to load view", "", "*.ini", NULL, QFileDialog::DontUseNativeDialog
 		);
-
 	if ( ini_file_name.isNull() )
 	{
 		QMessageBox::warning(this, "Warning: no file specified.", "View not loaded.");

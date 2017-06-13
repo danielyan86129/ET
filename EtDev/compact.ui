@@ -52,7 +52,7 @@
         <string/>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="fileTab">
         <property name="toolTip">
@@ -531,6 +531,9 @@
                    <property name="decimals">
                     <number>5</number>
                    </property>
+                   <property name="minimum">
+                    <double>0.000010000000000</double>
+                   </property>
                    <property name="maximum">
                     <double>9999999.000000000000000</double>
                    </property>
@@ -716,6 +719,12 @@
                    </property>
                    <property name="decimals">
                     <number>5</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.000010000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>999999999.000000000000000</double>
                    </property>
                   </widget>
                  </item>
@@ -1075,6 +1084,9 @@ export the ET value for each sector of each vertex into a .etps file&lt;/p&gt;
               <property name="decimals">
                <number>5</number>
               </property>
+              <property name="maximum">
+               <double>999999999.000000000000000</double>
+              </property>
              </widget>
             </item>
             <item row="2" column="1">
@@ -1247,7 +1259,7 @@ export the ET value for each sector of each vertex into a .etps file&lt;/p&gt;
                <number>6</number>
               </property>
               <property name="maximum">
-               <double>1000.000000000000000</double>
+               <double>999999999.000000000000000</double>
               </property>
              </widget>
             </item>
