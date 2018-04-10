@@ -62,7 +62,7 @@ public:
 	// draw flags:
 	enum DrawFlag {
 		DRAW_MA=1, DRAW_ORIG=2, DRAW_MC=4, DRAW_HS=8, DRAW_MP=16, DRAW_ISOSURF=32, DRAW_ISOCONT=64, 
-		DRAW_BURNT_EDGES=128, DRAW_POINTS = 256, DRAW_MA_FINE = 512, DRAW_QMAT = 1024
+		DRAW_BURNT_EDGES=128, DRAW_POINTS = 256, DRAW_MA_FINE = 512, DRAW_QMAT = 1024, DRAW_MA_LINE = 2048
 	};
 	// possible scalar fields on vts of MC
 	enum DistMC {BT3_MC, BT2_MC, BT2_BT3_MC, BT2_BT3_REL_MC, BT1_MC, BT1_BT2_MC, BT1_BT2_REL_MC};
@@ -399,6 +399,7 @@ private:
 private:
 	std::shared_ptr<Drawable> m_origDrawer;
 	std::shared_ptr<Drawable> m_MADrawer;
+	std::shared_ptr<Drawable> m_MALineDrawer;
 	std::shared_ptr<Drawable> m_FinerMAStaticDrawer;
 	std::shared_ptr<Drawable> m_MAFinnerDynamicDrawer;
 	std::shared_ptr<Drawable> m_pointDrawer;
@@ -526,7 +527,7 @@ private:
 	vector<std::pair<std::shared_ptr<Drawable>,bool> > opaque_draws;
 	/// flags
 	bool m_drawOrig;
-	bool m_drawMA;
+	bool m_drawMA, m_drawMALines;
 	bool m_drawMAFinnerStatic;
 	bool m_drawMC;
 	bool m_drawBurntEdges;

@@ -1688,7 +1688,7 @@ void SteinerGraph::burn()
 	bt2MA_vert_per_sheet.clear();
 	bt2MA_vert_per_sheet.resize(m_stSubdiv.sizeOfVts());
 	bt2MA_vert.clear();
-	bt2MA_vert.resize(m_stSubdiv.sizeOfVts());
+	bt2MA_vert.resize( m_stSubdiv.sizeOfVts(), infiniteBurnDist() );
 	prev_vert.clear();
 	prev_vert.resize(m_stSubdiv.sizeOfVts());
 	prev_tedge.clear();
@@ -2082,6 +2082,16 @@ void SteinerGraph::burn()
 			cout << "recovering bt done." << endl << endl;
 		}
 
+		// reset burn time to those vertices that have unburned pieces 
+		// (e.g. due to being part of closed pockets)
+		for ( auto i = 0; i < m_stSubdiv.sizeOfVts(); ++i )
+		{
+			if ( !burnt[ i ] )
+			{
+				bt2MA_vert[ i ] = infiniteBurnDist();
+			}
+		}
+
 		// compute difference between dist2surf & burn dist for orig. verts
 		float min_burn, max_burn, min_d2s, max_d2s, min_diff, max_diff;
 		min_burn = min_d2s = min_diff = numeric_limits<float>::max();
@@ -2089,13 +2099,21 @@ void SteinerGraph::burn()
 		for (unsigned i = 0; i < m_stSubdiv.sizeOfVts(); ++i)
 		{
 			float d2s = bt3MA_vert.empty() ? 0.0f : bt3MA_vert[i];
-			bt2bt3diffMA_vert[i] = std::max((bt2MA_vert[i] - d2s), 0.0f);
-			min_burn = std::min(bt2MA_vert[i], min_burn);
-			max_burn = std::max(bt2MA_vert[i], max_burn);
+			float d_bt2 = bt2MA_vert[ i ];
+			if ( d_bt2 < infiniteBurnDist() )
+			{
+				bt2bt3diffMA_vert[ i ] = std::max( ( d_bt2 - d2s ), 0.0f );
+				min_burn = std::min( bt2MA_vert[ i ], min_burn );
+				max_burn = std::max( bt2MA_vert[ i ], max_burn );
+				min_diff = std::min( bt2bt3diffMA_vert[ i ], min_diff );
+				max_diff = std::max( bt2bt3diffMA_vert[ i ], max_diff );
+			}
+			else
+			{
+				bt2bt3diffMA_vert[ i ] = infiniteBurnDist();
+			}
 			min_d2s = std::min(d2s, min_d2s);
 			max_d2s = std::max(d2s, max_d2s);
-			min_diff = std::min(bt2bt3diffMA_vert[i], min_diff);
-			max_diff = std::max(bt2bt3diffMA_vert[i], max_diff);
 		}
 		cout << "min/max burn: " << min_burn<<", "<<max_burn<<endl; // debug
 		cout << "min/max d2s: " << min_d2s<<", "<<max_d2s<<endl; // debug
@@ -2113,7 +2131,7 @@ void SteinerGraph::burn()
 				//cout << "topo type: " << topo_type_str[t_graphs[vi].type] << endl;// debug
 				continue;
 			}
-			if (burnt[vi] && bt2MA_vert[vi] == numeric_limits<float>::max())
+			if ( burnt[ vi ] && bt2MA_vert[ vi ] == infiniteBurnDist() )
 				cout << "burnt but infinite distF! vid: " << vi << endl;
 			min_burnDistOrigVts = std::min(min_burnDistOrigVts, bt2MA_vert[vi]);
 			max_burnDistOrigVts = std::max(max_burnDistOrigVts, bt2MA_vert[vi]);
@@ -2280,41 +2298,12 @@ void SteinerGraph::burnMedialCurveNetwork(
 		nbVts[e[1]].push_back(e[0]);
 	}
 
-	// boundary vertices
-
-	if (_start_time)
-	{
-		for (unsigned vi = 0; vi < dual_vts.size(); ++vi)
-		{
-			if (nbVts[vi].size() == 1)
-			{
-				bt1_medialCurve[vi] = bt2_MC[vi];
-				burnPrev_medialCurve[vi] = vi;
-			}
-		}
-	}
-	else
-	{
-		for (unsigned vi = 0; vi < dual_vts.size(); ++vi)
-		{
-			if (nbVts[vi].size() == 1)
-			{
-				bt1_medialCurve[vi] = 0.0f;
-				burnPrev_medialCurve[vi] = vi;
-			}
-		}
-	}
-
 	// count initial degrees of each vert
 	vector<unsigned> remain_degs(dual_vts.size());
 	for (unsigned vi = 0; vi < dual_vts.size(); ++vi)
 	{
 		remain_degs[vi] = nbVts[vi].size(); 
 	}
-
-	// start burning from boundary vertices
-	// only propagate to neighbor having one outgoing branch
-	// 
 	typedef std::pair<unsigned, float> uint_float_pair;
 	struct uint_float_comp
 	{
@@ -2323,16 +2312,39 @@ void SteinerGraph::burnMedialCurveNetwork(
 			return _a.second > _b.second;
 		}
 	};
+	
 	std::priority_queue< uint_float_pair,vector<uint_float_pair>,uint_float_comp > q; // containing <firefront vert, its dist>
-	// add all boundary vts in q
+	
+	// init q and start time of boundary nodes
+	vector<unsigned int> st_vts_on_e;
 	for (unsigned vi = 0; vi < dual_vts.size(); ++vi)
 	{
 		//if (!_under_estimate_dist)
 		{
 			/* BEGIN: orig. burning code */
-			if ( nbVts[vi].size() == 1 )
+			if ( nbVts[ vi ].size() == 1 )
 			{
-				q.push(std::make_pair(vi, bt2_MC[vi]));
+				bool is_on_pocket = false;
+				//if ( isEdgeDual( vi ) >= 0 )
+				//{
+				//	auto e = m_stSubdiv.getOrigTriEdge( isEdgeDual( vi ) );
+				//	// it's ok to only inspect the first st vert on edge
+				//	is_on_pocket = !burnt[ m_stSubdiv.getClosestVertOnEdge( e[ 0 ], e[ 1 ], 0 ) ]; 
+				//}
+				if ( !is_on_pocket )
+				{
+					q.push( std::make_pair( vi, bt2_MC[ vi ] ) );
+					if ( _start_time )
+					{
+						bt1_medialCurve[ vi ] = bt2_MC[ vi ];
+						burnPrev_medialCurve[ vi ] = vi;
+					}
+					else
+					{
+						bt1_medialCurve[ vi ] = 0.0f;
+						burnPrev_medialCurve[ vi ] = vi;
+					}
+				}
 			}
 			/* END: orig. burning code */
 		}
@@ -3178,7 +3190,7 @@ void SteinerGraph::getBurnedStEdgesFromBurnTree(
 				( !m_stSubdiv.isSteinerVert( st_e[ 0 ] ) || !m_stSubdiv.isSteinerVert( st_e[ 1 ] ) )
 				)
 				continue;
-			if ( isStEdgeBurnt( st_e, fi, from, to ) )
+			if ( isBurnPath( st_e, fi, from, to ) )
 			{
 				burntE_assocF_set.insert(make_edge_face_tuple(from, to, fi));
 			}
@@ -3376,7 +3388,7 @@ void SteinerGraph::getBurnedStEdgesFromBurnTree(
 							vts2traverse[st_e[0]], vts2traverse[st_e[1]], temp);*/
 						int assoc_f = _fi; /*non_manifoldness ? _fi : -1;*/
 						auto e_to_add = util::makeEdge(vts2traverse[st_e[1]], vts2traverse[st_e[0]]);
-						bool already_exist = isStEdgeBurnt(e_to_add, assoc_f, temp_from, temp_to);
+						bool already_exist = isBurnPath(e_to_add, assoc_f, temp_from, temp_to);
 						if (already_exist)
 						{
 							if (temp_from == st_e[0] && temp_to == st_e[1])
@@ -3569,7 +3581,7 @@ void SteinerGraph::getBurnedStEdgesFromBurnTree(
 						( !m_stSubdiv.isSteinerVert( e[ 0 ] ) || !m_stSubdiv.isSteinerVert( e[ 1 ] ) )
 						)
 						continue;
-					if ( isStEdgeBurnt(e, fi, temp_from, temp_to) )
+					if ( isBurnPath(e, fi, temp_from, temp_to) )
 					{
 						if (temp_from == e[0])
 							potential_crossing_paths.push_back(TriEdge(order, other_order));
@@ -3580,7 +3592,7 @@ void SteinerGraph::getBurnedStEdgesFromBurnTree(
 				if ( getBurnScheme() == ORIGINAL_AND_STEINER)
 				{
 					e = TriEdge( vts2traverse[ order ], vts2traverse[ oppo_v_order ] );
-					if ( isStEdgeBurnt( e, fi, temp_from, temp_to ) )
+					if ( isBurnPath( e, fi, temp_from, temp_to ) )
 					{
 						//potential_crossing_paths.push_back(TriEdge(temp_from, temp_to));
 						if ( temp_from == e[ 0 ] )
@@ -4009,8 +4021,8 @@ void SteinerGraph::assignBoundaryStartDist(
 		final[ vi ].assign( n_sector, false );
 		min_tedge[vi] = 0;
 		burnt[vi] = nbhood_has_2d_bits ? false : true;
-		bt2MA_vert_per_sheet[vi].assign(n_sector, numeric_limits<float>::max());
-		bt2MA_vert[ vi ] = nbhood_has_2d_bits ? numeric_limits<float>::max() : _dist2surf[ vi ];
+		bt2MA_vert_per_sheet[ vi ].assign( n_sector, infiniteBurnDist() );
+		bt2MA_vert[ vi ] = nbhood_has_2d_bits ? infiniteBurnDist() : _dist2surf[ vi ];
 		prev_vert[vi].assign(n_sector, -1);
 		prev_tedge[vi].assign(n_sector, 255);
 		if ( !nbhood_has_2d_bits )
@@ -4044,13 +4056,13 @@ void SteinerGraph::recover_bt_for_orig_vts()
 	vector<int> assoc_faces;
 	for ( auto vi = 0; vi < m_origG->vts.size(); ++vi )
 	{
-		// initialize this vert as burned.
-		burnt[ vi ] = true;
-
 		// skip if this is a boundary vertex
 		auto tt = getTopoType( vi );
-		if ( !TopoGraph::has2dNbhood(vi) || tt == BOUNDARY_2D )
+		if ( !TopoGraph::has2dNbhood( vi ) || tt == BOUNDARY_2D )
+		{
+			burnt[ vi ] = true;
 			continue;
+		}
 		// initialize burn time value
 		bt2MA_vert[ vi ] = 0.0f;
 		auto cur_v = m_origG->vts[ vi ];
@@ -4061,7 +4073,7 @@ void SteinerGraph::recover_bt_for_orig_vts()
 			// skip if this is a boundary sheet
 			if ( TopoGraph::isOpenSheet(vi, si) )
 				continue;
-			float bt_on_s = std::numeric_limits<float>::max();
+			float bt_on_s = infiniteBurnDist();
 			int pre_vert, pre_s;
 			assoc_faces.clear();
 			getAssocFaces( vi, si, assoc_faces );
@@ -4084,10 +4096,11 @@ void SteinerGraph::recover_bt_for_orig_vts()
 				}
 			}
 			
-			if ( bt_on_s == std::numeric_limits<float>::max() )
+			if ( bt_on_s == infiniteBurnDist() )
 			{
-				burnt[ vi ] = false;
-				break;
+				bt2MA_vert[ vi ] = infiniteBurnDist();
+				prev_vert[ vi ][ si ] = -1;
+				prev_tedge[ vi ][ si ] = 0;
 			}
 			else
 			{
@@ -4097,6 +4110,7 @@ void SteinerGraph::recover_bt_for_orig_vts()
 				prev_tedge[ vi ][ si ] = pre_s;
 			}
 		}
+		burnt[ vi ] = bt2MA_vert[ vi ] < infiniteBurnDist();
 	}
 }
 
@@ -4289,7 +4303,7 @@ void SteinerGraph::dualize_poly_subdivision_simple(
 } // SteinerGraph::dualize_poly_subdivision_simple()
 
 void SteinerGraph::dualize_poly_subdivision(
-	const std::vector<unsigned>& _vts, unsigned _fi, 
+	const std::vector<unsigned>& _vts, unsigned _fi, bool _f_part_of_pocket,
 	const std::vector<vector<unsigned>>& _poly_subdivision,
 	const map<unsigned, std::pair<trimesh::vec, float>>& _vert_burnDirDistPair_map,
 	const map<TriEdge, vector<int> >& _burntEdge_assocFaces_map,
@@ -4359,71 +4373,81 @@ void SteinerGraph::dualize_poly_subdivision(
 		edge_no_dual.clear();
 		edge_no_dual.resize( poly_it->size(), true );
 
-		for (unsigned poly_ei = 0; poly_ei < poly_it->size(); ++poly_ei)
+		for ( unsigned poly_ei = 0; poly_ei < poly_it->size(); ++poly_ei )
 		{
-			qis[0] = *(poly_it->begin()+poly_ei);
-			qis[1] = *(poly_it->begin()+(poly_ei+1)%poly_it->size());
-			TriEdge e = util::makeEdge( qis[0], qis[1] );
+			qis[ 0 ] = *( poly_it->begin() + poly_ei );
+			qis[ 1 ] = *( poly_it->begin() + ( poly_ei + 1 ) % poly_it->size() );
+			TriEdge e = util::makeEdge( qis[ 0 ], qis[ 1 ] );
 
 			// skip if cur edge is not dualizable.
-			if ( !is_edge_dualizable(qis[0], qis[1], _fi, _burntEdge_assocFaces_map, _verbose) )
+			if ( !is_edge_dualizable( qis[ 0 ], qis[ 1 ], _fi, _burntEdge_assocFaces_map, _verbose ) )
 				continue;
-			edge_no_dual[poly_ei] = false;
+			edge_no_dual[ poly_ei ] = false;
 
 			TriPoint edge_dual_pos;
 			unsigned dualV_idx;
-			const auto& dir_dist1 = _vert_burnDirDistPair_map.find(qis[0])->second;
-			const auto& dir_dist2 = _vert_burnDirDistPair_map.find(qis[1])->second;
 			// topo edge for the two ends of a poly edge
-			int te1, te2; 
+			int te1, te2;
 			float dual_bt2;
 			float dual_bt3;
+			pair<vec, float> dir_dist1, dir_dist2;
+			if ( !_f_part_of_pocket )
+			{
+				dir_dist1 = _vert_burnDirDistPair_map.find( qis[ 0 ] )->second;
+				dir_dist2 = _vert_burnDirDistPair_map.find( qis[ 1 ] )->second;
+			}
 
 			/* 1. dualize edges */
-			if (_edge_dual_opt == SIMPLE_DUAL)
+			if ( _f_part_of_pocket ) // handle pocket edge specially
 			{
-				edge_dual_pos = trimesh::mix(m_stSubdiv.getVert(e[0]), m_stSubdiv.getVert(e[1]), 0.5f);
-				dual_bt2 = (dir_dist1.second + dir_dist2.second) * 0.5f;
-				dual_bt3 = (bt3MA_vert[e[0]] + bt3MA_vert[e[1]]) * 0.5f;
+				edge_dual_pos = trimesh::mix( m_stSubdiv.getVert( e[ 0 ] ), m_stSubdiv.getVert( e[ 1 ] ), 0.5f );
+				dual_bt2 = infiniteBurnDist();
+				dual_bt3 = ( bt3MA_vert[ e[ 0 ] ] + bt3MA_vert[ e[ 1 ] ] ) * 0.5f;
 			}
-			else if (_edge_dual_opt == PSEUDO_INV_DUAL || _edge_dual_opt == WEIGHT_CENTER_CLOSENESS_DUAL)
+			else if ( _edge_dual_opt == SIMPLE_DUAL )
 			{
-				p1_ = m_stSubdiv.getVert(qis[0]);
-				p2_ = m_stSubdiv.getVert(qis[1]);
-				p2_cpy << p2_[0], p2_[1], p2_[2];
+				edge_dual_pos = trimesh::mix( m_stSubdiv.getVert( e[ 0 ] ), m_stSubdiv.getVert( e[ 1 ] ), 0.5f );
+				dual_bt2 = ( dir_dist1.second + dir_dist2.second ) * 0.5f;
+				dual_bt3 = ( bt3MA_vert[ e[ 0 ] ] + bt3MA_vert[ e[ 1 ] ] ) * 0.5f;
+			}
+			else if ( _edge_dual_opt == PSEUDO_INV_DUAL || _edge_dual_opt == WEIGHT_CENTER_CLOSENESS_DUAL )
+			{
+				p1_ = m_stSubdiv.getVert( qis[ 0 ] );
+				p2_ = m_stSubdiv.getVert( qis[ 1 ] );
+				p2_cpy << p2_[ 0 ], p2_[ 1 ], p2_[ 2 ];
 				p2_ = p1_ - p2_;
-				P_ << p2_[0], p2_[1], p2_[2];
+				P_ << p2_[ 0 ], p2_[ 1 ], p2_[ 2 ];
 				A_ = Eigen::Matrix2d::Zero();
 				B_ = Eigen::Matrix<double, 2, 1>::Zero();
 
-				for (unsigned j = 0; j < 2; ++j)
+				for ( unsigned j = 0; j < 2; ++j )
 				{
-					const auto& dir_dist_pair = _vert_burnDirDistPair_map.find(qis[j])->second;
+					const auto& dir_dist_pair = _vert_burnDirDistPair_map.find( qis[ j ] )->second;
 					const auto& burn_dir = dir_dist_pair.first;
 					double di = dir_dist_pair.second;
-					const auto& qi_ = m_stSubdiv.getVert(qis[j]);
-					qi << qi_[0], qi_[1], qi_[2];
-					dir << burn_dir[0], burn_dir[1], burn_dir[2];
-					Ai_ << dir.dot(P_), -1.0;
+					const auto& qi_ = m_stSubdiv.getVert( qis[ j ] );
+					qi << qi_[ 0 ], qi_[ 1 ], qi_[ 2 ];
+					dir << burn_dir[ 0 ], burn_dir[ 1 ], burn_dir[ 2 ];
+					Ai_ << dir.dot( P_ ), -1.0;
 					A_ += Ai_ * Ai_.transpose();
-					Ci_ = (p2_cpy - qi).dot(dir) + di;
+					Ci_ = ( p2_cpy - qi ).dot( dir ) + di;
 					B_ += -1 * Ci_ * Ai_;
 				}
 
 				// the center of the cur edge
-				TriPoint center(0.0f, 0.0f, 0.0f);
-				center = (m_stSubdiv.getVert(qis[0]) + m_stSubdiv.getVert(qis[1])) / 2.0f;
+				TriPoint center( 0.0f, 0.0f, 0.0f );
+				center = ( m_stSubdiv.getVert( qis[ 0 ] ) + m_stSubdiv.getVert( qis[ 1 ] ) ) / 2.0f;
 
-				if (_edge_dual_opt == PSEUDO_INV_DUAL)
+				if ( _edge_dual_opt == PSEUDO_INV_DUAL )
 				{
 					float center_d = 0.0f;
-					for (unsigned j = 0; j < 2; ++j)
+					for ( unsigned j = 0; j < 2; ++j )
 					{
-						const auto& dir_dist_pair = _vert_burnDirDistPair_map.find(qis[j])->second;
+						const auto& dir_dist_pair = _vert_burnDirDistPair_map.find( qis[ j ] )->second;
 						const auto& burn_dir = dir_dist_pair.first;
 						double di = dir_dist_pair.second;
 
-						center_d += ( (center - m_stSubdiv.getVert(qis[j])).dot(burn_dir) + di );
+						center_d += ( ( center - m_stSubdiv.getVert( qis[ j ] ) ).dot( burn_dir ) + di );
 					}
 					center_d /= 2.0f;
 
@@ -4431,59 +4455,59 @@ void SteinerGraph::dualize_poly_subdivision(
 					/*c << center[0], center[1], center[2];*/
 					c << 0.5f, center_d;
 
-					linearSolveSVD<2>(A_, B_, c, sol_);
+					linearSolveSVD<2>( A_, B_, c, sol_ );
 				}
 				else // weight closeness to center method
 				{
-					A_(0,0) += 2*_w*P_.dot(P_);
+					A_( 0, 0 ) += 2 * _w*P_.dot( P_ );
 					Eigen::Vector3d c_;
-					c_ << center[0], center[1], center[2];
-					B_(0,0) -= 2*_w*(p2_cpy-c_).dot(P_);
+					c_ << center[ 0 ], center[ 1 ], center[ 2 ];
+					B_( 0, 0 ) -= 2 * _w*( p2_cpy - c_ ).dot( P_ );
 
-					sol_ = A_.fullPivLu().solve(B_);
+					sol_ = A_.fullPivLu().solve( B_ );
 				}
 
 				// linear solve is done. construct poly dual point from the solution
-				weights[0] = (float)sol_[0];
-				weights[1] = 1-weights[0];
-				weights[2] = 0.0f;
-				snap_to_boundary(weights);
-				edge_dual_pos = weights[0] * m_stSubdiv.getVert(qis[0]) + 
-					weights[1] * m_stSubdiv.getVert(qis[1]);
-				dual_bt2 = sol_[1];
-				dual_bt3 = weights[0] * bt3MA_vert[qis[0]] + weights[1] * bt3MA_vert[qis[1]];
+				weights[ 0 ] = (float)sol_[ 0 ];
+				weights[ 1 ] = 1 - weights[ 0 ];
+				weights[ 2 ] = 0.0f;
+				snap_to_boundary( weights );
+				edge_dual_pos = weights[ 0 ] * m_stSubdiv.getVert( qis[ 0 ] ) +
+					weights[ 1 ] * m_stSubdiv.getVert( qis[ 1 ] );
+				dual_bt2 = sol_[ 1 ];
+				dual_bt3 = weights[ 0 ] * bt3MA_vert[ qis[ 0 ] ] + weights[ 1 ] * bt3MA_vert[ qis[ 1 ] ];
 			}
 			else // new WEIGHT_DUAL
 			{
 				float f1_v1 = dir_dist1.second;
-				float f1_v2 = f1_v1 + 
-					(this->m_stSubdiv.getVert(qis[1])-this->m_stSubdiv.getVert(qis[0])).dot(dir_dist1.first);
+				float f1_v2 = f1_v1 +
+					( this->m_stSubdiv.getVert( qis[ 1 ] ) - this->m_stSubdiv.getVert( qis[ 0 ] ) ).dot( dir_dist1.first );
 				float f2_v2 = dir_dist2.second;
-				float f2_v1 = f2_v2 + 
-					(this->m_stSubdiv.getVert(qis[0])-this->m_stSubdiv.getVert(qis[1])).dot(dir_dist2.first);
-				float b = std::max(f2_v1 - f1_v1, _eps);
-				float a = std::max(f1_v2 - f2_v2, _eps);
+				float f2_v1 = f2_v2 +
+					( this->m_stSubdiv.getVert( qis[ 0 ] ) - this->m_stSubdiv.getVert( qis[ 1 ] ) ).dot( dir_dist2.first );
+				float b = std::max( f2_v1 - f1_v1, _eps );
+				float a = std::max( f1_v2 - f2_v2, _eps );
 
-				edge_dual_pos = (a*this->m_stSubdiv.getVert(qis[0]) + b*this->m_stSubdiv.getVert(qis[1])) / (a+b);
-				te1 = this->mapTopo(qis[0], _fi);
-				te2 = this->mapTopo(qis[1], _fi);
-				dual_bt2 = (a*bt2MA_vert_per_sheet[qis[0]][te1] + b*bt2MA_vert_per_sheet[qis[1]][te2]) / (a+b);
-				dual_bt3 = (a*bt3MA_vert[qis[0]] + b*bt3MA_vert[qis[1]]) / (a+b);
+				edge_dual_pos = ( a*this->m_stSubdiv.getVert( qis[ 0 ] ) + b*this->m_stSubdiv.getVert( qis[ 1 ] ) ) / ( a + b );
+				te1 = this->mapTopo( qis[ 0 ], _fi );
+				te2 = this->mapTopo( qis[ 1 ], _fi );
+				dual_bt2 = ( a*bt2MA_vert_per_sheet[ qis[ 0 ] ][ te1 ] + b*bt2MA_vert_per_sheet[ qis[ 1 ] ][ te2 ] ) / ( a + b );
+				dual_bt3 = ( a*bt3MA_vert[ qis[ 0 ] ] + b*bt3MA_vert[ qis[ 1 ] ] ) / ( a + b );
 			}
 
 			// now save the just created point in the edge_dual_map 
 			// & the edge_duals list of cur poly
-			auto it = _edge_dual_map.find(e);
-			if (it == _edge_dual_map.end())
+			auto it = _edge_dual_map.find( e );
+			if ( it == _edge_dual_map.end() )
 			{
 				dual_vts.push_back( edge_dual_pos );
-				m_is_face_dual.push_back(-1); // this is not a face dual
+				m_is_face_dual.push_back( -1 ); // this is not a face dual
 				dualV_idx = dual_vts.size() - 1;
 
 				bt2_MC.push_back( dual_bt2 );
 				bt3_MC.push_back( dual_bt3 );
 
-				auto& tpl = _edge_dual_map[e];
+				auto& tpl = _edge_dual_map[ e ];
 				tpl.dual_v_id = dualV_idx;
 				tpl.bt2 = dual_bt2;
 				tpl.sum = edge_dual_pos;
@@ -4493,23 +4517,23 @@ void SteinerGraph::dualize_poly_subdivision(
 			{
 				dualV_idx = it->second.dual_v_id;
 
-				auto& tpl = _edge_dual_map[e];
+				auto& tpl = _edge_dual_map[ e ];
 				//tpl.dist_sum += dual_dist;
-				tpl.sum += dual_vts[dualV_idx];
+				tpl.sum += dual_vts[ dualV_idx ];
 				tpl.count += 1;
 
 				// store the largest bt2/bt3 at the intermediate structure for the dual vert
 				// which will be finalized later
-				tpl.bt2 = std::max(tpl.bt2, dual_bt2);
-				bt3_MC[dualV_idx] = std::max(bt3_MC[dualV_idx], dual_bt3);
+				tpl.bt2 = std::max( tpl.bt2, dual_bt2 );
+				bt3_MC[ dualV_idx ] = std::max( bt3_MC[ dualV_idx ], dual_bt3 );
 			}
-			edge_dual_indices[poly_ei] = dualV_idx;
+			edge_dual_indices[ poly_ei ] = dualV_idx;
 			edge_dual_bt2[ poly_ei ] = dual_bt2;
 			edge_dual_bt3[ poly_ei ] = dual_bt3;
 
 			// save the {<edge dual id, face id> -> the bt2 w.r.t. that face} relationship
-			m_bt2_MC_perFace[trimesh::ivec2(dualV_idx, _fi)] = dual_bt2;
-		}
+			m_bt2_MC_perFace[ trimesh::ivec2( dualV_idx, _fi ) ] = dual_bt2;
+		}// dual of edge
 
 		int cnt_edge_duals = 0;
 		for ( auto it = edge_no_dual.begin(); it != edge_no_dual.end(); ++it )
@@ -4518,160 +4542,175 @@ void SteinerGraph::dualize_poly_subdivision(
 				cnt_edge_duals++;
 		}
 
-		/* 1. dualize poly region */
+		/* dualize poly region */
 		TriPoint center_pos(0.0f, 0.0f, 0.0f);
 		float center_bt2 = 0.0f;
 		float center_bt3 = 0.0f;
 
-		// fall-back plan to compute face dual and related info
-		if ( cnt_edge_duals == 0 )
+		if ( _f_part_of_pocket ) // handle f that's part of pocket
 		{
 			for ( auto q_it = poly_it->begin(); q_it != poly_it->end(); ++q_it )
 			{
 				TriPoint q = m_stSubdiv.getVert( *q_it );
 				center_pos = center_pos + q;
-				auto si = mapTopo( *q_it, _fi );
-				center_bt2 += bt2MA_vert_per_sheet[ *q_it ][ si ];
 				center_bt3 += bt3MA_vert[ *q_it ];
 			}
 			poly_dual_pos = vec( center_pos ) / (float)poly_it->size();
-			poly_dual_bt2 = center_bt2 / (float)poly_it->size();
 			poly_dual_bt3 = center_bt3 / (float)poly_it->size();
+			poly_dual_bt2 = infiniteBurnDist();
 		}
-		else
+		else // normal dualization of face
 		{
-			if ( _poly_dual_opt == SIMPLE_DUAL )
+			if ( cnt_edge_duals == 0 )
 			{
-				for ( unsigned ii = 0; ii < edge_dual_indices.size(); ++ii )
-				{
-					if ( edge_no_dual[ ii ] )
-						continue;
-					center_pos = center_pos + this->dual_vts[ edge_dual_indices[ ii ] ];
-					center_bt2 = center_bt2 + edge_dual_bt2[ ii ];
-					center_bt3 += edge_dual_bt3[ ii ];
-				}
-				poly_dual_pos = vec( center_pos ) / (float)cnt_edge_duals;
-				poly_dual_bt2 = center_bt2 / (float)cnt_edge_duals;
-				poly_dual_bt3 = center_bt3 / (float)cnt_edge_duals;
-			}
-			else if ( _poly_dual_opt == PSEUDO_INV_DUAL || _poly_dual_opt == WEIGHT_CENTER_CLOSENESS_DUAL )
-			{
-				A.setZero();
-				B.setZero();
-
+				// fall-back plan to compute face dual and related info
 				for ( auto q_it = poly_it->begin(); q_it != poly_it->end(); ++q_it )
 				{
 					TriPoint q = m_stSubdiv.getVert( *q_it );
-					qi << q[ 0 ], q[ 1 ], q[ 2 ];
-					const auto& dir_dist_pair = _vert_burnDirDistPair_map.find( *q_it )->second;
-					const auto& burn_dir = dir_dist_pair.first;
-					double di = dir_dist_pair.second;
-
-					dir << burn_dir[ 0 ], burn_dir[ 1 ], burn_dir[ 2 ];
-					Ai << P.transpose() * dir, -1.0;
-					A += Ai * Ai.transpose();
-					Ci = ( p3_cpy - qi ).dot( dir ) + di;
-					B += -1 * Ci * Ai;
+					center_pos = center_pos + q;
+					center_bt3 += bt3MA_vert[ *q_it ];
+					auto si = mapTopo( *q_it, _fi );
+					center_bt2 += bt2MA_vert_per_sheet[ *q_it ][ si ];
 				}
-
-				// the center of the cur poly
-				TriPoint center( 0.0f, 0.0f, 0.0f );
-				for ( auto idx_iter = edge_dual_indices.begin(); idx_iter != edge_dual_indices.end(); ++idx_iter )
-				{
-					if ( edge_no_dual[ idx_iter - edge_dual_indices.begin() ] )
-						continue;
-					const TriPoint& q = dual_vts[ *idx_iter ];
-					center += q;
-				}
-				center /= edge_dual_indices.size();
-
-				if ( _poly_dual_opt == PSEUDO_INV_DUAL )
-				{
-					util::find_barycentric( center, p1, p2, p3, weights[ 0 ], weights[ 1 ], weights[ 2 ] );
-					snap_to_boundary( weights );
-
-					// find the dist of the center using the distance functions
-					// defined by each poly vert
-					float center_d = std::numeric_limits<float>::max();
-					for ( auto idx_iter = poly_it->begin(); idx_iter != poly_it->end(); ++idx_iter )
-					{
-						const auto& dir_dist_pair = _vert_burnDirDistPair_map.find( *idx_iter )->second;
-						const auto& burn_dir = dir_dist_pair.first;
-						float di = dir_dist_pair.second;
-
-						center_d = std::min(
-							( center - m_stSubdiv.getVert( *idx_iter ) ).dot( burn_dir ) + di,
-							center_d );
-					}
-					/*center_d /= poly_it->size();*/
-
-					Eigen::Vector3d c;
-					c << weights[ 0 ], weights[ 1 ], center_d;
-					linearSolveSVD<3>( A, B, c, sol );
-				}
-				else // poly_dual_opt == WEIGHT_CENTER_CLOSENESS_DUAL
-				{
-					A.topLeftCorner( 2, 2 ) += _w*poly_it->size()*P.transpose()*P;
-					Eigen::Vector3d c_;
-					c_ << center[ 0 ], center[ 1 ], center[ 2 ];
-					B.head( 2 ) += -1 * _w*poly_it->size()*( ( p3_cpy - c_ ).transpose() )*P;
-
-					sol = A.fullPivLu().solve( B );
-				}
-				// now linear solve is done. construct poly dual from solution
-				weights[ 0 ] = (float)sol[ 0 ]; // s
-				weights[ 1 ] = (float)sol[ 1 ]; // t
-				weights[ 2 ] = 1 - weights[ 0 ] - weights[ 1 ]; // 1-s-t
-				snap_to_boundary( weights );
-				poly_dual_pos = ( weights[ 0 ] ) * p1 + ( weights[ 1 ] ) * p2 + ( weights[ 2 ] ) * p3;
-				poly_dual_bt2 = sol[ 2 ];
-				poly_dual_bt3 =
-					( weights[ 0 ] ) * bt3_MC[ f[ 0 ] ] +
-					( weights[ 1 ] ) * bt3_MC[ f[ 1 ] ] +
-					( weights[ 2 ] ) * bt3_MC[ f[ 2 ] ];
+				poly_dual_pos = vec( center_pos ) / (float)poly_it->size();
+				poly_dual_bt3 = center_bt3 / (float)poly_it->size();
+				poly_dual_bt2 = center_bt2 / (float)poly_it->size();
 			}
-			else // new WEIGHT_DUAL
+			else
 			{
-				// find the angle based weight for each dual on the edges of cur poly
-				angle_weights.clear();
-				angle_weights.reserve( edge_dual_indices.size() );
-				for ( unsigned ii = 0; ii < poly_it->size(); ++ii )
+				if ( _poly_dual_opt == SIMPLE_DUAL )
 				{
-					// skip burnt edge
-					e = TriEdge( ( *poly_it )[ ii ], ( *poly_it )[ ( ii + 1 ) % poly_it->size() ] );
-					if ( edge_no_dual[ ii ] )
-						continue;
+					for ( unsigned ii = 0; ii < edge_dual_indices.size(); ++ii )
+					{
+						if ( edge_no_dual[ ii ] )
+							continue;
+						center_pos = center_pos + this->dual_vts[ edge_dual_indices[ ii ] ];
+						center_bt2 = center_bt2 + edge_dual_bt2[ ii ];
+						center_bt3 += edge_dual_bt3[ ii ];
+					}
+					poly_dual_pos = vec( center_pos ) / (float)cnt_edge_duals;
+					poly_dual_bt2 = center_bt2 / (float)cnt_edge_duals;
+					poly_dual_bt3 = center_bt3 / (float)cnt_edge_duals;
+				}
+				else if ( _poly_dual_opt == PSEUDO_INV_DUAL || _poly_dual_opt == WEIGHT_CENTER_CLOSENESS_DUAL )
+				{
+					A.setZero();
+					B.setZero();
 
-					const auto& dir_dist_1 = _vert_burnDirDistPair_map.find( e[ 0 ] )->second;
-					const auto& dir_dist_2 = _vert_burnDirDistPair_map.find( e[ 1 ] )->second;
-					angle_weights.push_back(
-						std::max(
-							std::abs( trimesh::angle( dir_dist_1.first, dir_dist_2.first ) ), 0.1f*3.14f / 360.0f
+					for ( auto q_it = poly_it->begin(); q_it != poly_it->end(); ++q_it )
+					{
+						TriPoint q = m_stSubdiv.getVert( *q_it );
+						qi << q[ 0 ], q[ 1 ], q[ 2 ];
+						const auto& dir_dist_pair = _vert_burnDirDistPair_map.find( *q_it )->second;
+						const auto& burn_dir = dir_dist_pair.first;
+						double di = dir_dist_pair.second;
+
+						dir << burn_dir[ 0 ], burn_dir[ 1 ], burn_dir[ 2 ];
+						Ai << P.transpose() * dir, -1.0;
+						A += Ai * Ai.transpose();
+						Ci = ( p3_cpy - qi ).dot( dir ) + di;
+						B += -1 * Ci * Ai;
+					}
+
+					// the center of the cur poly
+					TriPoint center( 0.0f, 0.0f, 0.0f );
+					for ( auto idx_iter = edge_dual_indices.begin(); idx_iter != edge_dual_indices.end(); ++idx_iter )
+					{
+						if ( edge_no_dual[ idx_iter - edge_dual_indices.begin() ] )
+							continue;
+						const TriPoint& q = dual_vts[ *idx_iter ];
+						center += q;
+					}
+					center /= edge_dual_indices.size();
+
+					if ( _poly_dual_opt == PSEUDO_INV_DUAL )
+					{
+						util::find_barycentric( center, p1, p2, p3, weights[ 0 ], weights[ 1 ], weights[ 2 ] );
+						snap_to_boundary( weights );
+
+						// find the dist of the center using the distance functions
+						// defined by each poly vert
+						float center_d = std::numeric_limits<float>::max();
+						for ( auto idx_iter = poly_it->begin(); idx_iter != poly_it->end(); ++idx_iter )
+						{
+							const auto& dir_dist_pair = _vert_burnDirDistPair_map.find( *idx_iter )->second;
+							const auto& burn_dir = dir_dist_pair.first;
+							float di = dir_dist_pair.second;
+
+							center_d = std::min(
+								( center - m_stSubdiv.getVert( *idx_iter ) ).dot( burn_dir ) + di,
+								center_d );
+						}
+						/*center_d /= poly_it->size();*/
+
+						Eigen::Vector3d c;
+						c << weights[ 0 ], weights[ 1 ], center_d;
+						linearSolveSVD<3>( A, B, c, sol );
+					}
+					else // poly_dual_opt == WEIGHT_CENTER_CLOSENESS_DUAL
+					{
+						A.topLeftCorner( 2, 2 ) += _w*poly_it->size()*P.transpose()*P;
+						Eigen::Vector3d c_;
+						c_ << center[ 0 ], center[ 1 ], center[ 2 ];
+						B.head( 2 ) += -1 * _w*poly_it->size()*( ( p3_cpy - c_ ).transpose() )*P;
+
+						sol = A.fullPivLu().solve( B );
+					}
+					// now linear solve is done. construct poly dual from solution
+					weights[ 0 ] = (float)sol[ 0 ]; // s
+					weights[ 1 ] = (float)sol[ 1 ]; // t
+					weights[ 2 ] = 1 - weights[ 0 ] - weights[ 1 ]; // 1-s-t
+					snap_to_boundary( weights );
+					poly_dual_pos = ( weights[ 0 ] ) * p1 + ( weights[ 1 ] ) * p2 + ( weights[ 2 ] ) * p3;
+					poly_dual_bt2 = sol[ 2 ];
+					poly_dual_bt3 =
+						( weights[ 0 ] ) * bt3_MC[ f[ 0 ] ] +
+						( weights[ 1 ] ) * bt3_MC[ f[ 1 ] ] +
+						( weights[ 2 ] ) * bt3_MC[ f[ 2 ] ];
+				}
+				else // new WEIGHT_DUAL
+				{
+					// find the angle based weight for each dual on the edges of cur poly
+					angle_weights.clear();
+					angle_weights.reserve( edge_dual_indices.size() );
+					for ( unsigned ii = 0; ii < poly_it->size(); ++ii )
+					{
+						// skip burnt edge
+						e = TriEdge( ( *poly_it )[ ii ], ( *poly_it )[ ( ii + 1 ) % poly_it->size() ] );
+						if ( edge_no_dual[ ii ] )
+							continue;
+
+						const auto& dir_dist_1 = _vert_burnDirDistPair_map.find( e[ 0 ] )->second;
+						const auto& dir_dist_2 = _vert_burnDirDistPair_map.find( e[ 1 ] )->second;
+						angle_weights.push_back(
+							std::max(
+								std::abs( trimesh::angle( dir_dist_1.first, dir_dist_2.first ) ), 0.1f*3.14f / 360.0f
 							)
 						);
-				}
-				assert( angle_weights.size() == cnt_edge_duals );
+					}
+					assert( angle_weights.size() == cnt_edge_duals );
 
-				// normalize the weights
-				float sum = std::accumulate( angle_weights.begin(), angle_weights.end(), 0.0f );
+					// normalize the weights
+					float sum = std::accumulate( angle_weights.begin(), angle_weights.end(), 0.0f );
 
-				// find the weighted sum of edge dual positions as the poly dual
-				// and the dual bt2;
-				// simply average to find bt3;
-				poly_dual_pos[ 0 ] = poly_dual_pos[ 1 ] = poly_dual_pos[ 2 ] = 0.0f;
-				poly_dual_bt2 = 0.0f;
-				poly_dual_bt3 = 0.0f;
-				for ( unsigned ii = 0; ii < edge_dual_indices.size(); ++ii )
-				{
-					if ( edge_no_dual[ ii ] )
-						continue;
-					poly_dual_pos += ( angle_weights[ ii ] / sum ) * this->dual_vts[ edge_dual_indices[ ii ] ];
-					poly_dual_bt2 += ( angle_weights[ ii ] / sum ) * edge_dual_bt2[ ii ];
-					poly_dual_bt3 += edge_dual_bt3[ ii ];
+					// find the weighted sum of edge dual positions as the poly dual
+					// and the dual bt2;
+					// simply average to find bt3;
+					poly_dual_pos[ 0 ] = poly_dual_pos[ 1 ] = poly_dual_pos[ 2 ] = 0.0f;
+					poly_dual_bt2 = 0.0f;
+					poly_dual_bt3 = 0.0f;
+					for ( unsigned ii = 0; ii < edge_dual_indices.size(); ++ii )
+					{
+						if ( edge_no_dual[ ii ] )
+							continue;
+						poly_dual_pos += ( angle_weights[ ii ] / sum ) * this->dual_vts[ edge_dual_indices[ ii ] ];
+						poly_dual_bt2 += ( angle_weights[ ii ] / sum ) * edge_dual_bt2[ ii ];
+						poly_dual_bt3 += edge_dual_bt3[ ii ];
+					}
+					poly_dual_bt3 /= (float)cnt_edge_duals;
 				}
-				poly_dual_bt3 /= (float)cnt_edge_duals;
 			}
-		}
+		} // when _f_part_of_pocket == false, dualize f in the usual way
 
 		// now actually append dual pos/dist of the poly region to output lists
 		// and connect the poly dual with edge duals (and, if any, dual at orig vts)
@@ -4769,7 +4808,7 @@ void SteinerGraph::dualize_poly_subdivision(
 		//	k ++ ;
 		//}
 
-	}
+	} // for each poly face
 } // SteinerGraph::dualize_poly_subdivision()
 
 void SteinerGraph::process_orig_vts_as_duals()
@@ -4858,8 +4897,12 @@ void SteinerGraph::find_burn_dir_dist_of_face(
 	{
 		if ( _verbose )
 			cout << "vid: " << *v_it <<". ";
+
+		// skip vert that cannot be reached by fire (logic differs by burn-scheme)
+		if ( getBurnScheme() == STEINER_ONLY && !m_stSubdiv.isSteinerVert( *v_it ) )
+			continue;
+
 		trimesh::vec burn_dir;
-		float burn_dist;
 		// need to find out the burn dist corresponding to cur face _fi by examining topo info
 		unsigned vi2;
 		auto tt = getTopoType(*v_it);
@@ -4882,11 +4925,11 @@ void SteinerGraph::find_burn_dir_dist_of_face(
 		int ret_code = mapTopo(*v_it, _fi);
 		assert(ret_code >= 0);
 		tei = (TopoGraph::EdgeIdx)ret_code;
+		float burn_dist = this->bt2MA_vert_per_sheet[ *v_it ][ tei ];
 
 		ret_code = getPrevVert(*v_it, tei);
 		assert(ret_code >= 0);
 		unsigned pre_v = (unsigned)ret_code;
-		burn_dist = this->bt2MA_vert_per_sheet[*v_it][tei];
 		if ( _verbose )
 		{
 			cout << topo_type_str[ tt ] << ". "
@@ -4955,18 +4998,18 @@ void SteinerGraph::finalize_dual_vts(
 		for ( int i = 0; i < 3; ++i )
 		{
 			auto e = util::makeEdge( f[ i ], f[ ( i + 1 ) % 3 ] );
-			auto oppo_v = f[ ( i + 2 ) % 3 ];
-			if ( ( isDualVertInFineTri( e[ 0 ], temp0 ) || isDualVertInFineTri( e[ 1 ], temp1 ) ) ||
+			//auto oppo_v = f[ ( i + 2 ) % 3 ];
+			if ( ( isDualVertInFineTri( e[ 0 ], temp0 ) || isDualVertInFineTri( e[ 1 ], temp1 ) ) /*||
 				( getBurnScheme() == STEINER_ONLY && 
-				( m_stSubdiv.isSteinerVert( temp0 ) || m_stSubdiv.isSteinerVert( temp1 ) ) )
+				( m_stSubdiv.isSteinerVert( temp0 ) || m_stSubdiv.isSteinerVert( temp1 ) ) )*/
 				)
 				continue;
-			if ( isStEdgeBurnt( e, from_tri, from, to ) )
+			if ( isBurnPath( e, from_tri, from, to ) /*|| !burnt[ e[ 0 ] ] && !burnt[ e[ 1 ] ]*/ )
 			{
-				// there might be a dual created for this st edge on other faces. 
-				// find it.
+				// there might be a dual created for this st edge on other faces;
+				// for each such face, add a padding triangle at the st edge on that face.
 				auto find_it = _edge_dual_map.find( e );
-				if ( find_it != _edge_dual_map.end() && padded.count( e ) == 0 )
+				if ( find_it != _edge_dual_map.end() /*&& padded.count( e ) == 0*/ )
 				{
 					// add a padding tri face using the dual
 					const auto& tpl = find_it->second;
@@ -4985,21 +5028,32 @@ void SteinerGraph::finalize_dual_vts(
 		new_origTri_for_finerTri_byDual.begin(), new_origTri_for_finerTri_byDual.end() );
 }
 
-// TODO: in the case where new dual scheme is used,
-// test whether the edge is dualizable or not.
 bool SteinerGraph::is_edge_dualizable(
 	unsigned _u, unsigned _v, unsigned _fi,
 	const map<TriEdge, vector<int> >& _burntEdge_assocFaces_map,
 	bool _verbose )
 {
-	if ( getBurnScheme() == STEINER_ONLY &&
-		( !m_stSubdiv.isSteinerVert( _u ) || !m_stSubdiv.isSteinerVert( _v ) )
-		)
-		return false;
-
-	TriEdge e = TriEdge(_u, _v);
-	if (_verbose)
+	TriEdge e = TriEdge( _u, _v );
+	if ( _verbose )
 		cout << "edge " << e << ": ";
+
+	//// TODO: this check cannot differentiate between two possible situations.
+	//// so get rid of this. 
+	//// first, this edge could be part of pocket, then not dualizable
+	//if ( !burnt[ e[ 0 ] ] || !burnt[ e[ 1 ] ] )
+	//{
+	//	if ( _verbose ) cout << "is part of pocket, thus not dualizable." << endl;
+	//	return false;
+	//}
+
+	if (
+		getBurnScheme() == STEINER_ONLY &&
+		( !m_stSubdiv.isSteinerVert( e[ 0 ] ) || !m_stSubdiv.isSteinerVert( e[ 1 ] ) )
+		)
+	{
+		if ( _verbose ) cout << "already contains at least one dual vert, not dualizable." << endl;
+		return false;
+	}
 
 	list<int> assoc_faces;
 	auto edge_face_pair = _burntEdge_assocFaces_map.find( e );
@@ -5012,7 +5066,7 @@ bool SteinerGraph::is_edge_dualizable(
 	// no dual point is created
 	// only if the edge is used by a burn path 
 	// and the assoc face id matches cur face
-	bool is_burnt = false;
+	bool part_of_burntree = false;
 	int assoc_f = -2; // by default means this edges is not a burnt edge
 	for (auto a_f = assoc_faces.begin(); a_f != assoc_faces.end(); ++a_f)
 	{
@@ -5021,14 +5075,15 @@ bool SteinerGraph::is_edge_dualizable(
 		{
 			if (_verbose)
 				cout << "assoc_f " << assoc_f <<". occupied & skip."<<endl;
-			is_burnt = true;
+			part_of_burntree = true;
 			break;
 		}
 	}
-	if (!is_burnt && _verbose)
-		cout <<"empty edge. assoc_f "<<-2<< endl;
 
-	return !is_burnt;
+	if (!part_of_burntree && _verbose)
+		cout <<"assoc_f "<< assoc_f <<". is dualizable." << endl;
+
+	return !part_of_burntree;
 } // SteinerGraph::is_burnt_edge()
 
 void SteinerGraph::computeIntersectionsForFaces(
@@ -6035,6 +6090,8 @@ void SteinerGraph::dualizeFacesWithBurnPaths(
 
 		f = m_origG->faces[fi];
 		directed_neighbors.clear();
+		st_edges_in_face.clear();
+		vts2traverse.clear();
 
 		//if (st_vts[f[0]]==st_vts[f[1]] && st_vts[f[0]]==st_vts[f[2]]) // debug
 		//{
@@ -6049,17 +6106,16 @@ void SteinerGraph::dualizeFacesWithBurnPaths(
 
 		// whether we need to reverse the steiner points order
 		// for each edge
-		for (unsigned ei = 0; ei < 3; ei ++)
+		for ( unsigned ei = 0; ei < 3; ei++ )
 		{
-			e = util::makeEdge(f[ei], f[(ei+1)%3]);
-			edges[ei] = e;
-			if (e[0] != f[ei])
-				reversed[ei] = true;
+			e = util::makeEdge( f[ ei ], f[ ( ei + 1 ) % 3 ] );
+			edges[ ei ] = e;
+			if ( e[ 0 ] != f[ ei ] )
+				reversed[ ei ] = true;
 		}
 
-		vts2traverse.clear();
 		/*
-		// check non-manifold-ness of each edge 
+		// check non-manifold-ness of each edge
 		for (unsigned ei = 0; ei < 3; ei ++)
 		{
 		e = edges[ei];
@@ -6069,27 +6125,43 @@ void SteinerGraph::dualizeFacesWithBurnPaths(
 		*/
 
 		// save the traversal order as we traverse each st&orig vert
-		for (unsigned ei = 0; ei < 3; ei ++)
+		for ( unsigned ei = 0; ei < 3; ei++ )
 		{
-			e = edges[ei];
+			e = edges[ ei ];
 			stVts.clear();
-			m_stSubdiv.getStVertIndicesOnTriEdge(e, stVts);
-			nVts_eachEdge[ei] = stVts.size();
+			m_stSubdiv.getStVertIndicesOnTriEdge( e, stVts );
+			nVts_eachEdge[ ei ] = stVts.size();
 
-			if (reversed[ei])
+			if ( reversed[ ei ] )
 			{
-				std::reverse(stVts.begin(), stVts.end());
-				stVts.insert(stVts.begin(), e[1]);
+				std::reverse( stVts.begin(), stVts.end() );
+				stVts.insert( stVts.begin(), e[ 1 ] );
 			}
 			else
 			{
-				stVts.insert(stVts.begin(), e[0]);
+				stVts.insert( stVts.begin(), e[ 0 ] );
 			}
-			std::copy(stVts.begin(), stVts.end(), back_inserter(vts2traverse));
+			std::copy( stVts.begin(), stVts.end(), back_inserter( vts2traverse ) );
 
 		}
 
-		directed_neighbors.resize(vts2traverse.size());
+		// check if this face is part of "pocket" or not
+		bool f_part_of_pocket = false;
+		for ( auto v_it = vts2traverse.begin(); v_it != vts2traverse.end(); ++v_it )
+		{
+			// only care about whether burnable verts are burned or not on this face
+			if ( getBurnScheme() == STEINER_ONLY && !m_stSubdiv.isSteinerVert( *v_it ) )
+				continue;
+			int ret_code = mapTopo( *v_it, fi );
+			assert( ret_code >= 0 );
+			auto tei = ( TopoGraph::EdgeIdx )ret_code;
+			float burn_dist = this->bt2MA_vert_per_sheet[ *v_it ][ tei ];
+			f_part_of_pocket = burn_dist == infiniteBurnDist();
+			if ( f_part_of_pocket )
+				break;
+		}
+
+		directed_neighbors.resize( vts2traverse.size() );
 
 		// traverse each edge along the "face orientation": f[0->1->2]
 		// [start_st_v, ..., end_st_v)
@@ -6097,81 +6169,83 @@ void SteinerGraph::dualizeFacesWithBurnPaths(
 		// 
 		// first, add to the directed graph using steiner edges
 		// on each face's orig edges
-		for (unsigned i = 0; i < vts2traverse.size()-1; ++i)
+		for ( unsigned i = 0; i < vts2traverse.size() - 1; ++i )
 		{
-			directed_neighbors[i].push_back( make_pair(i+1, i+1) );
+			directed_neighbors[ i ].push_back( make_pair( i + 1, i + 1 ) );
 		}
-		directed_neighbors[vts2traverse.size()-1].push_back( make_pair(0, vts2traverse.size()) );
-		
-		// second, add to the directed graph using steiner edges
-		// lying within each face
-		unsigned start_v = 1;
-		unsigned end_v = 1 + nVts_eachEdge[0];
-		unsigned next_start_v, next_end_v;
-		st_edges_in_face.clear();
-		// where do st vts on each edge start & end?
-		range_eachEdge[0].first = start_v;
-		range_eachEdge[0].second = end_v;
-		range_eachEdge[1].first = range_eachEdge[0].second+1;
-		range_eachEdge[1].second = range_eachEdge[0].second+1+nVts_eachEdge[1];
-		range_eachEdge[2].first = (range_eachEdge[1].second+1) % vts2traverse.size();
-		range_eachEdge[2].second = (range_eachEdge[1].second+1+nVts_eachEdge[2]) % vts2traverse.size();
-		// now form st edges in face
-		// 1. vts on e1 connected to those on e2 and e3 and oppo_v
-		for (unsigned ei = 0; ei < 3; ei ++)
-		{
-			// update the start / end index into vts2traverse for next edge
-			const auto& s_e_pr = range_eachEdge[ei];
-			const auto& s_e_pr_next = range_eachEdge[(ei+1)%3];
-			start_v = s_e_pr.first;
-			end_v = s_e_pr.second;
-			next_start_v = s_e_pr_next.first;
-			next_end_v = s_e_pr_next.second;
-			unsigned oppo_v_order = next_end_v;
+		directed_neighbors[ vts2traverse.size() - 1 ].push_back( make_pair( 0, vts2traverse.size() ) );
 
-			for (unsigned order = start_v; order != end_v; order = (order+1)%vts2traverse.size() )
+		// second, add to the directed graph using steiner edges
+		// lying within each face, only if cur face is not part of pocket
+		if ( !f_part_of_pocket )
+		{
+			unsigned start_v = 1;
+			unsigned end_v = 1 + nVts_eachEdge[ 0 ];
+			unsigned next_start_v, next_end_v;
+			// where do st vts on each edge start & end?
+			range_eachEdge[ 0 ].first = start_v;
+			range_eachEdge[ 0 ].second = end_v;
+			range_eachEdge[ 1 ].first = range_eachEdge[ 0 ].second + 1;
+			range_eachEdge[ 1 ].second = range_eachEdge[ 0 ].second + 1 + nVts_eachEdge[ 1 ];
+			range_eachEdge[ 2 ].first = ( range_eachEdge[ 1 ].second + 1 ) % vts2traverse.size();
+			range_eachEdge[ 2 ].second = ( range_eachEdge[ 1 ].second + 1 + nVts_eachEdge[ 2 ] ) % vts2traverse.size();
+			// now form st edges in face
+			// 1. vts on e1 connected to those on e2 and e3 and oppo_v
+			for ( unsigned ei = 0; ei < 3; ei++ )
 			{
-				for (unsigned other_order = next_start_v; 
-					other_order != next_end_v; other_order = (other_order+1)%vts2traverse.size() )
+				// update the start / end index into vts2traverse for next edge
+				const auto& s_e_pr = range_eachEdge[ ei ];
+				const auto& s_e_pr_next = range_eachEdge[ ( ei + 1 ) % 3 ];
+				start_v = s_e_pr.first;
+				end_v = s_e_pr.second;
+				next_start_v = s_e_pr_next.first;
+				next_end_v = s_e_pr_next.second;
+				unsigned oppo_v_order = next_end_v;
+
+				for ( unsigned order = start_v; order != end_v; order = ( order + 1 ) % vts2traverse.size() )
 				{
-					e = TriEdge(vts2traverse[order], vts2traverse[other_order]);
-					if ( getBurnScheme() == STEINER_ONLY &&
-						( !m_stSubdiv.isSteinerVert( e[ 0 ] ) || !m_stSubdiv.isSteinerVert( e[ 1 ] ) )
-						)
-						continue;
-					if ( burntEdge_assocFace_map.count(e) > 0 || 
-						burntEdge_assocFace_map.count(TriEdge(e[1], e[0])) > 0 )
+					for ( unsigned other_order = next_start_v;
+						other_order != next_end_v; other_order = ( other_order + 1 ) % vts2traverse.size() )
 					{
-						st_edges_in_face.push_back(util::makeEdge(order, other_order));
+						e = TriEdge( vts2traverse[ order ], vts2traverse[ other_order ] );
+						if ( getBurnScheme() == STEINER_ONLY &&
+							( !m_stSubdiv.isSteinerVert( e[ 0 ] ) || !m_stSubdiv.isSteinerVert( e[ 1 ] ) )
+							)
+							continue;
+						if ( burntEdge_assocFace_map.count( e ) > 0 ||
+							burntEdge_assocFace_map.count( TriEdge( e[ 1 ], e[ 0 ] ) ) > 0 )
+						{
+							st_edges_in_face.push_back( util::makeEdge( order, other_order ) );
+						}
 					}
-				}
-				if ( getBurnScheme() == ORIGINAL_AND_STEINER )
-				{
-					e = TriEdge( vts2traverse[ order ], vts2traverse[ oppo_v_order ] );
-					if ( burntEdge_assocFace_map.count( e ) > 0 ||
-						burntEdge_assocFace_map.count( TriEdge( e[ 1 ], e[ 0 ] ) ) > 0 )
+					if ( getBurnScheme() == ORIGINAL_AND_STEINER )
 					{
-						st_edges_in_face.push_back( util::makeEdge( order, oppo_v_order ) );
+						e = TriEdge( vts2traverse[ order ], vts2traverse[ oppo_v_order ] );
+						if ( burntEdge_assocFace_map.count( e ) > 0 ||
+							burntEdge_assocFace_map.count( TriEdge( e[ 1 ], e[ 0 ] ) ) > 0 )
+						{
+							st_edges_in_face.push_back( util::makeEdge( order, oppo_v_order ) );
+						}
 					}
 				}
 			}
-		}
 
-		/*if (!st_edges_in_face.empty())
-		cout << "in-face burnt st edges found in face " << fi << endl;*/
+			/*if (!st_edges_in_face.empty())
+			cout << "in-face burnt st edges found in face " << fi << endl;*/
 
-		// add these new paths to directed graph
-		for (auto path_it = st_edges_in_face.begin(); 
-			path_it != st_edges_in_face.end(); ++path_it)
-		{
-			int order = (*path_it)[0];
-			int order_other = (*path_it)[1];
-			directed_neighbors[order].push_back(make_pair(order_other, 
-				order_other < order ? order_other+vts2traverse.size() : order_other));
-			////printf("%d->%d, cosine: %f\n", stVts[j], stVts_other[i], cosine); //debug
-			directed_neighbors[order_other].push_back(make_pair(order, 
-				order < order_other ? order+vts2traverse.size() : order));
-			////printf("%d->%d, cosine: %f\n", stVts_other[i], stVts[j], cosine); //debug
+			// add these new paths to directed graph
+			for ( auto path_it = st_edges_in_face.begin();
+				path_it != st_edges_in_face.end(); ++path_it )
+			{
+				int order = ( *path_it )[ 0 ];
+				int order_other = ( *path_it )[ 1 ];
+				directed_neighbors[ order ].push_back( make_pair( order_other,
+					order_other < order ? order_other + vts2traverse.size() : order_other ) );
+				////printf("%d->%d, cosine: %f\n", stVts[j], stVts_other[i], cosine); //debug
+				directed_neighbors[ order_other ].push_back( make_pair( order,
+					order < order_other ? order + vts2traverse.size() : order ) );
+				////printf("%d->%d, cosine: %f\n", stVts_other[i], stVts[j], cosine); //debug
+			}
 		}
 
 		// now directed graph is ready. sort outgoing edges.
@@ -6289,16 +6363,20 @@ void SteinerGraph::dualizeFacesWithBurnPaths(
 
 		unsigned start_newDualEdges = dual_edges.size();
 		vert_burnDirDistPair_map.clear();
-		find_burn_dir_dist_of_face(vts2traverse, fi, 
-			bndry_dirs, vIdx_burnDirIdx_map, vert_burnDirDistPair_map, 
-			f_debug.count( fi ) );
+		if (!f_part_of_pocket )
+		{
+			find_burn_dir_dist_of_face( vts2traverse, fi,
+				bndry_dirs, vIdx_burnDirIdx_map, vert_burnDirDistPair_map,
+				f_debug.count( fi ) );
+		}
 
 		if ( f_debug.count( fi ) )
 		{
 			std::cout << "finished find_burn_dir_dist_of_face()." << endl;
 		}
 
-		dualize_poly_subdivision(vts2traverse, fi, poly_faces,
+		dualize_poly_subdivision(vts2traverse, fi, f_part_of_pocket,
+			poly_faces,
 			vert_burnDirDistPair_map, 
 			burntEdge_assocFace_map, edge_dualV_map,
 			_edge_dual_opt, _poly_dual_opt, 0.080001f, _eps, 
@@ -6383,6 +6461,12 @@ bool SteinerGraph::isDualValid() const
 bool SteinerGraph::isFaceDual(int _dual_id) const
 {
 	return m_is_face_dual[_dual_id] >= 0;
+}
+
+int SteinerGraph::isEdgeDual( int _dual_id ) const
+{
+	int ret_id = m_dualV_triEdgeIdx[ _dual_id ];
+	return ret_id >= 0 ? ret_id : -1;
 }
 
 const vector<TriPoint>& SteinerGraph::getDualVts() const
@@ -6537,7 +6621,7 @@ vector<int> SteinerGraph::checkUnburnt()
 	return bad_faces;
 }
 
-bool SteinerGraph::isStEdgeBurnt(const TriEdge& e, int _fi, int& _from, int& _to)
+bool SteinerGraph::isBurnPath(const TriEdge& e, int _fi, int& _from, int& _to)
 {
 	unsigned u = e[0];
 	unsigned v = e[1];

@@ -373,77 +373,7 @@
             <string>medial axis</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_6">
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="hideMA">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>hide/show medial axis</string>
-              </property>
-              <property name="text">
-               <string>hide</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="turnOffLightingForMABox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>disable/enable lighting on medial axis</string>
-              </property>
-              <property name="text">
-               <string>no lighting</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="drawStPoints">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>visualize all steiner points on medial axis</string>
-              </property>
-              <property name="text">
-               <string>steiner points</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QPushButton" name="colorMABtn">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>500</width>
-                <height>23</height>
-               </size>
-              </property>
-              <property name="toolTip">
-               <string>Give MA a constant color</string>
-              </property>
-              <property name="text">
-               <string>color</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0" colspan="2">
+            <item row="3" column="0" colspan="3">
              <widget class="QGroupBox" name="distVisBtnGroup">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -544,7 +474,39 @@
               </layout>
              </widget>
             </item>
-            <item row="3" column="0" colspan="2">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="hideMA">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>hide/show medial axis</string>
+              </property>
+              <property name="text">
+               <string>hide</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="drawStPoints">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>visualize all steiner points on medial axis</string>
+              </property>
+              <property name="text">
+               <string>steiner points</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0" colspan="3">
              <widget class="QGroupBox" name="MAAlphaGroup">
               <property name="title">
                <string>transparency</string>
@@ -574,6 +536,51 @@
                 </widget>
                </item>
               </layout>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="turnOffLightingForMABox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>disable/enable lighting on medial axis</string>
+              </property>
+              <property name="text">
+               <string>no lighting</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="hideMALine">
+              <property name="text">
+               <string>hide 1d cells</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="colorMABtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>500</width>
+                <height>23</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Give MA a constant color</string>
+              </property>
+              <property name="text">
+               <string>color</string>
+              </property>
              </widget>
             </item>
            </layout>

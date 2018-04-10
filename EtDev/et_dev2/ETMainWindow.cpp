@@ -32,6 +32,7 @@ ETMainWindow::ETMainWindow(QWidget *parent, Qt::WindowFlags flags)
 	QObject::connect( ui_compact.dualizeBtn, SIGNAL(clicked()), this, SLOT(onDualizeClicked()) );
 	QObject::connect( ui_compact.hideOrig, SIGNAL(stateChanged(int)), this, SLOT(onHideOrigChanged(int)) );
 	QObject::connect( ui_compact.hideMA, SIGNAL(stateChanged(int)), this, SLOT(onHideMAChanged(int)) );
+	QObject::connect( ui_compact.hideMALine, SIGNAL( stateChanged( int ) ), this, SLOT( onHideMALineChanged( int ) ) );
 	QObject::connect( ui_compact.hideMC, SIGNAL(stateChanged(int)), this, SLOT(onHideMCChanged(int)) );
 	QObject::connect( ui_compact.visBurnt, SIGNAL(stateChanged(int)), this, SLOT(onVisBurntEdgesChanged(int)) );
 	QObject::connect( ui_compact.hideHS, SIGNAL(stateChanged(int)), this, SLOT(onHideHSChanged(int)) );
@@ -585,6 +586,11 @@ void ETMainWindow::onPrintStatsClicked()
 void ETMainWindow::onHideMAChanged(int _state)
 {
 	glarea->setDrawFlag( GLArea::DRAW_MA, _state != Qt::Checked );
+}
+
+void ETMainWindow::onHideMALineChanged( int _state )
+{
+	glarea->setDrawFlag( GLArea::DRAW_MA_LINE, _state != Qt::Checked );
 }
 
 void ETMainWindow::onHideOrigChanged(int _state)
@@ -1160,6 +1166,10 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		ui_compact.hideMA->setChecked(true);
 		ui_compact.hideMA->blockSignals(false);
 		ui_compact.hideMA->setChecked(false);
+		ui_compact.hideMALine->blockSignals( true );
+		ui_compact.hideMALine->setChecked( true );
+		ui_compact.hideMALine->blockSignals( false );
+		ui_compact.hideMALine->setChecked( false );
 		break;
 	case PRUNE_MA:
 		disableWidgetsForStep(PRUNE_MA);
@@ -1957,6 +1967,7 @@ void ETMainWindow::resetWidgetsStates()
 	ui.drawStPoints->blockSignals(true);
 	ui.showMPBox->blockSignals(true);*/
 	ui_compact.hideMA->setCheckState(Qt::Unchecked);
+	ui_compact.hideMALine->setCheckState( Qt::Unchecked );
 	ui_compact.drawEdge->setCheckState(Qt::Unchecked);
 	ui_compact.drawStPoints->setCheckState(Qt::Unchecked);
 	ui_compact.hideOrig->setCheckState(Qt::Unchecked);
@@ -2206,6 +2217,10 @@ void ETMainWindow::resetParams(FineStep _stp)
 	ui_compact.hideMA->setChecked(false);
 	ui_compact.hideMA->blockSignals(false);
 	ui_compact.hideMA->setChecked(true);
+	ui_compact.hideMALine->blockSignals( true );
+	ui_compact.hideMALine->setChecked( false );
+	ui_compact.hideMALine->blockSignals( false );
+	ui_compact.hideMALine->setChecked( true );
 	ui_compact.hideOrig->blockSignals(true);
 	ui_compact.hideOrig->setChecked(false);
 	ui_compact.hideOrig->blockSignals(false);

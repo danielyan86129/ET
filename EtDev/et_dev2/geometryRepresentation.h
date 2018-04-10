@@ -179,6 +179,11 @@ public:
 		int _edgeWeight_idx,
 		SteinerGraph::BurnScheme _burn_scheme = BurnScheme::ORIGINAL_AND_STEINER);
 	~SteinerGraph();
+
+	inline float infiniteBurnDist() const
+	{
+		return m_invalid_burn_d;
+	}
 	//
 	// return the burn&dual scheme 
 	//
@@ -206,7 +211,7 @@ public:
 	// Return a list of bad faces to remove from orig mesh
 	vector<int> checkUnburnt(void);
 	// is st edge e burnt on assoc face fi? If so, return fire direction _from -> _to
-	bool isStEdgeBurnt(const TriEdge& e, int _fi, int& _from, int& _to);
+	bool isBurnPath(const TriEdge& e, int _fi, int& _from, int& _to);
 	// return only st. edges that are used as part of some "burn tree"
 	void getBurnedStEdgesFromBurnTree(
 		vector<std::pair<TriEdge, int> >& _burntE_assocF_list,
@@ -272,6 +277,8 @@ public:
 	bool isDualValid() const;
 	// return if a given dual vert id corresponds to a face-dual.
 	bool isFaceDual(int _dual_id) const;
+	// return the MA tri edge id if the given dual vert is on a tri edge, -1 otherwise
+	int isEdgeDual( int _dual_id ) const;
 	// return the list of dual vts
 	const vector<TriPoint>& getDualVts() const;
 	// burn a polyline network
@@ -471,7 +478,7 @@ public:
 	void exportPerSectorET(std::string _file_name);
 	//bool setPerSectorBT(std::string _file_name);
 
-private:
+protected:
 	/* steiner graph helpers 
 	*/
 	// subdivision dispatcher
@@ -531,7 +538,7 @@ private:
 	//
 	//void recordDualwrtStEdge(unsigned _fi, TriEdge _st_e, unsigned _e_dual_vi, unsigned _poly_dual_vi);
 
-private:
+protected:
 	typedef CGAL::Quotient<CGAL::MP_Float>							NT;
 	typedef CGAL::Cartesian<NT>										Exact_K;
 	typedef CGAL::Point_2<Exact_K>									Point2_E; // exact cgal point_2
@@ -544,7 +551,7 @@ private:
 	typedef Arrangement2::Halfedge_handle							Arr_halfedge_hdl;
 	typedef Arrangement2::Face_handle								Arr_face_hdl;
 
-private:
+protected:
 	// do initialize chores
 	void init();
 	// reset statistics related to burn function
@@ -609,7 +616,7 @@ private:
 	// find the dual point of the given polygon face
 	// modeled and solved as a quadratic opt. problem
 	void dualize_poly_subdivision(
-		const std::vector<unsigned>& _vts, unsigned _fi, 
+		const std::vector<unsigned>& _vts, unsigned _fi, bool _f_part_of_pocket,
 		const std::vector<vector<unsigned>>& _poly_subdivision,
 		const map<unsigned, std::pair<trimesh::vec, float>>& _vert_burnDirDistPair_map,
 		const map<TriEdge, vector<int> >& _burntEdge_assocFaces_map,
@@ -803,7 +810,9 @@ public:
 	vector<bool> has_isects;
 
 	/* private data member */
-private:
+protected:
+	// value indicating bad burn distance
+	const float m_invalid_burn_d = numeric_limits<float>::max();
 	// topo type for each vertex
 	vector<TopoType> t_type;
 	// num of sectors (topo edges) at each vertex.

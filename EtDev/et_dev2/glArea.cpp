@@ -240,6 +240,7 @@ void GLArea::reset()
 	m_drawOrig = false;
 	m_drawPoints = false;
 	m_drawMA = false;
+	m_drawMALines = false;
 	m_drawMAFinnerStatic = false;
 	m_drawMC = false;
 	m_drawBurntEdges = false;
@@ -305,17 +306,39 @@ void GLArea::passToDrawable(
 		return;
 	}
 	m_radiiReady = radii.size();
+	this->m_meshMA = mesh_MA;
+	this->m_medialAxisFile = _medialMesh_file;
+	this->m_meshOrig = mesh_3d;
 
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setRenderMode(MeshDrawer::PER_VERT);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setMeshToDraw(mesh_MA);
 	std::dynamic_pointer_cast<MeshDrawer>(m_origDrawer)->setRenderMode(MeshDrawer::PER_VERT);
 	std::dynamic_pointer_cast<MeshDrawer>(m_origDrawer)->setMeshToDraw(mesh_3d);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->initCameraPosAndLens();
-
-	this->m_meshMA = mesh_MA;
-	this->m_medialAxisFile = _medialMesh_file;
-	this->m_meshOrig = mesh_3d;
-
+	
+	m_meshOrig->need_bbox();
+	float s = m_meshOrig->bbox.size().max();
+	
+	/* setup line geometry of MA to render */
+	auto ma_line_drawer_ptr = std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer );
+	uploadLinesToDrawer( mesh_MA->vertices, mesh_MA->lines, ma_line_drawer_ptr );
+	cout << "MA lines uploaded to GPU!" << endl;
+	TriColor const_edge_color( 0.469, 0.469, 0.469 );
+	auto color_data = new float[ mesh_MA->lines.size() * 2 * 3 ];
+	for ( unsigned i = 0; i < mesh_MA->lines.size(); i++ )
+	{
+		const auto& edge_color = const_edge_color;
+		color_data[ i * 2 * 3 + 0 ] = edge_color[ 0 ];
+		color_data[ i * 2 * 3 + 1 ] = edge_color[ 1 ];
+		color_data[ i * 2 * 3 + 2 ] = edge_color[ 2 ];
+		color_data[ i * 2 * 3 + 3 + 0 ] = edge_color[ 0 ];
+		color_data[ i * 2 * 3 + 3 + 1 ] = edge_color[ 1 ];
+		color_data[ i * 2 * 3 + 3 + 2 ] = edge_color[ 2 ];
+	}
+	cout << "Setting color for MA lines..." << endl;
+	ma_line_drawer_ptr->setPerVertColor( color_data, mesh_MA->lines.size() * 2 );
+	delete[] color_data;
+	
 	// clear the history data in GPU managed by line/point drawers
 	/*m_linesDrawer->clear();
 	m_pointDrawer->clear();*/
@@ -324,13 +347,12 @@ void GLArea::passToDrawable(
 	//this->stg = NULL; 
 
 	// update the geometry scale of the other drawers
-	m_meshOrig->need_bbox();
-	float s = m_meshOrig->bbox.size().max();
 	std::dynamic_pointer_cast<PointDrawer>(m_pointDrawer)->setScale(s);
 	std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer)->setScale(s);
 	std::dynamic_pointer_cast<LineDrawer>(m_dynamic_dualLineDrawer)->setScale(s);
 	std::dynamic_pointer_cast<LineDrawer>(m_burntEdgesDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setScale(s);
+	std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer )->setScale( s );
 	std::dynamic_pointer_cast<MeshDrawer>(m_FinerMAStaticDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MAFinnerDynamicDrawer)->setScale(s);
 	std::dynamic_pointer_cast<SphereDrawer>(m_MPDrawer)->setScale(s);
@@ -787,12 +809,12 @@ bool GLArea::colorMCEdgeBy(
 				float max_dist = -1.0f;
 				for (auto it = cur_MC_visDist_byEdge.begin(); it != cur_MC_visDist_byEdge.end(); ++it)
 				{
-					if (it->at(0) < numeric_limits<float>::max())
+					if ( it->at( 0 ) < stg->infiniteBurnDist() )
 					{
 						min_dist = std::min(it->at(0), min_dist);
 						max_dist = std::max(it->at(0), max_dist);
 					}
-					if (it->at(1) < numeric_limits<float>::max())
+					if (it->at(1) < stg->infiniteBurnDist() )
 					{
 						min_dist = std::min(it->at(1), min_dist);
 						max_dist = std::max(it->at(1), max_dist);
@@ -813,11 +835,17 @@ bool GLArea::colorMCEdgeBy(
 				for (auto it = cur_MC_visDist_byEdge.begin(); it != cur_MC_visDist_byEdge.end(); ++it)
 				{
 					auto ei = it - cur_MC_visDist_byEdge.begin();
-					c = util::GetColour(it->at(0), min_dist, max_dist);
+					if ( it->at( 0 ) < stg->infiniteBurnDist() )
+						c = util::GetColour( it->at( 0 ), min_dist, max_dist );
+					else
+						c = TriColor( 0, 0, 0 );
 					colors[ei*2*3 + 0 + 0] = c[0];
 					colors[ei*2*3 + 0 + 1] = c[1];
 					colors[ei*2*3 + 0 + 2] = c[2];
-					c = util::GetColour(it->at(1), min_dist, max_dist);
+					if ( it->at( 1 ) < stg->infiniteBurnDist() )
+						c = util::GetColour( it->at( 1 ), min_dist, max_dist );
+					else
+						c = TriColor( 0, 0, 0 );
 					colors[ei*2*3 + 3 + 0] = c[0];
 					colors[ei*2*3 + 3 + 1] = c[1];
 					colors[ei*2*3 + 3 + 2] = c[2];
@@ -856,12 +884,12 @@ bool GLArea::colorMCEdgeBy(
 				float max_dist = -1.0f;
 				for (auto it = cur_MC_visDist_byEdge.begin(); it != cur_MC_visDist_byEdge.end(); ++it)
 				{
-					if (it->at(0) < numeric_limits<float>::max())
+					if ( it->at( 0 ) < stg->infiniteBurnDist() )
 					{
 						min_dist = std::min(it->at(0), min_dist);
 						max_dist = std::max(it->at(0), max_dist);
 					}
-					if (it->at(1) < numeric_limits<float>::max())
+					if ( it->at( 1 ) < stg->infiniteBurnDist() )
 					{
 						min_dist = std::min(it->at(1), min_dist);
 						max_dist = std::max(it->at(1), max_dist);
@@ -870,10 +898,16 @@ bool GLArea::colorMCEdgeBy(
 				for (auto it = cur_MC_visDist_byEdge.begin(); it != cur_MC_visDist_byEdge.end(); ++it)
 				{
 					auto ei = it - cur_MC_visDist_byEdge.begin();
-					saliency_data[ei*2 + 1] = 
-						util::rescale(it->at(1), min_dist, max_dist, _alpha_exp, _min_alpha, 1.0f);
-					saliency_data[ei*2] = 
-						util::rescale(it->at(1), min_dist, max_dist, _alpha_exp, _min_alpha, 1.0f);
+					if ( it->at( 1 ) < stg->infiniteBurnDist() )
+						saliency_data[ ei * 2 + 1 ] = util::rescale(
+							it->at( 1 ), min_dist, max_dist, _alpha_exp, _min_alpha, 1.0f );
+					else
+						saliency_data[ ei * 2 + 1 ] = 1.0f;
+					if ( it->at( 0 ) < stg->infiniteBurnDist() )
+						saliency_data[ ei * 2 ] = util::rescale( 
+							it->at( 0 ), min_dist, max_dist, _alpha_exp, _min_alpha, 1.0f );
+					else
+						saliency_data[ ei * 2 ] = 1.0f;
 				}
 				/*for (unsigned ei = 0; ei < stg->dual_edges.size(); ei++)
 				{
@@ -1399,6 +1433,10 @@ void GLArea::setDrawFlag(GLArea::DrawFlag _obj_to_draw, bool _draw)
 		break;
 	case GLArea::DRAW_MA:
 		m_drawMA = _draw;
+		//m_drawMALines = _draw;
+		break;
+	case GLArea::DRAW_MA_LINE:
+		m_drawMALines = _draw;
 		break;
 	case GLArea::DRAW_MA_FINE:
 		m_drawMAFinnerStatic = _draw;		
@@ -1584,44 +1622,32 @@ void GLArea::uploadMAFinerStaticColors(
 	vector<vector<float>>& _scalar_per_sheet, float _min, float _max
 	)
 {
-	unsigned vts_size = 0;
-	vector<float> scalar_field;
-	scalar_field.reserve(stg->m_MA_finer_tris.size() * 3);
-	vector<TriFace> faces(stg->m_MA_finer_tris.size());
+	unsigned vts_size = stg->m_MA_finer_tris.size() * 3;
+	float scalar;
+	TriColor vert_color;
+	float* color_data = new float[ vts_size * 3 ]; // to be uploaded to gpu
 	for (int fi = 0; fi < stg->m_MA_finer_tris.size(); ++fi)
 	{
 		const auto& f = stg->m_MA_finer_tris[fi].first;
 		auto fi_MA = stg->m_MA_finer_tris[fi].second;
-		// duplicate shared vertices
+		// assign a color for each vert for each face (shared vertices thus are duplicated)
 		for (int j = 0; j < 3; ++j)
 		{
 			int vi = f[j];
-			vts_size ++;
-			auto tei = stg->mapTopo(vi, fi_MA);
-			assert(tei >= 0);
-			scalar_field.push_back( _scalar_per_sheet[vi][tei] );
-		}
-		faces[fi] = util::makeFace(vts_size-1, vts_size-2, vts_size-3);
-	}
-
-	float scalar;
-	TriColor vert_color;
-	float* color_data = new float[ vts_size*3 ];
-
-	for (int fi = 0; fi < faces.size(); ++fi)
-	{
-		const auto& f = faces[fi];
-		// duplicate shared vertices
-		for (int j = 0; j < 3; ++j)
-		{
-			int vi = f[j];
-
-			// per vert color according to properly selected scalar value 
-			scalar = scalar_field[vi];
-			vert_color = util::GetColour( scalar, _min, _max );
-			color_data[vi * 3 + 0] = vert_color[0];
-			color_data[vi * 3 + 1] = vert_color[1];
-			color_data[vi * 3 + 2] = vert_color[2];
+			auto tei = stg->mapTopo( vi, fi_MA );
+			assert( tei >= 0 );
+			scalar = _scalar_per_sheet[ vi ][ tei ];
+			if ( scalar == numeric_limits<float>::max() )
+			{
+				vert_color = TriColor( 0.0f, 0.0f, 0.0f ); 
+			}
+			else
+			{
+				vert_color = util::GetColour( scalar, _min, _max );
+			}
+			color_data[ vi * 3 + 0 ] = vert_color[ 0 ];
+			color_data[ vi * 3 + 1 ] = vert_color[ 1 ];
+			color_data[ vi * 3 + 2 ] = vert_color[ 2 ];
 		}
 	}
 
@@ -2019,7 +2045,11 @@ void GLArea::getFaceDistMetricMA(
 				auto cur_vert_per_sheet = _vert_dist_per_sheet[i];
 				for (int j = 0; j < cur_vert_per_sheet.size(); ++j)
 				{
-					cur_vert_per_sheet[j] = cur_vert_per_sheet[j] - bt3;
+					float bt2_s = cur_vert_per_sheet[ j ];
+					if ( bt2_s < stg->infiniteBurnDist() )
+						cur_vert_per_sheet[ j ] = bt2_s - bt3;
+					else
+						cur_vert_per_sheet[ j ] = stg->infiniteBurnDist();
 				}
 				_vert_dist_per_sheet[i] = cur_vert_per_sheet;
 			}
@@ -2127,10 +2157,14 @@ void GLArea::getPerSheetDistMetricMA(VertFieldType _vert_field, vector<vector<fl
 		for (auto it = _dist_per_sheet.begin(); it != _dist_per_sheet.end(); ++it)
 		{
 			auto idx = it - _dist_per_sheet.begin();
-			auto bt3_val = stg->bt3MA_vert[idx];
+			auto d_bt3 = stg->bt3MA_vert[idx];
 			for (unsigned j = 0; j < it->size(); ++j)
 			{
-				(*it)[j] -= bt3_val;
+				float d_bt2 = ( *it )[ j ];
+				if ( d_bt2 < stg->infiniteBurnDist() )
+					( *it )[ j ] = d_bt2 - d_bt3;
+				else
+					( *it )[ j ] = stg->infiniteBurnDist();
 			}
 		}
 		break;
@@ -2299,23 +2333,30 @@ void GLArea::colorMAFaceBy(
 				// visualize topo type: only if burnt && dist value valid
 				for (unsigned j = 0; j < 3; ++j)
 				{
-					int tei = stg->mapTopo(f[j], fi);
-					assert(tei >= 0);
-					scalar = vertDist_per_sheet[f[j]][tei];
-					burnt = stg->burnt[f[j]];
-
-					saliency = burnt ? util::rescale(
-						scalar, min_val, max_val, _alpha_exp, _min_alpha, 1.0f
-						) : 1.0f;
+					bool burnt = stg->burnt[ f[ j ] ];
+					if (burnt)
+					{
+						int tei = stg->mapTopo( f[ j ], fi );
+						assert( tei >= 0 );
+						scalar = vertDist_per_sheet[ f[ j ] ][ tei ];
+						saliency = util::rescale(
+							scalar, min_val, max_val, _alpha_exp, _min_alpha, 1.0f
+						);
+					}
+					else
+					{
+						saliency = 1.0f;
+					}
 					saliency_data[3*fi+j] = saliency;
 				}
 			}
 			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertSaliency(saliency_data, m_meshMA->faces.size()*3);
 			delete [] saliency_data;
 		}
-
+		cout << "uploading MA finer static colors... " << endl;
 		// don't forget to update colors of fine MA triangulation in case fine pruning is to perform
 		this->uploadMAFinerStaticColors(vertDist_per_sheet, min_val, max_val);
+		cout << "Done: uploading MA finer static colors." << endl;
 	}
 	else
 	{
@@ -2513,9 +2554,11 @@ void GLArea::getMCDistMetric(DistMC _type, vector<float>& _dist) const
 		_dist.reserve(stg->dual_vts.size());
 		for (unsigned i = 0; i < stg->bt2_MC.size(); ++i)
 		{
-			_dist.push_back(
-				stg->bt2_MC[i] - stg->bt3_MC[i]
-			);
+			float d_bt2 = stg->bt2_MC[ i ], d_bt3 = stg->bt3_MC[ i ];
+			if ( d_bt2 < stg->infiniteBurnDist() )
+				_dist.push_back( d_bt2 - d_bt3 );
+			else
+				_dist.push_back( stg->infiniteBurnDist() );
 		}
 		break;
 	case BT2_BT3_REL_MC:
@@ -2536,9 +2579,11 @@ void GLArea::getMCDistMetric(DistMC _type, vector<float>& _dist) const
 		_dist.reserve(stg->dual_vts.size());
 		for (unsigned i = 0; i < stg->bt1_medialCurve.size(); ++i)
 		{
-			_dist.push_back(
-				std::max(0.0f, stg->bt1_medialCurve[i] - stg->bt2_MC[i])
-			);
+			float d_bt2 = stg->bt2_MC[ i ], d_bt1 = stg->bt1_medialCurve[ i ];
+			if ( d_bt2 < stg->infiniteBurnDist() )
+				_dist.push_back( std::max( 0.0f, d_bt1 - d_bt2 ) );
+			else
+				_dist.push_back( stg->infiniteBurnDist() );
 		}
 		break;
 	case BT1_BT2_REL_MC:
@@ -2582,6 +2627,8 @@ void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge)
 	};
 	auto get_bt1 = [this] (const TriEdge& _e, trimesh::vec2& _dist_on_e)
 	{
+		// needs to explicitly consider dist of _e b.c. our bt1_MC doesn't record
+		// bt1 on a per-edge basis (i.e. the similar way per-sheet bt is recorded for MA)
 		float d = trimesh::dist(this->stg->dual_vts[_e[0]], this->stg->dual_vts[_e[1]]);
 		if (stg->burnNext_medialCurve[_e[0]] == _e[1])
 		{
@@ -2593,6 +2640,8 @@ void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge)
 			_dist_on_e[1] = stg->bt1_medialCurve[_e[1]];
 			_dist_on_e[0] = stg->bt1_medialCurve[_e[1]] + d;
 		}
+		if ( !( ::is_valid( _dist_on_e[ 0 ] ) && _dist_on_e[ 0 ] < stg->infiniteBurnDist() ) )
+			_dist_on_e = vec2( stg->infiniteBurnDist() );
 	};
 
 	for (unsigned ei = 0; ei < stg->dual_edges.size(); ++ei)
@@ -2609,7 +2658,10 @@ void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge)
 		case BT2_BT3_MC: 
 			get_bt2(ei, e, dist_on_e);
 			get_bt3(e, dist2_on_e);
-			dist_on_e = std::max(0.0f, dist_on_e - dist2_on_e);
+			if ( dist_on_e[ 0 ] < stg->infiniteBurnDist() )
+				dist_on_e = std::max( 0.0f, dist_on_e - dist2_on_e );
+			else
+				dist_on_e = vec2( stg->infiniteBurnDist() );
 			break;
 		case BT2_BT3_REL_MC:
 			get_bt2(ei, e, dist_on_e);
@@ -2622,7 +2674,10 @@ void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge)
 		case BT1_BT2_MC:
 			get_bt1(e, dist_on_e);
 			get_bt2(ei, e, dist2_on_e);
-			dist_on_e = std::max(0.0f, dist_on_e - dist2_on_e);
+			if ( dist_on_e[ 0 ] < stg->infiniteBurnDist() )
+				dist_on_e = std::max( 0.0f, dist_on_e - dist2_on_e );
+			else
+				dist_on_e = vec2( stg->infiniteBurnDist() );
 			break;
 		case BT1_BT2_REL_MC:
 			get_bt1(e, dist_on_e);
@@ -2630,7 +2685,8 @@ void GLArea::getMCDistMetric(DistMC _type, vector<trimesh::vec2>& _dist_by_edge)
 			dist2_on_e = trimesh::vec2(1.0f) - dist_on_e / dist2_on_e;
 			break;
 		}
-
+		if ( !( ::is_valid( dist_on_e[ 0 ] ) && dist_on_e[ 0 ] < stg->infiniteBurnDist() ) )
+			dist_on_e = vec2( stg->infiniteBurnDist() );
 		_dist_by_edge.push_back(dist_on_e);
 	}
 }
@@ -2702,7 +2758,10 @@ void GLArea::pruneMA(float _t1, float _t2)
 {
 	if (!stg)
 		return;
-	
+	// do nothing if no threshold is valid
+	if ( _t1 < 0 && _t2 < 0 )
+		return;
+
 	vector<unsigned> _faces;
 	TriFace f;
 	// begin: used for face-pruning by inspecting vertex values
@@ -2713,8 +2772,6 @@ void GLArea::pruneMA(float _t1, float _t2)
 		stg->setFacePruned(fi, false);
 		f = stg->m_origG->faces[fi];
 
-		// at least t1 or t2 is valid
-		assert(!(_t1 < 0) || !(_t2 < 0));
 		if ( !(_t1 < 0) ) // t1 valid
 		{
 			if ( !(_t2 < 0) ) // t2 also valid
@@ -2790,6 +2847,7 @@ void GLArea::pruneMA(float _t1, float _t2)
 		}
 	}
 
+	cout << "MA faces left: " << _faces.size() << endl;
 	this->drawMeshSubset(std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer), _faces);
 }
 
@@ -3154,7 +3212,10 @@ void GLArea::uploadHS()
 	m_hs->getRemainedEdgesColor( edge_colors );*/
 
 	//this->m_drawHS = true;
-	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, /*&edge_colors*/nullptr, nullptr, m_hsLineDrawer, m_hsFaceDrawer);
+	cout << "hs faces left: " << tri_faces_hs.size() << endl;
+	vector<TriColor> edge_color( 1, TriColor( 0, 0, 0 ) );
+	vector<TriColor> face_color( 1, m_constColor_MA );
+	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, &edge_color/*nullptr*/, &face_color/*nullptr*/, m_hsLineDrawer, m_hsFaceDrawer);
 }
 
 //void GLArea::uploadHS()
@@ -3806,6 +3867,7 @@ void GLArea::setLinesOffset(float _r)
 {
 	std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer)->setZFightOffset(_r);
 	std::dynamic_pointer_cast<LineDrawer>(m_hsLineDrawer)->setZFightOffset(_r);
+	std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer )->setZFightOffset( _r );
 	std::dynamic_pointer_cast<LineDrawer>(m_dynamic_dualLineDrawer)->setZFightOffset(_r);
 
 	if (m_iso_cont)
@@ -3993,6 +4055,9 @@ void GLArea::initializeGL(void)
 		new MeshDrawer(width(), height(), m_simpProg, m_edgeProg)
 		);
 	track_ball = dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->getCamera();
+	m_MALineDrawer = std::shared_ptr<LineDrawer>(
+		new LineDrawer( m_linesProg, track_ball )
+		);
 	m_origDrawer = std::shared_ptr<MeshDrawer>(
 		new MeshDrawer(width(), height(), m_simpProg, m_edgeProg, track_ball)
 		);
@@ -4034,6 +4099,7 @@ void GLArea::initializeGL(void)
 	m_drawers.clear();
 	m_drawers.push_back(m_origDrawer);
 	m_drawers.push_back(m_MADrawer);
+	m_drawers.push_back( m_MALineDrawer );
 	m_drawers.push_back(m_pointDrawer);
 	m_drawers.push_back(m_dualLinesDrawer);
 	m_drawers.push_back(m_dynamic_dualLineDrawer);
@@ -4078,7 +4144,10 @@ void GLArea::resizeGL(int _w, int _h)
 	if (m_drawOrig)
 		m_origDrawer->reshape(_w, _h);
 	if (m_drawMA)
-		m_MADrawer->reshape(_w, _h);
+	{
+		m_MADrawer->reshape( _w, _h );
+		m_MALineDrawer->reshape( _w, _h );
+	}
 	if (m_drawMAFinnerStatic)
 	{
 		m_FinerMAStaticDrawer->reshape(_w, _h);
@@ -4144,6 +4213,17 @@ void GLArea::paintGL(void)
 			{
 				opaque_draws.push_back( std::make_pair(m_MADrawer, true) );
 				//m_MADrawer->render(0.0);
+			}
+			if ( m_drawMALines )
+			{
+				if ( m_lineTransparent )
+				{
+					transparent_draws.push_back( std::make_pair( m_MALineDrawer, false ) );
+				}
+				else
+				{
+					opaque_draws.push_back( std::make_pair( m_MALineDrawer, false ) );
+				}
 			}
 			//m_MADrawer->render(0.0);
 		}
@@ -5112,7 +5192,7 @@ void GLArea::uploadSimplicialComplex(
 	float* color_data = new float[tri_faces_hs.size()*3];
 	for (unsigned i = 0; i < tri_faces_hs.size()*3; i += 3)
 	{
-		const auto& face_color = _f_colors ? ( *_f_colors )[ i ] : const_face_color;
+		const auto& face_color = _f_colors ? ( *_f_colors )[ _f_colors->size() == 1 ? 0 : i ] : const_face_color;
 		color_data[i+0] = face_color[0];
 		color_data[i+1] = face_color[1];
 		color_data[i+2] = face_color[2];
@@ -5156,7 +5236,7 @@ void GLArea::uploadSimplicialComplex(
 	color_data = new float[ edges_hs.size() * 2 * 3 ];
 	for ( unsigned i = 0; i < edges_hs.size(); i++ )
 	{
-		const auto& edge_color = _e_colors ? ( *_e_colors )[ i ] : const_edge_color;
+		const auto& edge_color = _e_colors ? ( *_e_colors )[ _e_colors->size() == 1 ? 0 : i ] : const_edge_color;
 		color_data[ i * 2 * 3 + 0 ] = edge_color[ 0 ];
 		color_data[ i * 2 * 3 + 1 ] = edge_color[ 1 ];
 		color_data[ i * 2 * 3 + 2 ] = edge_color[ 2 ];

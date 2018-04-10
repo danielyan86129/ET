@@ -904,23 +904,37 @@ void HybridSkeleton::assignElementValues(
 		{
 			val_0 = is_dual_0 ? _dual_vts_bt2bt3[v0] : _orig_vts_bt2bt3[v0];
 			val_1 = is_dual_1 ? _dual_vts_bt2bt3[v1] : _orig_vts_bt2bt3[v1];
-			e_value = std::min(val_0, val_1);
-			/*if ( debug_e.count( ei ) )
-				cout << "e-value bt2bt3 done." << e_value << endl;*/
-			edges_measure[ei] = e_value;
-			min_bt2bt3 = std::min(min_bt2bt3, e_value);
-			max_bt2bt3 = std::max(max_bt2bt3, max(val_0, val_1));
+			e_value = std::min( val_0, val_1 );
+			if ( ::is_valid( e_value ) && e_value < m_stg->infiniteBurnDist() )
+			{
+				/*if ( debug_e.count( ei ) )
+								cout << "e-value bt2bt3 done." << e_value << endl;*/
+				min_bt2bt3 = std::min( min_bt2bt3, e_value );
+				max_bt2bt3 = std::max( max_bt2bt3, e_value );
+				edges_measure[ ei ] = e_value;
+			}
+			else
+			{
+				edges_measure[ ei ] = m_stg->infiniteBurnDist();
+			}
 			/*if ( debug_e.count( ei ) )
 				cout << "range of bt2bt3 done." << endl;*/
 
 			val_0 = is_dual_0 ? _dual_vts_bt2bt3rel[v0] : _orig_vts_bt2bt3rel[v0];
 			val_1 = is_dual_1 ? _dual_vts_bt2bt3rel[v1] : _orig_vts_bt2bt3rel[v1];
-			e_value = std::min(val_0, val_1);
-			/*if ( debug_e.count( ei ) )
-				cout << "e-value bt2bt3 rel. done." << e_value << endl;*/
-			edges_rel_measure[ei] = e_value;
-			min_bt2bt3rel = std::min(min_bt2bt3rel, e_value);
-			max_bt2bt3rel = std::max(max_bt2bt3rel, e_value);
+			e_value = std::min( val_0, val_1 );
+			if ( ::is_valid( e_value ) && e_value < m_stg->infiniteBurnDist() )
+			{
+				/*if ( debug_e.count( ei ) )
+								cout << "e-value bt2bt3 rel. done." << e_value << endl;*/
+				min_bt2bt3rel = std::min( min_bt2bt3rel, e_value );
+				max_bt2bt3rel = std::max( max_bt2bt3rel, e_value );
+				edges_measure[ ei ] = e_value;
+			}
+			else
+			{
+				edges_rel_measure[ ei ] = m_stg->infiniteBurnDist();
+			}
 			/*if ( debug_e.count( ei ) )
 				cout << "range of bt2bt3 rel. done." << endl;*/
 		}
@@ -973,7 +987,7 @@ void HybridSkeleton::assignElementValues(
 			{
 				// only use face dual value cuz dual on edge could be a junction 
 				// that's trickier to deal with correctly
-				if ( m_stg->m_is_face_dual[v] >= 0 ) 
+				if ( m_stg->m_is_face_dual[v] >= 0 && _dual_vts_bt2bt3[v] < m_stg->infiniteBurnDist() ) 
 				{
 					scalar_bt2bt3 += _dual_vts_bt2bt3[v];
 					scalar_bt2bt3rel += _dual_vts_bt1bt2rel[v];
@@ -984,23 +998,33 @@ void HybridSkeleton::assignElementValues(
 			{
 				int res = m_stg->mapTopo(v, from_fi);
 				assert(res >= 0);
-
 				auto tei = (TopoGraph::EdgeIdx)res;
-				scalar_bt2bt3 += _orig_persheet_bt2bt3[v][tei];
-				scalar_bt2bt3rel += _orig_persheet_bt2bt3rel[v][tei];
-				cnt_scalar ++;
+				if ( _orig_persheet_bt2bt3[ v ][ tei ] < m_stg->infiniteBurnDist() )
+				{
+					scalar_bt2bt3 += _orig_persheet_bt2bt3[ v ][ tei ];
+					scalar_bt2bt3rel += _orig_persheet_bt2bt3rel[ v ][ tei ];
+					cnt_scalar++;
+				}
 			}
 		}
-		scalar_bt2bt3 /= cnt_scalar;
-		scalar_bt2bt3rel /= cnt_scalar;
+		// safe guard: range excludes invalid/infinity values
+		if ( cnt_scalar == 0 )
+		{
+			scalar_bt2bt3 = m_stg->infiniteBurnDist();
+			scalar_bt2bt3rel = m_stg->infiniteBurnDist();
+		}
+		else
+		{
+			scalar_bt2bt3 /= cnt_scalar;
+			scalar_bt2bt3rel /= cnt_scalar;
+			min_bt2bt3 = std::min( scalar_bt2bt3, min_bt2bt3 );
+			max_bt2bt3 = std::max( scalar_bt2bt3, max_bt2bt3 );
+			min_bt2bt3rel = std::min( scalar_bt2bt3rel, min_bt2bt3rel );
+			max_bt2bt3rel = std::max( scalar_bt2bt3rel, max_bt2bt3rel );
+		}
 
 		face_bt2bt3[i] = scalar_bt2bt3;
 		face_bt2bt3rel[i] = scalar_bt2bt3rel;
-
-		min_bt2bt3 = std::min(face_bt2bt3[i], min_bt2bt3);
-		max_bt2bt3 = std::max(face_bt2bt3[i], max_bt2bt3);
-		min_bt2bt3rel = std::min(face_bt2bt3rel[i], min_bt2bt3rel);
-		max_bt2bt3rel = std::max(face_bt2bt3rel[i], max_bt2bt3rel);
 	}
 	std::cout << "HS faces' values derived." << endl;
 
@@ -1304,35 +1328,55 @@ void HybridSkeleton::prune(
 			}
 		}
 	}
-	// third, those faces marked as TO-REMOVE must have been removed
+	// third, report num of those faces marked as TO-REMOVE but remained
+	// (usually due to being part of closed pocket)
+	int cnt_open_faces = 0;
+	int cnt_leftover_faces = 0;
 	for (unsigned fi = 0; fi < m_tri_faces.size(); ++fi)
 	{
 		if (m_to_remove_face[fi] && !m_removed[1][fi])
 		{
-			cout << "face " << fi << " (marked as to-remove) but not removed!"
-				<< "value: " << face_bt2bt3[ fi ] << endl;
+			/*cout << "face " << fi << " (marked as to-remove) remained!"
+				<< "value: " << face_bt2bt3[ fi ] << endl;*/
 			const auto& f = m_tri_faces[fi];
+			bool face_is_open = false;
+			cnt_leftover_faces++;
 			for ( auto i = 0; i < 3; ++i )
 			{
 				auto ei = f[ i ];
 				if ( !m_removed[ 0 ][ ei ] )
 				{
-					cout << "edge " << ei << " removed? " << m_removed[ 0 ][ ei ] << ", "
+					/*cout << "edge " << ei << " removed? " << m_removed[ 0 ][ ei ] << ", "
 						<< " dual edge? " << !part_of_orig_edge( ei ) << ", "
 						<< " ref count " << m_ref_edge_per_prune[ ei ] << ", "
 						<< " remaining nb faces: ";
 					const auto& nbFaces = m_nb_faces_for_edge[ ei ];
 					for ( auto f_iter = nbFaces.begin(); f_iter != nbFaces.end(); ++f_iter )
 					{
-						if ( !m_removed[ 1 ][ *f_iter ] )
-							cout << *f_iter << ( m_to_remove_face[ *f_iter ] ? "(m)" : "" ) << ", ";
+					if ( !m_removed[ 1 ][ *f_iter ] )
+					cout << *f_iter << ( m_to_remove_face[ *f_iter ] ? "(m)" : "" ) << ", ";
 					}
-					cout << endl;
+					cout << endl;*/
+					if ( m_ref_edge_per_prune[ ei ] == 1 )
+					{
+						face_is_open = true;
+						break;
+					}
 				}
 			}
+			cnt_open_faces += face_is_open;
 			//goto END_OF_POST_TEST;
 			//break;
 		}
+	} // check remaining face
+	if ( cnt_open_faces )
+	{
+		cout << "WARNING: " << cnt_open_faces << " out of " << cnt_leftover_faces
+			<< " faces (marked to-remove) should really be removed!" << endl;
+	}
+	else
+	{
+		cout << cnt_leftover_faces << " faces (marked to-remove) are left un-removed, due to being part of closed pockets" << endl;
 	}
 END_OF_POST_TEST:
 	;
@@ -1396,7 +1440,7 @@ void HybridSkeleton::exportSkeleton(
 			auto v = transform_skel_vert_id( f[ j ] );
 			if ( m_stg->isDualVertInFineTri( v, v ) )
 			{
-				if ( m_stg->isFaceDual( v ) )
+				if ( m_stg->isFaceDual( v ) >= 0 )
 				{
 					s_bt3 += bt3_dual[ v ];
 					s_bt2 += bt2_dual[ v ];
@@ -1688,7 +1732,7 @@ bool HybridSkeleton::edge_below_threshold(
 	else
 	{
 		if ( edges_measure[ _ei ] < _bt1bt2_t ||
-			edges_rel_measure[_ei] < _bt1bt2rel_t )
+			edges_rel_measure[ _ei ] < _bt1bt2rel_t )
 		{
 			return true;
 		}

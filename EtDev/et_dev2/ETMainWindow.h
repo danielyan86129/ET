@@ -54,6 +54,7 @@ public slots:
 	void onDrawStPointsChecked(int _state);
 	void onPointSizeSpun(double _value);
 	void onHideMAChanged(int _state);
+	void onHideMALineChanged( int _state );
 	void onHideOrigChanged(int _state);
 	void onHideMCChanged(int _state);
 	void onVisBurntEdgesChanged(int _state);
