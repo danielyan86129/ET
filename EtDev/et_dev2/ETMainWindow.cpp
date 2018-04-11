@@ -982,6 +982,7 @@ void ETMainWindow::onColorPerFaceBtnClicked()
 	ui_compact.visMADistCombo->addItem("Angle");
 	ui_compact.visMADistCombo->addItem("Lambda");
 	ui_compact.visMADistCombo->addItem("MGF");
+	ui_compact.visMADistCombo->addItem( "measure in file" );
 	ui_compact.visMADistCombo->setCurrentIndex(-1);
 
 	ui_compact.visMADistCombo->setItemData(
@@ -1018,7 +1019,7 @@ void ETMainWindow::onColorPerFaceBtnClicked()
 
 void ETMainWindow::onVisDistMAComboChanged(int _idx)
 {
-	//cout << "current index: " << _idx << endl; //debug
+	cout << "current index: " << _idx << endl; //debug
 	if (_idx < 0)
 		return;
 
@@ -1151,12 +1152,15 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		disableWidgetsForStep(BURN_MA);
 		ui_compact.maViewGroup->setEnabled(true);
 		ui_compact.distVisBtnGroup->setEnabled( true );
+		ui_compact.MAAlphaGroup->setEnabled( true );
 		ui_compact.maBurnGroup->setEnabled( true );
 		resetParams(BURN_MA);
 		if (!m_debugMode)
 		{
-			// adaptive subdivision
 			ui_compact.stSubdivCombo->setCurrentIndex(1);
+			ui_compact.computeAllDistBtn->click();
+			ui_compact.doMAFaceScalarDiffusion->setChecked( true );
+			ui_compact.usePerSheetBox->setChecked( false );
 		}
 		// show both orig and MA
 		ui_compact.hideOrig->blockSignals(true);
@@ -1351,6 +1355,9 @@ GLArea::FaceFieldType ETMainWindow::get_MA_face_dist_type(int _idx)
 		break;
 	case 6:
 		face_field = GLArea::GEODESIC_f;
+		break;
+	case 7:
+		face_field = GLArea::FILE_MSURE;
 		break;
 	default:
 		face_field = GLArea::BT2_f;

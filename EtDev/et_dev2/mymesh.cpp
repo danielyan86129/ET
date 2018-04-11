@@ -11,6 +11,7 @@ struct internal{
 	struct Face {
 		unsigned char nvts;
 		int verts[ 3 ];
+		float s;
 	};
 };
 MyMesh * MyMesh::read( const char * _fname )
@@ -72,9 +73,12 @@ MyMesh * MyMesh::read_ply_helper( const char* _fname )
 	std::map<std::string, PlyProperty> f_props_map;
 	PlyProperty f_props[] = {
 		{"vertex_indices", Int32, Int32, offsetof( internal::Face, verts ),
-			PLY_LIST, Uint8, Uint8, offsetof( internal::Face,nvts ) }
+			PLY_LIST, Uint8, Uint8, offsetof( internal::Face,nvts ) },
+		{"msure", Float32, Float32, offsetof( internal::Face, s ),
+			PLY_SCALAR, 0,0,0}
 	};
 	f_props_map[ "vertex_indices" ] = f_props[0];
+	f_props_map[ "msure" ] = f_props[ 1 ];
 	vector<internal::Vertex> vts;
 	vector<internal::Edge> edges;
 	vector<internal::Face> faces;
@@ -103,7 +107,10 @@ MyMesh * MyMesh::read_ply_helper( const char* _fname )
 	{
 		const auto& f = faces[ i ];
 		mesh->faces.push_back( TriFace( f.verts ) );
+		mesh->msure_face.push_back( f.s );
 	}
+	faces.clear(); faces.shrink_to_fit();
+
 	return mesh;
 }
 

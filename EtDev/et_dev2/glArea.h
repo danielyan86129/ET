@@ -56,7 +56,9 @@ public:
 	// possible scalar fields on verts of MA
 	enum VertFieldType { BT2_v, BT3_v, DIFF_v, DIFF_REL_v };
 	// possible scalar fields on faces of MA
-	enum FaceFieldType { BT2_f, BT3_f, DIFF_f, DIFF_REL_f, ANGLE_f, LAMBDA_f, GEODESIC_f };
+	enum FaceFieldType {
+		BT2_f, BT3_f, DIFF_f, DIFF_REL_f, ANGLE_f, LAMBDA_f, GEODESIC_f, FILE_MSURE
+	};
 	// visualize burned edges or dual edges
 	enum BurntOrDualType { VIS_BURNT = 0x1, VIS_DUAL = 0x10 };
 	// draw flags:

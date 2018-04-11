@@ -1841,12 +1841,12 @@ void GLArea::getFaceDistMetricMA(
 	bool _do_face_diffusion,	
 	vector<float>& _dist_per_face)
 {
-	_dist_per_face.assign(stg->m_origG->faces.size(), -1.0f);
-	switch (_face_field)
+	_dist_per_face.assign( stg == nullptr ? m_meshMA->faces.size() : stg->m_origG->faces.size(), -1.0f );
+	switch ( _face_field )
 	{
 	case BT2_f: case BT3_f: case DIFF_f: case DIFF_REL_f:
 		//precomputeForMeasures();
-		switch (_face_field)
+		switch ( _face_field )
 		{
 		case BT2_f:
 			_dist_per_face = stg->bt2MA_face;
@@ -1858,68 +1858,69 @@ void GLArea::getFaceDistMetricMA(
 			_dist_per_face = stg->bt2bt3diffMA_face;
 			break;
 		case DIFF_REL_f:
-			_dist_per_face.resize(stg->bt2bt3diffMA_face.size());
-			for (unsigned i = 0; i < _dist_per_face.size(); ++i)
-				_dist_per_face[i] = !( stg->bt2MA_face[i] > 0.0f ) ? 
-				1.0f : stg->bt2bt3diffMA_face[i] / stg->bt2MA_face[i];
+			_dist_per_face.resize( stg->bt2bt3diffMA_face.size() );
+			for ( unsigned i = 0; i < _dist_per_face.size(); ++i )
+				_dist_per_face[ i ] = !( stg->bt2MA_face[ i ] > 0.0f ) ?
+				1.0f : stg->bt2bt3diffMA_face[ i ] / stg->bt2MA_face[ i ];
 			break;
 		}
 		break;
 	case ANGLE_f: case LAMBDA_f: case GEODESIC_f:
+	{
 		/*vector<TriPoint> isects;
-		vector<bool> has_isects;
-		stg->computeIntersectionsForFaces(this->m_meshOrig, radii);*/
+				vector<bool> has_isects;
+				stg->computeIntersectionsForFaces(this->m_meshOrig, radii);*/
 
-		if (_face_field == ANGLE_f)
+		if ( _face_field == ANGLE_f )
 		{
 			cout << "computing angles..." << endl;
-			stg->computeAngleMetricForFaces(stg->m_footPtsForMAFaces, _dist_per_face);
+			stg->computeAngleMetricForFaces( stg->m_footPtsForMAFaces, _dist_per_face );
 			cout << "done" << endl;
 		}
-		else if (_face_field == LAMBDA_f)
+		else if ( _face_field == LAMBDA_f )
 		{
 			cout << "computing lambda metric..." << endl;
-			stg->computeLambdaMetricForFaces(stg->m_footPtsForMAFaces, _dist_per_face);
+			stg->computeLambdaMetricForFaces( stg->m_footPtsForMAFaces, _dist_per_face );
 			cout << "done" << endl;
 		}
 		else
 		{
 			cout << "computing geodesic metric..." << endl;
-			QString cache = QString(this->m_medialAxisFile.c_str()).remove(".clean").replace(".off", "_geoDCache.txt");
-			stg->computeGeodMetricForFaces(this->m_meshOrig, stg->m_footPtsForMAFaces, _dist_per_face, cache.toStdString());
+			QString cache = QString( this->m_medialAxisFile.c_str() ).remove( ".clean" ).replace( ".off", "_geoDCache.txt" );
+			stg->computeGeodMetricForFaces( this->m_meshOrig, stg->m_footPtsForMAFaces, _dist_per_face, cache.toStdString() );
 			cout << "done" << endl;
 		}
 
 		// debug begin:
-		cout << "getFaceDistMetricMA (per-face), before diffusion: "<<endl;
+		cout << "getFaceDistMetricMA (per-face), before diffusion: " << endl;
 		auto min_f_val = *_dist_per_face.begin();
 		auto max_f_val = *_dist_per_face.begin();
-		for (unsigned fi = 0; fi < _dist_per_face.size(); ++fi)
+		for ( unsigned fi = 0; fi < _dist_per_face.size(); ++fi )
 		{
-			if (_dist_per_face[fi] < 0.0f)
+			if ( _dist_per_face[ fi ] < 0.0f )
 				continue;
-			min_f_val = std::min(min_f_val, _dist_per_face[fi]);
-			max_f_val = std::max(max_f_val, _dist_per_face[fi]);
+			min_f_val = std::min( min_f_val, _dist_per_face[ fi ] );
+			max_f_val = std::max( max_f_val, _dist_per_face[ fi ] );
 		}
-		std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<endl;
+		std::cout << "face field range: " << min_f_val << "," << max_f_val << endl;
 		// debug end:
 
-		if (_do_face_diffusion)
+		if ( _do_face_diffusion )
 		{
-			m_diffuser_MA.solve(_dist_per_face);
+			m_diffuser_MA.solve( _dist_per_face );
 
 			// debug begin:
-			cout << "getFaceDistMetricMA (per-face), after diffusion: "<<endl;
+			cout << "getFaceDistMetricMA (per-face), after diffusion: " << endl;
 			min_f_val = *_dist_per_face.begin();
 			max_f_val = *_dist_per_face.begin();
-			for (unsigned fi = 0; fi < _dist_per_face.size(); ++fi)
+			for ( unsigned fi = 0; fi < _dist_per_face.size(); ++fi )
 			{
-				if (_dist_per_face[fi] < 0.0f)
+				if ( _dist_per_face[ fi ] < 0.0f )
 					continue;
-				min_f_val = std::min(min_f_val, _dist_per_face[fi]);
-				max_f_val = std::max(max_f_val, _dist_per_face[fi]);
+				min_f_val = std::min( min_f_val, _dist_per_face[ fi ] );
+				max_f_val = std::max( max_f_val, _dist_per_face[ fi ] );
 			}
-			std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<endl;
+			std::cout << "face field range: " << min_f_val << "," << max_f_val << endl;
 			// debug end:
 
 			/*cout << "outputting diffusion system to Mathematica file..."<<endl;
@@ -1929,6 +1930,10 @@ void GLArea::getFaceDistMetricMA(
 
 		break;
 	}
+	case FILE_MSURE:
+		_dist_per_face = m_meshMA->msure_face;
+		break;
+	}
 }
 
 void GLArea::getFaceDistMetricMA(
@@ -1936,6 +1941,7 @@ void GLArea::getFaceDistMetricMA(
 	bool _do_face_diffusion,
 	vector<vector<float> >& _vert_dist_per_sheet)
 {
+	cout << "face field: " << _face_field << endl;
 	const auto& vts = m_meshMA->vertices;
 	// by default BT2 per vert per sheet
 	_vert_dist_per_sheet.assign(
@@ -2214,8 +2220,8 @@ void GLArea::colorMAFaceBy(
 	bool _do_face_diffusion,
 	bool _use_per_sheet)
 {
-	if (!stg)
-		return;
+	/*if (!stg)
+		return;*/
 	
 	auto MA_drawer = std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer);
 	if (_use_per_sheet)

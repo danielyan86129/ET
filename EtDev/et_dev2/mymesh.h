@@ -23,4 +23,6 @@ protected:
 public:
 	// 1-d line geometry
 	vector<TriEdge> lines;
+	// measure assoc. on element
+	vector<float> msure_face;
 };
