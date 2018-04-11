@@ -52,7 +52,7 @@
         <string/>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="fileTab">
         <property name="toolTip">
@@ -150,6 +150,13 @@
              <widget class="QPushButton" name="loadFilesBtn">
               <property name="text">
                <string>load</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QCheckBox" name="removeDupFace">
+              <property name="text">
+               <string>remove dup</string>
               </property>
              </widget>
             </item>

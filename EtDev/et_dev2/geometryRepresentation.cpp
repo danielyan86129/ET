@@ -966,9 +966,9 @@ void SteinerGraph::buildTopoGraphs()
 			// associate cur face with that 1-ring edge
 			// then save this <edge, assoc_face> pair
 			TriEdge one_r_e = util::makeEdge(st1, st2);
-			int ret_code = m_origG->getFaceIdx(m_origG->faces[nbFaces[i]]);
-			assert(ret_code >= 0);
-			faces_assoc.push_back(ret_code);
+			/*int ret_code = m_origG->getFaceIdx( util::makeFace( m_origG->faces[ nbFaces[ i ] ] ) );
+			assert(ret_code >= 0);*/
+			faces_assoc.push_back( nbFaces[ i ] );
 			one_ring_edges.push_back(make_pair(one_r_e, faces_assoc));
 
 			// index 1-ring edge and store 1-ring vts (test for duplicate)

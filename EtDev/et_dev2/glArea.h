@@ -80,11 +80,12 @@ public:
 	void saveView(std::shared_ptr<QSettings>& _qsetting);
 	void loadView(std::shared_ptr<QSettings>& _qsetting);
 	
-	void loadRadiiFromFile(std::string _r_file);
+	//void loadRadiiFromFile(std::string _r_file);
 	void passToDrawable(
 		std::string _medialMesh_file, 
 		std::string _origMesh_file,
-		std::string _r_file);
+		std::string _r_file,
+		bool _remove_dup_faces);
 	void wireFrameOnMesh(bool _draw_or_not);
 	void drawSteinerPoints(bool _draw_or_not, float _size);
 	void drawMCProxy(bool _draw_or_not);

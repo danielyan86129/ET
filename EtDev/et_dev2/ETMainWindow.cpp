@@ -337,7 +337,7 @@ void ETMainWindow::onLoadFilesClicked()
 	if (origshape_file == "")
 		origshape_file = ma_file;
 	glarea->reset();
-	glarea->passToDrawable(ma_file, origshape_file, r_file);
+	glarea->passToDrawable(ma_file, origshape_file, r_file, ui_compact.removeDupFace->isChecked());
 
 	prepareForStep(POST_OPEN_FILE);
 	prepareForStep(BURN_MA);

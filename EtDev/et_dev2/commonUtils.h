@@ -82,6 +82,10 @@ namespace util
 		_j > _k ? std::swap(_j, _k) : NULL;
 		return TriFace(_i, _j, _k);
 	}
+	inline TriFace makeFace( const TriFace& _f )
+	{
+		return makeFace( _f[ 0 ], _f[ 1 ], _f[ 2 ] );
+	}
 
 	inline TriEdge pureLoopEdge(void)
 	{

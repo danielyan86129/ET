@@ -30,7 +30,7 @@ namespace et
 		const char * _r_file, vector<float>* _radii,
 		const char * _orig3d_file, shared_ptr<TriMesh>& _m_orig3d,
 		trimesh::XForm<double> &_trans_mat,
-		float _eps, float _pert )
+		float _eps, float _pert, bool _remove_dup_faces )
 	{
 		int ret = true;
 		bool radii_ready = false;
@@ -81,50 +81,59 @@ namespace et
 			_m_MA->need_normals();
 			_m_MA->need_faces();
 			_m_MA->need_bbox();
-
 			_m_orig3d->need_normals();
 			_m_orig3d->need_faces();
 			_m_orig3d->need_bbox();
 
+			// re-order indices in each face
+			for ( auto & f : _m_MA->faces )
+				f = util::makeFace( f );
+			for ( auto & f : _m_orig3d->faces )
+				f = util::makeFace( f );
+
 			cout << endl << "Loading meshes done." << endl << endl;
 		}
 
-		cout << "------------Clean Duplicate Faces------------" << endl;
-
-		struct FaceCompare
+		if ( _remove_dup_faces )
 		{
-			bool operator () ( const TriFace& a, const TriFace& b )
+			cout << "------------Clean Duplicate Faces------------" << endl;
+
+			/*struct FaceCompare
 			{
-				if ( a[ 0 ] == b[ 0 ] )
-					if ( a[ 1 ] == b[ 1 ] )
-						return a[ 2 ] < b[ 2 ];
+				bool operator () ( const TriFace& a, const TriFace& b )
+				{
+					if ( a[ 0 ] == b[ 0 ] )
+						if ( a[ 1 ] == b[ 1 ] )
+							return a[ 2 ] < b[ 2 ];
+						else
+							return a[ 1 ] < b[ 1 ];
 					else
-						return a[ 1 ] < b[ 1 ];
-				else
-					return a[ 0 ] < b[ 0 ];
-			}
-		};
-		set<TriFace, FaceCompare> faces_map;
-		vector<bool> faces_to_remove( _m_MA->faces.size(), false );
-		int remove_cnt = 0;
+						return a[ 0 ] < b[ 0 ];
+				}
+			};*/
+			set<TriFace, FaceCompare> faces_map;
+			vector<bool> faces_to_remove( _m_MA->faces.size(), false );
+			int remove_cnt = 0;
 
-		for ( unsigned fi = 0; fi < _m_MA->faces.size(); ++fi )
-		{
-			TriFace& f = _m_MA->faces[ fi ];
-			std::sort( f.v, f.v + 3 );
-			int pre_sz = faces_map.size();
-			faces_map.insert( f );
-			if ( faces_map.size() == pre_sz )
+			for ( unsigned fi = 0; fi < _m_MA->faces.size(); ++fi )
 			{
-				remove_cnt++;
-				faces_to_remove[ fi ] = true;
+				TriFace& f = _m_MA->faces[ fi ];
+				//std::sort( f.v, f.v + 3 );
+				f = util::makeFace( f );
+				int pre_sz = faces_map.size();
+				faces_map.insert( f );
+				if ( faces_map.size() == pre_sz )
+				{
+					remove_cnt++;
+					faces_to_remove[ fi ] = true;
+				}
 			}
-		}
-		trimesh::remove_faces( _m_MA.get(), faces_to_remove );
-		cout << "# duplicate faces removed: " << remove_cnt << endl;
-		faces_map.clear();
+			trimesh::remove_faces( _m_MA.get(), faces_to_remove );
+			cout << "# duplicate faces removed: " << remove_cnt << endl;
+			faces_map.clear();
 
-		cout << endl << "Clean Duplicate Faces Done." << endl << endl;
+			cout << endl << "Clean Duplicate Faces Done." << endl << endl;
+		}
 
 		/*cout << "Cleaning Unused Vertices... " << endl << endl;
 		trimesh::remove_unused_vertices( _m_MA.get() );

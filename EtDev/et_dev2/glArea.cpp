@@ -278,7 +278,8 @@ void GLArea::loadView(std::shared_ptr<QSettings>& _qsetting)
 void GLArea::passToDrawable(
 	std::string _medialMesh_file, 
 	std::string _origMesh_file,
-	std::string _r_file)
+	std::string _r_file,
+	bool _remove_dup_faces )
 {
 	/* pass MA file to its mesh drawer */
 	/* and pass orig 3d surface file to its mesh drawer */
@@ -297,7 +298,7 @@ void GLArea::passToDrawable(
 		_r_file.c_str(), &radii, 
 		_origMesh_file.c_str(), mesh_3d, 
 		m_trans_mat,
-		eps, pert);
+		eps, pert, _remove_dup_faces );
 
 	if (!loaded)
 	{

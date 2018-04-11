@@ -8,7 +8,7 @@ namespace et
 		const char * _r_file, vector<float>* _radii,
 		const char * _orig3d_file, shared_ptr<TriMesh>& _m_orig3d,
 		trimesh::XForm<double> &_trans_mat,
-		float _eps, float _pert );
+		float _eps, float _pert, bool _remove_dup_faces );
 
 	// _radii will be of size 0 if loading fails
 	bool loadRadiiFromSAT( const char *_radii_file, vector<float>& _radii, vector<TriPoint>& _centers );
