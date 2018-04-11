@@ -1150,7 +1150,8 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 	case BURN_MA:
 		disableWidgetsForStep(BURN_MA);
 		ui_compact.maViewGroup->setEnabled(true);
-		ui_compact.maBurnGroup->setEnabled(true);
+		ui_compact.distVisBtnGroup->setEnabled( true );
+		ui_compact.maBurnGroup->setEnabled( true );
 		resetParams(BURN_MA);
 		if (!m_debugMode)
 		{

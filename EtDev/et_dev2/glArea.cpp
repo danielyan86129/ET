@@ -3665,8 +3665,23 @@ bool GLArea::changeConstColorMA(float * _color, bool _color_vert)
 		MA_drawer->setRenderMode(MeshDrawer::PER_FACE);
 		MA_drawer->setPerFaceColor(color_data, m_meshMA->faces.size());
 	}
-	
 	delete [] color_data;
+
+	// change color of the 1-cell in input MA
+	color_data = new float[ m_meshMA->lines.size() * 2 * 3 ];
+	for ( auto ei = 0; ei < m_meshMA->lines.size(); ++ei )
+	{
+		const auto& e = m_meshMA->lines[ ei ];
+		color_data[ ei * 2 * 3 + 0 + 0 ] = _color[ 0 ];
+		color_data[ ei * 2 * 3 + 0 + 1 ] = _color[ 1 ];
+		color_data[ ei * 2 * 3 + 0 + 2 ] = _color[ 2 ];
+
+		color_data[ ei * 2 * 3 + 3 + 0 ] = _color[ 0 ];
+		color_data[ ei * 2 * 3 + 3 + 1 ] = _color[ 1 ];
+		color_data[ ei * 2 * 3 + 3 + 2 ] = _color[ 2 ];
+	}
+	std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer )->setPerVertColor( color_data, m_meshMA->lines.size() * 2 );
+	delete[] color_data;
 
 	// also update color of finer MA 
 	uploadMAFinerStaticColors( TriColor(_color) );
@@ -3696,6 +3711,8 @@ bool GLArea::changeConstColorMC(float * _color)
 	std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer)->setPerVertColor(color_data, stg->dual_edges.size() * 2);
 	// also change color of the dynamic part of MC
 	std::dynamic_pointer_cast<LineDrawer>(m_dynamic_dualLineDrawer)->setPerVertColor(color_data, stg->dual_edges.size()*2 );
+	delete[] color_data; 
+	color_data = nullptr;
 
 	return true;
 }
