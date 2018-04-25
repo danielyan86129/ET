@@ -311,6 +311,9 @@ void GLArea::passToDrawable(
 	this->m_medialAxisFile = _medialMesh_file;
 	this->m_meshOrig = mesh_3d;
 
+	printf( "Medial axis #V/#E/#F = %d/%d/%d\n", 
+		m_meshMA->vertices.size(), m_meshMA->lines.size(), m_meshMA->faces.size() );
+
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setRenderMode(MeshDrawer::PER_VERT);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setMeshToDraw(mesh_MA);
 	std::dynamic_pointer_cast<MeshDrawer>(m_origDrawer)->setRenderMode(MeshDrawer::PER_VERT);
@@ -3922,85 +3925,24 @@ bool GLArea::outputToWenping()
 
 bool GLArea::readQMATFile(std::string _filename)
 {
-	ifstream infile(_filename);
-	if (!infile.is_open())
+	cout << "reading medial structure from qmat file "<<_filename<<endl;
+	vector<float> r;
+	auto mesh = MyMesh::readQMATFile( _filename, r );
+	if ( !mesh )
 	{
-		cout << "Error: cannot open "<<_filename<<endl;
+		cout << "Error: cannot read qmat file " << _filename << endl;
 		return false;
 	}
-
-	cout << "reading medial structure from qmat file "<<_filename<<endl;
-	int n_vts, n_edges, n_faces, dummy_int;
-	float r, dummy_float;
-	std::string data_type_s;
-	infile >> n_vts >> n_edges >> n_faces /*>> dummy_int*/;
-	vector<TriPoint> vts(n_vts);
-	vector<TriEdge> edges(n_edges);
-	vector<TriFace> faces(n_faces);
-	// read vts
-	for (int i = 0; i < n_vts; ++i)
-	{
-		auto& v = vts[i];
-		infile >> data_type_s;
-		if (data_type_s != "v")
-			return false;
-		infile >> v[0]>>v[1]>>v[2]>>r/*>>dummy_float*/;
-	}
-	// read edges
-	for (int i = 0; i < n_edges; ++i)
-	{
-		auto& e = edges[i];
-		infile >> data_type_s;
-		if (data_type_s != "e")
-			return false;
-		infile >> e[0]>>e[1];
-	}
-	// read faces
-	for (int i = 0; i < n_faces; ++i)
-	{
-		auto& f = faces[i];
-		infile >> data_type_s;
-		if (data_type_s != "f")
-			return false;
-		infile >> f[0]>>f[1]>>f[2];
-	}
-	infile.close();
-	cout << "reading qmat file done."<<endl;
-
-	// now, only keep edges that are isolated, i.e. not used by any faces
-	set<TriEdge> edges_used;
-	vector<TriEdge> es_of_f;
-	for (int i = 0; i < n_faces; ++i)
-	{
-		const auto& f = faces[i];
-		es_of_f = util::edgesFromFace(f);
-		for (auto it = es_of_f.begin(); it != es_of_f.end(); ++it)
-		{
-			edges_used.insert(*it);
-		}
-	}
-	vector<TriEdge> isolated_edges;
-	isolated_edges.reserve(edges.size());
-	for (int i = 0; i < n_edges; ++i)
-	{
-		const auto& e = edges[i];
-		if (edges_used.find(e) == edges_used.end())
-		{
-			isolated_edges.push_back(e);
-		}
-	}
+	cout << "Done: reading qmat file."<<endl;
 
 	// draw this simplicial complex
 	cout << "uploading qmat data to GPU for rendering..."<<endl;
 	this->m_drawQMAT = true;
-	uploadSimplicialComplex(vts, isolated_edges, faces, nullptr, nullptr, m_qmatEdgeDrawer, m_qmatFaceDrawer);
+	uploadSimplicialComplex(mesh->vertices, mesh->lines, mesh->faces, nullptr, nullptr, m_qmatEdgeDrawer, m_qmatFaceDrawer);
 	cout << "uploading qmat data to GPU done!"<<endl;
 	
-	vts.clear();
-	edges.clear();
-	isolated_edges.clear();
-	faces.clear();
-	isolated_edges.clear();
+	delete mesh;
+
 	return true;
 }
 

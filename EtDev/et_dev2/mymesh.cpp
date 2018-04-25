@@ -17,7 +17,7 @@ struct internal{
 MyMesh * MyMesh::read( const char * _fname )
 {
 	string fname( _fname );
-	if ( fname.find( ".off" ) != string::npos )
+	if ( fname.substr( fname.size() - string( ".off" ).size() ) == ".off" )
 	{
 		auto mesh = TriMesh::read( fname.c_str() );
 		auto newmesh = new MyMesh;
@@ -26,9 +26,14 @@ MyMesh * MyMesh::read( const char * _fname )
 		delete mesh;
 		return newmesh;
 	}
-	else if ( fname.find( ".ply" ) != string::npos )
+	else if ( fname.substr( fname.size() - string( ".ply" ).size() ) == ".ply" )
 	{
 		return read_ply_helper( fname.c_str() );
+	}
+	else if ( fname.substr( fname.size() - string( ".ma" ).size() ) == ".ma" )
+	{
+		vector<float> r;
+		return readQMATFile( fname, r );
 	}
 	return nullptr;
 }
@@ -100,13 +105,13 @@ MyMesh * MyMesh::read_ply_helper( const char* _fname )
 	for ( auto i = 0; i < edges.size(); ++i )
 	{
 		const auto& e = edges[ i ];
-		mesh->lines.push_back( TriEdge( e.v1, e.v2 ) );
+		mesh->lines.push_back( util::makeEdge( e.v1, e.v2 ) );
 	}
 	edges.clear(); edges.shrink_to_fit();
 	for ( auto i = 0; i < faces.size(); ++i )
 	{
 		const auto& f = faces[ i ];
-		mesh->faces.push_back( TriFace( f.verts ) );
+		mesh->faces.push_back( util::makeFace(TriFace( f.verts )) );
 		mesh->msure_face.push_back( f.s );
 	}
 	faces.clear(); faces.shrink_to_fit();
@@ -182,4 +187,84 @@ bool MyMesh::write_ply_helper( const char * _fname, const MyMesh * _m )
 	return ply_writer.write( _fname, true, true, true,
 		vert_props, edge_props, face_props,
 		output_vts, output_edges, output_faces ) == ply::SUCCESS;
+}
+
+MyMesh * MyMesh::readQMATFile( const std::string _filename, vector<float>& _radii )
+{
+	ifstream infile( _filename );
+	if ( !infile.is_open() )
+	{
+		return nullptr;
+	}
+
+	int n_vts, n_edges, n_faces, dummy_int;
+	float r, dummy_float;
+	std::string data_type_s;
+	infile >> n_vts >> n_edges >> n_faces /*>> dummy_int*/;
+	vector<TriEdge> edges;
+	set<TriEdge> edges_used;
+	vector<TriEdge> es_of_f;
+
+	// create mesh
+	auto mesh = new MyMesh();
+
+	// read vts
+	for ( int i = 0; i < n_vts; ++i )
+	{
+		point v;
+		infile >> data_type_s;
+		if ( data_type_s != "v" )
+			goto READ_QMAT_FAIL;
+		infile >> v[ 0 ] >> v[ 1 ] >> v[ 2 ] >> r/*>>dummy_float*/;
+		mesh->vertices.push_back( v );
+	}
+	// read edges
+	for ( int i = 0; i < n_edges; ++i )
+	{
+		TriEdge e;
+		infile >> data_type_s;
+		if ( data_type_s != "e" )
+			goto READ_QMAT_FAIL;
+		infile >> e[ 0 ] >> e[ 1 ];
+		edges.push_back( util::makeEdge( e[ 0 ], e[ 1 ] ) );
+	}
+	// read faces
+	for ( int i = 0; i < n_faces; ++i )
+	{
+		TriFace f;
+		infile >> data_type_s;
+		if ( data_type_s != "f" )
+			goto READ_QMAT_FAIL;
+		infile >> f[ 0 ] >> f[ 1 ] >> f[ 2 ];
+		mesh->faces.push_back( util::makeFace( f ) );
+	}
+	infile.close();
+
+	// keep isolated edges, i.e. not used by any faces
+	for ( int i = 0; i < n_faces; ++i )
+	{
+		const auto& f = mesh->faces[ i ];
+		es_of_f = util::edgesFromFace( f );
+		for ( auto it = es_of_f.begin(); it != es_of_f.end(); ++it )
+		{
+			edges_used.insert( *it );
+		}
+	}
+	for ( int i = 0; i < n_edges; ++i )
+	{
+		const auto& e = edges[ i ];
+		if ( edges_used.find( e ) == edges_used.end() )
+		{
+			mesh->lines.push_back( e );
+		}
+	}
+	edges_used.clear();
+	edges.clear();
+
+	return mesh;
+
+READ_QMAT_FAIL:
+	if ( mesh )
+		delete mesh;
+	return nullptr;
 }

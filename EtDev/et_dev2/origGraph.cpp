@@ -20,7 +20,10 @@ MyGraph::MyGraph( const vector<TriPoint>& _vts, const vector<TriEdge>& _edges, c
 	// store any pre-existing edges
 	this->edges = _edges;
 	for ( auto i = 0; i < edges.size(); ++i )
-		m_triEdge_idx_map[ edges[ i ] ] = i;
+	{
+		auto e = edges[ i ];
+		m_triEdge_idx_map[ util::makeEdge( e[ 0 ], e[ 1 ] ) ] = i;
+	}
 
 	// extract edges from faces
 	// add face to edge's nbface list

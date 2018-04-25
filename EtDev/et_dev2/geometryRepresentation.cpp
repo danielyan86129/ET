@@ -1081,8 +1081,10 @@ void SteinerGraph::buildTopoGraphs()
 		{
 			const auto& nbVts = m_origG->nbVtsOfVert[ vi ];
 			for ( auto i = 0; i < nbVts.size(); ++i )
-				if ( m_origG->getNbFaces( util::makeEdge( vi, nbVts[ i ] ) ).empty() )
-					tg->t_vts.push_back( nbVts[ i ] ); // add the nb v to rep this 1-cell-1-ring neighbor
+			{
+				//if ( m_origG->getNbFaces( util::makeEdge( vi, nbVts[ i ] ) ).empty() )
+				tg->t_vts.push_back( nbVts[ i ] ); // add the nb v to rep this 1-cell-1-ring neighbor
+			}
 		}
 
 		// finalize topo vts
