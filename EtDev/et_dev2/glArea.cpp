@@ -2266,7 +2266,8 @@ void GLArea::colorMAFaceBy(
 
 		for (unsigned vi = 0; vi < vertDist_per_sheet.size(); ++vi)
 		{
-			if (!stg->burnt[vi])
+			if ( ( _type == BT2_f || _type == DIFF_f || _type == DIFF_REL_f ) 
+				&& !stg->burnt[ vi ] )
 				continue;
 			const auto & cur_vert_per_sheet = vertDist_per_sheet[vi];
 			if ( !cur_vert_per_sheet.empty() )
@@ -2306,19 +2307,20 @@ void GLArea::colorMAFaceBy(
 				// visualize topo type: only if burnt && dist value valid
 				for (unsigned j = 0; j < 3; ++j)
 				{
-					int tei = stg->mapTopo(f[j], fi);
+					auto vi = f[ j ];
+					int tei = stg->mapTopo( vi, fi);
 					//assert(tei >= 0);
 					if (tei < 0)
 					{
 						cout << "Fatal Error: cannot find topo sheet containing face "<<fi<<endl;
 						exit(-1);
 					}
-					s = vertDist_per_sheet[f[j]][tei];
-					burnt = stg->burnt[f[j]];
+					s = vertDist_per_sheet[ vi ][tei];
+					bool invalid_color = ( _type == BT2_f || _type == DIFF_f || _type == DIFF_REL_f )
+						&& !stg->burnt[ vi ];
 
-					color = burnt ? util::GetColour(
-						s, min_val, max_val
-						) : TriColor(0.0f, 0.0f, 0.0f);
+					color = invalid_color ? TriColor( 0.0f, 0.0f, 0.0f ) 
+						: util::GetColour( s, min_val, max_val );
 
 					color_data[ 9*fi+3*j+0 ] = color[0];
 					color_data[ 9*fi+3*j+1 ] = color[1];
@@ -2343,19 +2345,18 @@ void GLArea::colorMAFaceBy(
 				// visualize topo type: only if burnt && dist value valid
 				for (unsigned j = 0; j < 3; ++j)
 				{
-					bool burnt = stg->burnt[ f[ j ] ];
-					if (burnt)
+					auto vi = f[ j ];
+					if ( ( _type == BT2_f || _type == DIFF_f || _type == DIFF_REL_f )
+						&& !stg->burnt[ vi ] )
+					{
+						saliency = 1.0f;
+					}
+					else
 					{
 						int tei = stg->mapTopo( f[ j ], fi );
 						assert( tei >= 0 );
 						scalar = vertDist_per_sheet[ f[ j ] ][ tei ];
-						saliency = util::rescale(
-							scalar, min_val, max_val, _alpha_exp, _min_alpha, 1.0f
-						);
-					}
-					else
-					{
-						saliency = 1.0f;
+						saliency = util::rescale( scalar, min_val, max_val, _alpha_exp, _min_alpha, 1.0f );
 					}
 					saliency_data[3*fi+j] = saliency;
 				}
