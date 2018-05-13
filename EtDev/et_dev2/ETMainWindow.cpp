@@ -133,6 +133,10 @@ ETMainWindow::ETMainWindow(QWidget *parent, Qt::WindowFlags flags)
 	QObject::connect( ui_compact.exportHSBtn, SIGNAL(clicked()), this, SLOT(onExportHSBtnClicked()) );
 	QObject::connect( ui_compact.exportBtn, SIGNAL(clicked()), this, SLOT(onExportBtnClicked()) );
 
+	/// new skeletonization tab
+	QObject::connect( ui_compact.precomputeAllBtn, SIGNAL( clicked() ), this, SLOT( onPrecomputeAllBtnClicked() ) );
+	QObject::connect( ui_compact.createSkelBtn, SIGNAL( clicked() ), this, SLOT( onVisHSClicked() ) );
+
 	/*resetParams();*/
 	
 	cout << "ui setup!" << endl;
@@ -167,6 +171,9 @@ void ETMainWindow::initUI()
 	pages_to_remove.push_back(ui_compact.hiddenTab);
 	pages_to_remove.push_back(ui_compact.ExportTab);
 	pages_to_remove.push_back(ui_compact.MCTab);
+	pages_to_remove.push_back( ui_compact.VideoTab );
+	pages_to_remove.push_back( ui_compact.MATab );
+	pages_to_remove.push_back( ui_compact.HSTab );
 	for (auto it = pages_to_remove.begin(); it != pages_to_remove.end(); ++it)
 	{
 		auto index = ui_compact.toolTabs->indexOf(*it);
@@ -175,6 +182,11 @@ void ETMainWindow::initUI()
 			index
 			);
 	}
+
+	// hide some widgets
+	ui_compact.MATransExpSlider->setVisible( false );
+	ui_compact.enableFinePruneMA->setVisible( false );
+	ui_compact.MCTransExpSlider->setVisible( false );
 }
 
 void ETMainWindow::setDebugMode(bool _enabled)
@@ -518,22 +530,7 @@ void ETMainWindow::onPruneCurveSpinChanged(double _val)
 
 bool ETMainWindow::onPruneDistMCComboChanged(int _idx)
 {
-	GLArea::DistMC metric;
-	switch (_idx)
-	{
-	case 0:
-		metric = GLArea::BT2_MC;
-		break;
-	case 1:
-		metric = GLArea::BT1_MC;
-		break;
-	case 2:
-		metric = GLArea::BT1_BT2_MC;
-		break;
-	case 3:
-		metric = GLArea::BT1_BT2_REL_MC;
-		break;
-	}
+	GLArea::DistMC metric = get_MC_dist_type( _idx );
 	if ( !glarea->setUpMCDistMetricForPruning(metric, distMin_MC, distMax_MC) )
 	{
 		cout << "ERROR: failed to get current distance metric to be used in pruning." << endl;
@@ -768,7 +765,7 @@ void ETMainWindow::onPruneMASpun_2(double _value)
 void ETMainWindow::onOrigTransparentSlided(int _value)
 {
 	glarea->changeOrigTransparency( 
-		((float)_value - ui_compact.origTransparentSlider->minimum()) / 
+		( ui_compact.origTransparentSlider->maximum() - (float)_value) /
 		(ui_compact.origTransparentSlider->maximum() - ui_compact.origTransparentSlider->minimum()) 
 		);
 }
@@ -780,7 +777,7 @@ void ETMainWindow::onMATransparentSlided(int _value)
 		ui_compact.visMADistCombo->currentIndex() >= 0
 		)
 	{
-		float min_alpha = ((float)ui_compact.MATransparentSlider->value() - ui_compact.MATransparentSlider->minimum()) / 
+		float min_alpha = ( ui_compact.MATransparentSlider->maximum() - (float)ui_compact.MATransparentSlider->value()) /
 			(ui_compact.MATransparentSlider->maximum() - ui_compact.MATransparentSlider->minimum());
 		int exp = ui_compact.MATransExpSlider->value();
 		if (ui_compact.colorPerVert->isChecked())
@@ -802,7 +799,7 @@ void ETMainWindow::onMATransparentSlided(int _value)
 
 void ETMainWindow::onMCTransparentSlided(int _value)
 {
-	float min_alpha = ((float)ui_compact.MCAlphaSlider->value() - ui_compact.MCAlphaSlider->minimum()) / 
+	float min_alpha = ( ui_compact.MCAlphaSlider->maximum() - (float)ui_compact.MCAlphaSlider->value()) /
 		(ui_compact.MCAlphaSlider->maximum() - ui_compact.MCAlphaSlider->minimum()) ;
 	int exp = ui_compact.MCTransExpSlider->value();
 	glarea->changeMCTransparency( 
@@ -975,14 +972,14 @@ void ETMainWindow::onColorPerFaceBtnClicked()
 	ui_compact.visMADistCombo->blockSignals(true);
 
 	ui_compact.visMADistCombo->clear();
-	ui_compact.visMADistCombo->addItem("BT_M");
-	ui_compact.visMADistCombo->addItem("R");
+	ui_compact.visMADistCombo->addItem("burntime");
+	ui_compact.visMADistCombo->addItem("radius");
 	ui_compact.visMADistCombo->addItem("ET");
-	ui_compact.visMADistCombo->addItem("ET(rel)");
-	ui_compact.visMADistCombo->addItem("Angle");
+	ui_compact.visMADistCombo->addItem("relative ET");
+	/*ui_compact.visMADistCombo->addItem("Angle");
 	ui_compact.visMADistCombo->addItem("Lambda");
 	ui_compact.visMADistCombo->addItem("MGF");
-	ui_compact.visMADistCombo->addItem( "measure in file" );
+	ui_compact.visMADistCombo->addItem( "measure in file" );*/
 	ui_compact.visMADistCombo->setCurrentIndex(-1);
 
 	ui_compact.visMADistCombo->setItemData(
@@ -1001,18 +998,18 @@ void ETMainWindow::onColorPerFaceBtnClicked()
 		3, 
 		"relative erosion thickness", 
 		Qt::ToolTipRole);
-	ui_compact.visMADistCombo->setItemData(
-		4, 
-		"angle btw. vectors formed by center of face & 3-sphere-intersections", 
+	/*ui_compact.visMADistCombo->setItemData(
+		4,
+		"angle btw. vectors formed by center of face & 3-sphere-intersections",
 		Qt::ToolTipRole);
 	ui_compact.visMADistCombo->setItemData(
-		5, 
-		"circumradius", 
+		5,
+		"circumradius",
 		Qt::ToolTipRole);
 	ui_compact.visMADistCombo->setItemData(
-		6, 
-		"medial geodesic function", 
-		Qt::ToolTipRole);
+		6,
+		"medial geodesic function",
+		Qt::ToolTipRole);*/
 
 	ui_compact.visMADistCombo->blockSignals(false);
 }
@@ -1066,6 +1063,9 @@ void ETMainWindow::onVisDistMAComboChanged(int _idx)
 		ui_compact.minVisDistMASpin->setValue(visDistOnMA_min);
 		ui_compact.maxVisDistMASpin->setValue(visDistOnMA_max);
 	}
+
+	// also update prune dist msure for MA
+	onPruneDistMAComboChanged_1( _idx );
 }
 
 void ETMainWindow::onPruneDistMAComboChanged_1(int _idx)
@@ -1145,14 +1145,15 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		ui_compact.origSurfViewGroup->setEnabled(true);
 		ui_compact.saveView->setEnabled(true);
 		ui_compact.loadView->setEnabled(true);
+		ui_compact.precomputeGroup->setEnabled( true );
 		resetParams(POST_OPEN_FILE);
 		ui_compact.colorPerFace->setChecked(true);
 		break;
 	case BURN_MA:
 		disableWidgetsForStep(BURN_MA);
 		ui_compact.maViewGroup->setEnabled(true);
-		ui_compact.distVisBtnGroup->setEnabled( true );
-		ui_compact.MAAlphaGroup->setEnabled( true );
+		ui_compact.distVisBtnGroup->setEnabled( false );
+		//ui_compact.MAAlphaGroup->setEnabled( true );
 		ui_compact.maBurnGroup->setEnabled( true );
 		resetParams(BURN_MA);
 		if (!m_debugMode)
@@ -1255,6 +1256,8 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		ui_compact.hsPruneGroup->setEnabled(true);
 		ui_compact.exportHSGroup->setEnabled(true);
 		ui_compact.ExportSkelBox->setEnabled(true);
+		// new tab
+		ui_compact.createSkelGroup->setEnabled( true );
 		resetParams(PRUNE_HS);
 		break;
 	case WRITE_BT_SKEL:
@@ -1273,7 +1276,7 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 	}
 	if (_stp > BURN_MA)
 	{
-		ui_compact.MAAlphaGroup->setEnabled(true);
+		//ui_compact.MAAlphaGroup->setEnabled(true);
 	}
 	if (_stp >= PRUNE_MA)
 	{
@@ -1291,9 +1294,10 @@ void ETMainWindow::disableWidgetsForStep(FineStep _stp)
 		ui_compact.saveView->setDisabled(true);
 		ui_compact.loadView->setDisabled(true);
 		ui_compact.readRadii->setDisabled(true);
+		ui_compact.precomputeGroup->setDisabled( true );
 	case POST_OPEN_FILE:
 		ui_compact.origSurfViewGroup->setDisabled(true);
-		ui_compact.MAAlphaGroup->setDisabled(true);
+		//ui_compact.MAAlphaGroup->setDisabled(true);
 	case BURN_MA:
 		ui_compact.maViewGroup->setDisabled(true);
 		ui_compact.maBurnGroup->setDisabled(true);
@@ -1315,6 +1319,8 @@ void ETMainWindow::disableWidgetsForStep(FineStep _stp)
 	case PRUNE_HS:
 		ui_compact.hsViewGroup->setDisabled(true);
 		ui_compact.hsPruneGroup->setDisabled(true);
+		// new tab
+		ui_compact.createSkelGroup->setDisabled( true );
 	case WRITE_BT_SKEL:
 		ui_compact.exportBTGroup->setDisabled(true);
 		ui_compact.ExportSkelBox->setDisabled(true);
@@ -1541,10 +1547,15 @@ void ETMainWindow::onVisHSClicked()
 			ui_compact.removeSmallCmpnts->isChecked()
 		);
 		// upload hs geometry and associated attributes
-		glarea->uploadHS();
+		glarea->uploadHS( ui_compact.smoothSkelCurve->isChecked(), ui_compact.smoothSkelCurveSpin->value() );
 	}
 
 	ui_compact.statusbar->showMessage("Done: pruning the skeleton. Skeleton is updated.");
+
+	// hide MA and MC
+	ui_compact.hideMA->setChecked( true );
+	ui_compact.hideMC->setChecked( true );
+
 }
 
 void ETMainWindow::onHSRemoveSmallCmpntsChecked(int _state)
@@ -1956,6 +1967,15 @@ void ETMainWindow::onExportBtnClicked()
 	}*/
 }
 
+void ETMainWindow::onPrecomputeAllBtnClicked()
+{
+	ui_compact.burnBtn->click();
+	ui_compact.createHSBtn->click();
+	ui_compact.hideMA->setChecked( false );
+	ui_compact.hideMC->setChecked( true );
+	ui_compact.hideHS->setChecked( true );
+}
+
 void ETMainWindow::handle_extra_params()
 {
 	cout << "measure to output: " << m_mc_meas_to_output << endl;
@@ -2128,7 +2148,7 @@ void ETMainWindow::resetParams(FineStep _stp)
 		
 	case BURN_MA:
 		// reset steiner subdivision widgets
-		ui_compact.nFixedSteinerSpin->setValue(0.004);
+		ui_compact.nFixedSteinerSpin->setValue(0.01);
 		ui_compact.stSubdivCombo->blockSignals(true);
 		ui_compact.stSubdivCombo->clear();
 		ui_compact.stSubdivCombo->addItems(QStringList() <<"Fixed"<<"Adaptive"<<"Midpoint");
@@ -2147,14 +2167,14 @@ void ETMainWindow::resetParams(FineStep _stp)
 		ui_compact.pruneMADistCombo1->blockSignals(true);
 		ui_compact.pruneMADistCombo1->clear();
 		ui_compact.pruneMADistCombo1->addItems(
-			QStringList() <<"BT_M"<<"R"<<"ET"<<"ET(rel)"<<"Angle"<<"Lambda"<<"MGF"
+			QStringList() << "burntime" << "radius" << "ET" << "relative ET"/*<<"Angle"<<"Lambda"<<"MGF"*/
 			);
 		ui_compact.pruneMADistCombo1->setCurrentIndex(-1);
 		ui_compact.pruneMADistCombo1->blockSignals(false);
 		ui_compact.pruneMADistCombo2->blockSignals(true);
 		ui_compact.pruneMADistCombo2->clear();
 		ui_compact.pruneMADistCombo2->addItems(
-			QStringList() <<"BT_M"<<"R"<<"ET"/*<<"ET(rel)"<<"Angle"<<"Lambda"<<"MGF"*/
+			QStringList() << "burntime" << "radius" << "ET" << "relative ET"/*<<"Angle"<<"Lambda"<<"MGF"*/
 			);
 		ui_compact.pruneMADistCombo2->setCurrentIndex(-1);
 		ui_compact.pruneMADistCombo2->blockSignals(false);
@@ -2188,14 +2208,14 @@ void ETMainWindow::resetParams(FineStep _stp)
 		ui_compact.visMCDistCombo->clear();
 		//ui_compact.visMCDistCombo->addItems(QStringList() <<"r"<<"BT_M"<<"ET_M"<<"ET_M(rel)"<<"BT_C"<<"ET_C"<<"ET_C(rel)");
 		//ui_compact.visMCDistCombo->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C");
-		ui_compact.visMCDistCombo->addItems( QStringList() << "r" << "BT_M" <<"ET_M" << "BT_C" << "ET_C" );
+		ui_compact.visMCDistCombo->addItems( QStringList() << "radius" << "burntime on MA" <<"ET on MA" << "burntime on MC" << "ET on MC" );
 		ui_compact.visMCDistCombo->setCurrentIndex( 0 );
 		ui_compact.visMCDistCombo->blockSignals(false);
 		ui_compact.pruneMCSlider1->setMaximum(10000);
 		ui_compact.pruneMCDistCombo1->blockSignals(true);
 		ui_compact.pruneMCDistCombo1->clear();
 		//ui_compact.pruneMCDistCombo1->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C"<<"ET_C(rel)");
-		ui_compact.pruneMCDistCombo1->addItems(QStringList() <<"BT_M"<<"BT_C"<<"ET_C");
+		ui_compact.pruneMCDistCombo1->addItems( QStringList() << "radius" << "burntime on MA" << "ET on MA" << "burntime on MC" << "ET on MC" );
 		ui_compact.pruneMCDistCombo1->setCurrentIndex( 0 );
 		ui_compact.pruneMCDistCombo1->blockSignals(false);
 		//ui_compact.pruneMCDistSpin1->setMaximum( 10000 );

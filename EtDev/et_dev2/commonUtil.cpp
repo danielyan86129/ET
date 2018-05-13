@@ -1,4 +1,5 @@
 #include "commonUtils.h"
+#include <unordered_map>
 
 namespace util 
 {
@@ -187,5 +188,57 @@ namespace util
 		_foot_pts[1] = vec3d( footpt[0], footpt[1], footpt[2] );
 
 		return isect_type;
+	}
+
+	void smoothCurves( vector<TriPoint>& _vts, const vector<TriEdge>& _edges, int _n )
+	{
+		// build V-V adjacency
+		std::unordered_map<int, vector<int>> adjVV;
+		for ( auto e : _edges )
+		{
+			adjVV[ e[ 0 ] ].push_back( e[ 1 ] );
+			adjVV[ e[ 1 ] ].push_back( e[ 0 ] );
+		}
+		for ( auto i = 0; i < _n; ++i )
+		{
+			smoothCurves( _vts, _edges, adjVV );
+		}
+	}
+	void smoothCurves( vector<TriPoint>& _vts, const vector<TriEdge>& _edges, const std::unordered_map<int, vector<int> >& _adjVV )
+	{
+		vector<TriPoint> new_V;
+		new_V.reserve( _edges.size() * 2 );
+		vector<int> V_id;
+		V_id.reserve( new_V.capacity() );
+		float lmd;
+		for (auto step_i = 1; step_i <= 2; ++step_i )
+		{
+			if ( step_i == 1 ) // lambda = 0.5 (smoothing)
+				lmd = 0.5;
+			else // lambda = 1/(0.1-1/0.5) ~ -0.2 (expanding)
+				lmd = -0.2;
+			for ( auto it = _adjVV.begin(); it != _adjVV.end(); ++it )
+			{
+				auto cur_vi = it->first;
+				const auto& nbs = it->second;
+				// nbhood avg
+				TriPoint nb_avg;
+				for ( auto ni : nbs )
+				{
+					nb_avg += _vts[ ni ];
+				}
+				nb_avg /= nbs.size();
+				// lin interpolate
+				new_V.push_back( trimesh::mix( _vts[ cur_vi ], nb_avg, lmd ) );
+				V_id.push_back( cur_vi );
+			}
+			// assign new locations to _vts
+			for ( auto i = 0; i < new_V.size(); ++i )
+			{
+				_vts[ V_id[ i ] ] = new_V[ i ];
+			}
+			new_V.clear();
+			V_id.clear();
+		}
 	}
 }

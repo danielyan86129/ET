@@ -5,6 +5,7 @@
 #include <limits>
 #include <assert.h>
 #include <vector>
+#include <unordered_map>
 #include <cstdlib>
 #include <Eigen/eigen>
 #include <CGAL/Exact_spherical_kernel_3.h> // use sphere intersection routine
@@ -543,6 +544,13 @@ namespace util
 		_isecs[1] = (q - h*n);
 		return POINT_ISECT;
 	}
+
+	///
+	/// smooth given curves with coordinates given in _vts (laplacian smoothing _n times)
+	/// correspondig entries in _vts will be modified with new locations
+	void smoothCurves( vector<TriPoint> & _vts, const vector<TriEdge>& _edges, int _n );
+	/// laplacian smoothing given curve's geometry once (v-v-adj is given)
+	void smoothCurves( vector<TriPoint>& _vts, const vector<TriEdge>& _edges, const std::unordered_map<int, vector<int> >& _adjVV );
 };
 
 

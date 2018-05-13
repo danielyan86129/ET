@@ -136,6 +136,7 @@ GLArea::GLArea(QWidget *parent /* = 0 */)
 
 	m_OrigTransparent = m_MATransparent = m_lineTransparent = false;
 	m_use_constColor_for_MA = false;
+	m_constColor_MA = TriColor( 1.0f, 98.0f / 255.0f, 0.0f );
 
 	m_fullMode = false;
 	m_pParent = nullptr;
@@ -2601,9 +2602,10 @@ void GLArea::getMCDistMetric(DistMC _type, vector<float>& _dist) const
 		_dist.reserve(stg->dual_vts.size());
 		for (unsigned i = 0; i < stg->bt1_medialCurve.size(); ++i)
 		{
-			_dist.push_back(
-				1.0f - stg->bt2_MC[i] / stg->bt1_medialCurve[i]
-			);
+			if ( stg->bt2_MC[ i ] < stg->infiniteBurnDist() )
+				_dist.push_back( 1.0f - stg->bt2_MC[ i ] / stg->bt1_medialCurve[ i ] );
+			else
+				_dist.push_back( stg->infiniteBurnDist() );
 		}
 		break;
 	}
@@ -3118,7 +3120,8 @@ void GLArea::usePerFaceRender(bool _is_perFace)
 
 void GLArea::setHSFaceDegenerateThreshold(float _t)
 {
-	this->m_hs->setPolyFaceDegenerateThresh(_t);
+	float max_area = std::pow( ( m_meshMA->bbox.max - m_meshMA->bbox.min ).max(), 2.0f );
+	this->m_hs->setPolyFaceDegenerateThresh( max_area* _t );
 }
 
 void GLArea::setComponentFaceNumberThresh(float _t)
@@ -3209,10 +3212,10 @@ void GLArea::createHS()
 #endif // PROFILE_SPEED
 }
 
-void GLArea::uploadHS()
+void GLArea::uploadHS( bool _smooth_curves, int _n_smooths )
 {
 	// obtain edges and faces of HS
-	auto& vts_hs = m_hs->getVts();
+	auto vts_hs = m_hs->getVts();
 	vector<TriEdge> edges_hs;
 	m_hs->getRemainedEdges(edges_hs);
 	//m_hs->getDualEdges( edges_hs );
@@ -3221,10 +3224,13 @@ void GLArea::uploadHS()
 	/*vector<TriColor> edge_colors;
 	m_hs->getRemainedEdgesColor( edge_colors );*/
 
+	if ( _smooth_curves )
+		util::smoothCurves( vts_hs, edges_hs, _n_smooths );
+
 	//this->m_drawHS = true;
 	cout << "hs faces left: " << tri_faces_hs.size() << endl;
 	vector<TriColor> edge_color( 1, TriColor( 0, 0, 0 ) );
-	vector<TriColor> face_color( 1, m_constColor_MA );
+	vector<TriColor> face_color( 1, m_use_constColor_for_MA ? m_constColor_MA : TriColor( 1.0f, 98.0f / 255.0f, 0.0f ) );
 	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, &edge_color/*nullptr*/, &face_color/*nullptr*/, m_hsLineDrawer, m_hsFaceDrawer);
 }
 

@@ -166,6 +166,9 @@ public slots:
 	void onExportHSBtnClicked();
 	void onExportBtnClicked();
 
+	/// new skeletonization tab
+	void onPrecomputeAllBtnClicked();
+
 protected:
 	void handle_extra_params();
 

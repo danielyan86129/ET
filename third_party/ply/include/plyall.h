@@ -84,6 +84,7 @@ namespace ply
 							setup_property_ply( m_ply, &( find_it->second ) );
 						}
 					}
+
 					// read in all elements
 					V v;
 					_vts.clear();
@@ -136,6 +137,12 @@ namespace ply
 						{
 							std::cout << "found property: " << prop->name << std::endl;
 							setup_property_ply( m_ply, &( find_it->second ) );
+						}
+						else
+						{
+							// when we don't want the prop, greg turk's ply reader didn't give internal type
+							// a valid value. We make it the same as external type to avoid crashing.
+							prop->internal_type = prop->external_type; 
 						}
 					}
 					// read in all elements

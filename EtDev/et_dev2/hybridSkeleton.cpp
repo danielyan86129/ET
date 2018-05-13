@@ -1553,15 +1553,24 @@ void HybridSkeleton::exportSkeleton(
 		}
 		else if ( _skel_name.find( ".ply" ) != std::string::npos )
 		{
+			struct VertexWithMsure
+			{
+				float x, y, z;
+				float bt3, bt2, bt1;
+			};
 			// prepare vertices, edges, and faces for output
-			vector<ply::Vertex> out_vts;
+			vector<VertexWithMsure> out_vts;
 			vector<ply::Edge> out_edges;
 			vector<ply::Face> out_faces;
 			for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
 			{
 				auto v = m_vts[ *it ];
 				v = _transform * v;
-				out_vts.push_back( { v[ 0 ], v[ 1 ], v[ 2 ] } );
+				int transformed_vi;
+				bool is_dual = m_stg->isDualVertInFineTri( *it, transformed_vi );
+				float bt3 = is_dual ? bt3_dual[ transformed_vi ] : bt3_orig[ *it ];
+				float bt2 = is_dual ? bt2_dual[ transformed_vi ] : bt2_orig[ *it ];
+				out_vts.push_back( { v[ 0 ], v[ 1 ], v[ 2 ], bt3, bt2 } );
 			}
 			for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
 			{
@@ -1574,9 +1583,12 @@ void HybridSkeleton::exportSkeleton(
 				out_faces.push_back( { 3, {f[ 0 ], f[ 1 ], f[ 2 ]} } );
 			}
 			std::map<std::string, PlyProperty> vert_props;
-			vert_props[ "x" ] = { "x", Float32, Float32, offsetof( ply::Vertex, x ), PLY_SCALAR, 0, 0, 0 };
-			vert_props[ "y" ] = { "y", Float32, Float32, offsetof( ply::Vertex, y ), PLY_SCALAR, 0, 0, 0 };
-			vert_props[ "z" ] = { "z", Float32, Float32, offsetof( ply::Vertex, z ), PLY_SCALAR, 0, 0, 0 };
+			vert_props[ "x" ] = { "x", Float32, Float32, offsetof( VertexWithMsure, x ), PLY_SCALAR, 0, 0, 0 };
+			vert_props[ "y" ] = { "y", Float32, Float32, offsetof( VertexWithMsure, y ), PLY_SCALAR, 0, 0, 0 };
+			vert_props[ "z" ] = { "z", Float32, Float32, offsetof( VertexWithMsure, z ), PLY_SCALAR, 0, 0, 0 };
+			vert_props[ "radius" ] = { "radius", Float32, Float32, offsetof( VertexWithMsure, bt3 ), PLY_SCALAR, 0, 0, 0 };
+			vert_props[ "bt2" ] = { "bt2", Float32, Float32, offsetof( VertexWithMsure, bt2 ), PLY_SCALAR, 0, 0, 0 };
+			//vert_props[ "bt1" ] = { "bt1", Float32, Float32, offsetof( ply::Vertex, bt1 ), PLY_SCALAR, 0, 0, 0 };
 			std::map<std::string, PlyProperty> edge_props;
 			edge_props[ "vertex1" ] = { "vertex1", Int32, Int32, offsetof( ply::Edge, v1 ), PLY_SCALAR, 0, 0, 0 };
 			edge_props[ "vertex2" ] = { "vertex2", Int32, Int32, offsetof( ply::Edge, v2 ), PLY_SCALAR, 0, 0, 0 };

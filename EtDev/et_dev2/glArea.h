@@ -244,12 +244,11 @@ public:
 	void getHSTheta2Ratio(float _abs_t, float& _ratio);
 	void getHSTheta1Ratio(float _abs_t, float& _ratio);
 	void createHS();
-	void uploadHS();
+	void uploadHS( bool _smooth_curves = false, int _n_smooths = 0 );
 	void pruneHS(
 		float _f_diff_r, float _f_reldiff_r, float _l_diff_r, float _l_reldiff_r, 
 		bool _use_inputs_directly,
-		bool _remove_small_cmpnts
-		);
+		bool _remove_small_cmpnts );
 
 	/*
 	application surf func related
