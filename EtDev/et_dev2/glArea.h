@@ -332,7 +332,7 @@ public:
 	void exportPerSectorET();
 	//bool importPerSectorBT(std::string _filename);
 	/// export skeleton to file
-	void exportSkeleton();
+	void exportSkeleton( bool _do_smoothing = false, int _smooth_cnt = 0 );
 
 public:
 	Ui::MainWindow* ui;

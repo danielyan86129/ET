@@ -1383,7 +1383,8 @@ END_OF_POST_TEST:
 }
 
 void HybridSkeleton::exportSkeleton(
-	const vector<std::string>& _skel_files, const trimesh::xform& _transform)
+	const vector<std::string>& _skel_files, const trimesh::xform& _transform,
+	bool _do_smoothing, int _smooth_cnt )
 {
 	// obtain remaining edges and faces of HS
 	vector<TriEdge> edges_hs;
@@ -1558,18 +1559,38 @@ void HybridSkeleton::exportSkeleton(
 				float x, y, z;
 				float bt3, bt2, bt1;
 			};
-			// prepare vertices, edges, and faces for output
+			
+			// smooth output geometry
+			vector<TriPoint> smooth_vts;
+			if ( _do_smoothing )
+			{
+				vector<TriEdge> skel_edges;
+				smooth_vts.reserve( vts_remained_indices.size() );
+				for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+				{
+					auto v = m_vts[ *it ];
+					v = _transform * v;
+					smooth_vts.push_back( v );
+				}
+				for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
+				{
+					const auto& e = *it;
+					skel_edges.push_back( e );
+				}
+				util::smoothCurves( smooth_vts, skel_edges, _smooth_cnt );
+			}
+			/* prepare vertices, edges, and faces for output */
 			vector<VertexWithMsure> out_vts;
 			vector<ply::Edge> out_edges;
 			vector<ply::Face> out_faces;
-			for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
+			for ( auto i = 0; i < vts_remained_indices.size(); ++i )
 			{
-				auto v = m_vts[ *it ];
-				v = _transform * v;
+				auto vi = vts_remained_indices[ i ];
+				auto v = _do_smoothing ? smooth_vts[ i ] : m_vts[ vi ];
 				int transformed_vi;
-				bool is_dual = m_stg->isDualVertInFineTri( *it, transformed_vi );
-				float bt3 = is_dual ? bt3_dual[ transformed_vi ] : bt3_orig[ *it ];
-				float bt2 = is_dual ? bt2_dual[ transformed_vi ] : bt2_orig[ *it ];
+				bool is_dual = m_stg->isDualVertInFineTri( vi, transformed_vi );
+				float bt3 = is_dual ? bt3_dual[ transformed_vi ] : bt3_orig[ vi ];
+				float bt2 = is_dual ? bt2_dual[ transformed_vi ] : bt2_orig[ vi ];
 				out_vts.push_back( { v[ 0 ], v[ 1 ], v[ 2 ], bt3, bt2 } );
 			}
 			for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
@@ -1604,6 +1625,7 @@ void HybridSkeleton::exportSkeleton(
 			ply_writer.write( _skel_name.c_str(), out_vts, out_edges, out_faces );*/
 
 			cout << "Done: skeleton exported to -> " << _skel_name << endl;
+			cout << "#V/#E/#F = " << out_vts.size() << "/" << out_edges.size() << "/" << out_faces.size() << endl;
 		}
 	}
 }

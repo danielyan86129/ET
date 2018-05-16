@@ -35,6 +35,7 @@ public:
 		float _omega,
 		const std::string& _mc_meas,
 		double _theta_2, double _theta_1,
+		int _smooth_cnt,
 		int _burn_sch_id = 0 /*default: steinergraph::orig-and-steiner*/ );
 
 public slots:
@@ -265,6 +266,8 @@ private:
 	double m_skel_theta1;
 	// burning scheme
 	SteinerGraph::BurnScheme m_burn_sch;
+	// skel smoothing params
+	int m_skel_smooth_cnt;
 };
 
 #endif // QTPUREGL_H

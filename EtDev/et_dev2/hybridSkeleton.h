@@ -122,7 +122,8 @@ public:
 
 	/* export the currently remaining parts of the skeleton to file
 	*/
-	void exportSkeleton(const vector<std::string>& _skel_files, const trimesh::xform& _transform);
+	void exportSkeleton( const vector<std::string>& _skel_files, const trimesh::xform& _transform,
+		bool _do_smoothing, int _smooth_cnt );
 
 	/* transforming threshold: given ratio -> absolute value */
 	void absToRatio(

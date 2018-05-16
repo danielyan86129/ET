@@ -3980,7 +3980,7 @@ void GLArea::exportPerSectorET()
 	stg->exportPerSectorET(bt_name.toStdString());
 }
 
-void GLArea::exportSkeleton()
+void GLArea::exportSkeleton( bool _do_smoothing /*= false*/, int _smooth_cnt /*= 0*/ )
 {
 	QString skel_name = QString(m_medialAxisFile.c_str());
 	skel_name.remove( ".clean" );
@@ -3997,7 +3997,8 @@ void GLArea::exportSkeleton()
 
 	auto trans_cpy = m_trans_mat;
 	trimesh::invert(trans_cpy);
-	m_hs->exportSkeleton( { skel_name.toStdString(), skel_w_msure_name.toStdString() }, trans_cpy );
+	m_hs->exportSkeleton( { skel_name.toStdString()/*, skel_w_msure_name.toStdString()*/ }, trans_cpy, 
+		_do_smoothing, _smooth_cnt );
 }
 
 void GLArea::initializeGL(void)

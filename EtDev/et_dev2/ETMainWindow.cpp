@@ -204,6 +204,7 @@ void ETMainWindow::setInputs(
 	float _omega,
 	const std::string& _mc_meas,
 	double _theta_2, double _theta_1,
+	int _smooth_cnt,
 	int _burn_sch_id)
 {
 	m_ma_file = _ma_file;
@@ -213,6 +214,7 @@ void ETMainWindow::setInputs(
 	m_mc_meas_to_output = _mc_meas;
 	m_skel_theta2 = _theta_2;
 	m_skel_theta1 = _theta_1;
+	m_skel_smooth_cnt = _smooth_cnt;
 	m_burn_sch = _burn_sch_id == 0 ? SteinerGraph::ORIGINAL_AND_STEINER : SteinerGraph::STEINER_ONLY;
 }
 
@@ -1533,7 +1535,7 @@ void ETMainWindow::onVisHSClicked()
 		glarea->pruneHS(
 			face_diff_ratio, face_reldiff_ratio,
 			line_diff_ratio, line_reldiff_ratio,
-			true, /*treat values as absolute*/
+			ui_compact.hsUseTypedInput->isChecked(),
 			ui_compact.removeSmallCmpnts->isChecked()
 		);
 	}
@@ -1555,6 +1557,7 @@ void ETMainWindow::onVisHSClicked()
 	// hide MA and MC
 	ui_compact.hideMA->setChecked( true );
 	ui_compact.hideMC->setChecked( true );
+	ui_compact.hideHS->setChecked( false );
 
 }
 
@@ -1933,7 +1936,10 @@ void ETMainWindow::onExportHSBtnClicked()
 	cout << endl;
 	cout << "Exporting skeleton to file ..."<<endl;
 	ui_compact.statusbar->showMessage("Exporting skeleton to file ...");
-	glarea->exportSkeleton();
+	if (m_consoleMode ) // use cmd provided params if in non-gui mode
+		glarea->exportSkeleton( m_skel_smooth_cnt > 0, m_skel_smooth_cnt );
+	else
+		glarea->exportSkeleton( ui_compact.smoothSkelCurve->isChecked(), ui_compact.smoothSkelCurveSpin->value() );
 	cout << "Done."<<endl;
 	ui_compact.statusbar->showMessage("Done: exporting skeleton.");
 	cout << endl;
