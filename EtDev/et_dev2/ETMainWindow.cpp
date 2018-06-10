@@ -470,6 +470,7 @@ void ETMainWindow::onBurnMCClicked()
 
 void ETMainWindow::onVisDistMCComboChanged(int _idx)
 {
+	cout << "vis index: " << _idx << endl;
 	bool clamp = ui_compact.clampMCDistBox->isChecked();
 	float visDistOnMC_min, visDistOnMC_max;
 	if (clamp)
@@ -532,6 +533,7 @@ void ETMainWindow::onPruneCurveSpinChanged(double _val)
 
 bool ETMainWindow::onPruneDistMCComboChanged(int _idx)
 {
+	cout << "prune index: " << _idx << endl;
 	GLArea::DistMC metric = get_MC_dist_type( _idx );
 	if ( !glarea->setUpMCDistMetricForPruning(metric, distMin_MC, distMax_MC) )
 	{
@@ -543,14 +545,16 @@ bool ETMainWindow::onPruneDistMCComboChanged(int _idx)
 	line_type |= ui.visBurnt->isChecked() ? GLArea::VIS_BURNT : 0;
 	line_type |= ui.visDual->isChecked() ? GLArea::VIS_DUAL : 0;*/
 
-	float dummy = 0.0f;
+	/*float dummy = 0.0f;
 	if ( glarea->colorMCEdgeBy(metric, dummy, dummy, false, 0.0f, 1.0f, 1) )
 	{
 		ui_compact.pruneMCSlider1->setEnabled(true);
 		return true;
 	}
 	else 
-		return false;
+		return false;*/
+	ui_compact.pruneMCSlider1->setEnabled( true );
+	return true;
 }
 
 void ETMainWindow::onVisBallStickChecked(int _state)
@@ -1403,7 +1407,7 @@ GLArea::VertFieldType ETMainWindow::get_MA_vert_dist_type(int _idx)
 GLArea::DistMC ETMainWindow::get_MC_dist_type(int _idx)
 {
 	GLArea::DistMC dist_type;
-	switch (ui_compact.visMCDistCombo->currentIndex())
+	switch ( _idx )
 	{
 	/*case 0:
 		dist_type = GLArea::BT3_MC;
