@@ -5,3 +5,8 @@ This software computes a measure called "erosion thickness" on the medial axis o
 
 Erosion Thickness on Medial Axes of 3D Shapes. ACM Transactions on Graphics, SIGGRAPH 2016
 - Yajie Yan (Washington University in St Louis), Kyle Sykes Erin Chambers, David Letscher (St. Louis University), Tao Ju (Washington University in St Louis)
+
+How to build
+============
+
+This software is developed using Visual Studio 2015. Specific version information about VS and the dependencies are as follows.
