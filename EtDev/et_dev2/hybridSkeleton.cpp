@@ -1,3 +1,10 @@
+// Implementation of skeleton generation
+// 
+// Copyright (C) 2018 Yajie Yan <danielyan86129@hotmail.com>
+// 
+// This Source Code Form is subject to the terms of the Mozilla Public License 
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can 
+// obtain one at http://mozilla.org/MPL/2.0/.
 #include "hybridSkeleton.h"
 #include "commonUtils.h"
 #include "origGraph.h"
@@ -1568,9 +1575,7 @@ void HybridSkeleton::exportSkeleton(
 				smooth_vts.reserve( vts_remained_indices.size() );
 				for ( auto it = vts_remained_indices.begin(); it != vts_remained_indices.end(); ++it )
 				{
-					auto v = m_vts[ *it ];
-					v = _transform * v;
-					smooth_vts.push_back( v );
+					smooth_vts.push_back( m_vts[ *it ] );
 				}
 				for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
 				{
@@ -1586,7 +1591,7 @@ void HybridSkeleton::exportSkeleton(
 			for ( auto i = 0; i < vts_remained_indices.size(); ++i )
 			{
 				auto vi = vts_remained_indices[ i ];
-				auto v = _do_smoothing ? smooth_vts[ i ] : m_vts[ vi ];
+				auto v = _transform * ( _do_smoothing ? smooth_vts[ i ] : m_vts[ vi ] );
 				int transformed_vi;
 				bool is_dual = m_stg->isDualVertInFineTri( vi, transformed_vi );
 				float bt3 = is_dual ? bt3_dual[ transformed_vi ] : bt3_orig[ vi ];
