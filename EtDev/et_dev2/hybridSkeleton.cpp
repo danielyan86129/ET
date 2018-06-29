@@ -1592,10 +1592,10 @@ void HybridSkeleton::exportSkeleton(
 			{
 				auto vi = vts_remained_indices[ i ];
 				auto v = _transform * ( _do_smoothing ? smooth_vts[ i ] : m_vts[ vi ] );
-				int transformed_vi;
-				bool is_dual = m_stg->isDualVertInFineTri( vi, transformed_vi );
-				float bt3 = is_dual ? bt3_dual[ transformed_vi ] : bt3_orig[ vi ];
-				float bt2 = is_dual ? bt2_dual[ transformed_vi ] : bt2_orig[ vi ];
+				int vi_t;
+				bool is_dual = m_stg->isDualVertInFineTri( transform_skel_vert_id(vi), vi_t );
+				float bt3 = is_dual ? bt3_dual[ vi_t ] : bt3_orig[ vi_t ];
+				float bt2 = is_dual ? bt2_dual[ vi_t ] : bt2_orig[ vi_t ];
 				out_vts.push_back( { v[ 0 ], v[ 1 ], v[ 2 ], bt3, bt2 } );
 			}
 			for ( auto it = edges_hs.begin(); it != edges_hs.end(); ++it )
