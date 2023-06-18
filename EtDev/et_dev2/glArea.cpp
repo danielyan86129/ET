@@ -8,7 +8,7 @@
 #include "glArea.h"
 #include "meshDrawer.h"
 #include "pointDrawer.h"
-#include "lineDrawer.h"
+
 #include "sphereDrawer.h"
 #include "iso_contour.h"
 #include "io.h"
@@ -17,14 +17,77 @@
 #include <unordered_set>
 #include <float.h>
 #include <QFileInfo>
+#include <QMatrix4x4>
+
+
+GLArea::VertFieldType get_MA_vert_dist_type(int _idx)
+{
+	GLArea::VertFieldType vert_field;
+	switch (_idx)
+	{
+	case 0: // burn dist
+		vert_field = GLArea::BT2_v;
+		break;
+	case 1: // dist2surf
+		vert_field = GLArea::BT3_v;
+		break;
+	case 2: // diff
+		vert_field = GLArea::DIFF_v;
+		break;
+		//case 3: // relative diff
+		//	vert_field = GLArea::DIFF_REL_v;
+		//	break;
+	default:
+		vert_field = GLArea::BT2_v;
+		break;
+	}
+	return vert_field;
+}
+
+GLArea::FaceFieldType get_MA_face_dist_type(int _idx)
+{
+	GLArea::FaceFieldType face_field;
+	switch (_idx) // burn dist 
+	{
+	case 0:
+		face_field = GLArea::BT2_f;
+		break;
+	case 1:
+		face_field = GLArea::BT3_f;
+		break;
+	case 2:
+		face_field = GLArea::DIFF_f;
+		break;
+	case 3:
+		face_field = GLArea::DIFF_REL_f;
+		break;
+	case 4:
+		face_field = GLArea::ANGLE_f;
+		break;
+	case 5:
+		face_field = GLArea::LAMBDA_f;
+		break;
+	case 6:
+		face_field = GLArea::GEODESIC_f;
+		break;
+	case 7:
+		face_field = GLArea::FILE_MSURE;
+		break;
+	default:
+		face_field = GLArea::BT2_f;
+		break;
+	}
+
+	return face_field;
+}
 
 QGLFormat GLArea::getGLFormat(void)
 {
 	QGLFormat qgl_format;
 	qgl_format.setDepth(true); // depth buffer
-	cout << "qgl depth size (before request): "<<qgl_format.depthBufferSize();
+	std::cout << "qgl depth size (before request): "<<qgl_format.depthBufferSize();
 	qgl_format.setDepthBufferSize(32);
-	cout << "qgl depth size (after request): "<<qgl_format.depthBufferSize();
+	std::cout << "qgl depth size (after request): "<<qgl_format.depthBufferSize();
 	qgl_format.setDoubleBuffer(true); // double framebuffer
 	return qgl_format;
 }
@@ -32,8 +95,8 @@ QGLFormat GLArea::getGLFormat(void)
 shared_ptr<oglplus::Program> GLArea::glslProgram(string _vs, string _fs)
 {
 	try {
-		cout << "Assembling shader program from: " << endl
-			<< _vs << ",\n" << _fs << endl;
+		std::cout << "Assembling shader program from: " << std::endl
+			<< _vs << ",\n" << _fs << std::endl;
 		using namespace oglplus;
 		shared_ptr<Program> prog(new Program());
 		prog->AttachShaders(
@@ -42,7 +105,7 @@ shared_ptr<oglplus::Program> GLArea::glslProgram(string _vs, string _fs)
 			FragmentShader().Source(loadShaderSource(_fs.c_str())).Compile()
 			)
 			).Link();
-		cout << "Done." << endl;
+		std::cout << "Done." << std::endl;
 		return prog;
 	}
 	catch(oglplus::ProgramBuildError& pbe)
@@ -81,8 +144,8 @@ shared_ptr<oglplus::Program> GLArea::glslProgram(string _vs, string _gs, string 
 {
 	try
 	{
-		cout << "Assembling shader program from: " << endl
-			<< _vs << ",\n" << _gs << ",\n" << _fs << endl;
+		std::cout << "Assembling shader program from: " << std::endl
+			<< _vs << ",\n" << _gs << ",\n" << _fs << std::endl;
 		using namespace oglplus;
 		shared_ptr<Program> prog(new Program());
 		prog->AttachShaders(
@@ -92,7 +155,7 @@ shared_ptr<oglplus::Program> GLArea::glslProgram(string _vs, string _gs, string 
 			FragmentShader().Source(loadShaderSource(_fs.c_str())).Compile()
 			)
 			).Link();
-		cout << "Deon." << endl;
+		std::cout << "Deon." << std::endl;
 		return prog;
 	}
 	catch(oglplus::ProgramBuildError& pbe)
@@ -130,7 +193,7 @@ shared_ptr<oglplus::Program> GLArea::glslProgram(string _vs, string _gs, string 
 GLArea::GLArea(QWidget *parent /* = 0 */)
 	: QGLWidget(getGLFormat(), parent)
 {
-	cout << "creating GLArea." << endl; // debug
+	std::cout << "creating GLArea." << std::endl; // debug
 
 	// glarea should accept both mouse and tab focus
 	setFocusPolicy(Qt::StrongFocus);
@@ -202,7 +265,7 @@ bool GLArea::event(QEvent *_e)
 		auto ke = static_cast<QKeyEvent*>(_e);
 		if (ke->key() == Qt::Key_Space)
 		{
-			//cout << "key space pressed." << endl;
+			//std::cout << "key space pressed." << std::endl;
 
 			this->track_ball->reset();
 			updateGL();
@@ -233,7 +296,7 @@ void GLArea::reset()
 	m_iso_cont->reset();
 #ifdef PROFILE_SPEED
 	t_duration = clock() - t_start;
-	cout << "PROFIELING SPEED: glarea.reset() took " << t_duration * 1000.0f / CLOCKS_PER_SEC << "ms."<<endl;
+	std::cout << "PROFIELING SPEED: glarea.reset() took " << t_duration * 1000.0f / CLOCKS_PER_SEC << "ms."<<std::endl;
 #endif
 
 	this->cur_MA_visDist_f.clear();
@@ -258,6 +321,8 @@ void GLArea::reset()
 	m_drawIsoCont = false;
 	m_drawQMAT = false;
 	m_drawLinesAsProxy = false;
+	m_drawPickedSphere = false;
+	m_selectionActive = false;
 	m_OrigTransparent = m_MATransparent = m_lineTransparent = false;
 	m_use_constColor_for_MA = false;
 
@@ -310,7 +375,7 @@ void GLArea::passToDrawable(
 
 	if (!loaded)
 	{
-		cout << "draw nothing." << endl;
+		std::cout << "draw nothing." << std::endl;
 		m_radiiReady = false;
 		return;
 	}
@@ -321,20 +386,36 @@ void GLArea::passToDrawable(
 
 	printf( "Medial axis #V/#E/#F = %d/%d/%d\n", 
 		m_meshMA->vertices.size(), m_meshMA->lines.size(), m_meshMA->faces.size() );
-
+	
+	initSphereMesh();
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setRenderMode(MeshDrawer::PER_VERT);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setMeshToDraw(mesh_MA);
 	std::dynamic_pointer_cast<MeshDrawer>(m_origDrawer)->setRenderMode(MeshDrawer::PER_VERT);
 	std::dynamic_pointer_cast<MeshDrawer>(m_origDrawer)->setMeshToDraw(mesh_3d);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->initCameraPosAndLens();
-	
 	m_meshOrig->need_bbox();
 	float s = m_meshOrig->bbox.size().max();
+
+	if (mesh_3d->faces.size() == 0)
+	{
+		ui->colorPerFace->setChecked(false);
+		std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer)->setPoints(mesh_3d->vertices);
+		float* color_data = new float[mesh_3d->vertices.size() * 3];
+		for (unsigned i = 0; i < mesh_3d->vertices.size(); ++i)
+		{
+			color_data[3 * i + 0] = 1.0f;
+			color_data[3 * i + 1] = 0.0f;
+			color_data[3 * i + 2] = 0.0f;
+		}
+		std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer)->setPerVertColor(color_data, mesh_3d->vertices.size());
+		delete[] color_data;
+	}
 	
 	/* setup line geometry of MA to render */
 	auto ma_line_drawer_ptr = std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer );
 	uploadLinesToDrawer( mesh_MA->vertices, mesh_MA->lines, ma_line_drawer_ptr );
-	cout << "MA lines uploaded to GPU!" << endl;
+
+	std::cout << "MA lines uploaded to GPU!" << std::endl;
 	TriColor const_edge_color( 0.469, 0.469, 0.469 );
 	auto color_data = new float[ mesh_MA->lines.size() * 2 * 3 ];
 	for ( unsigned i = 0; i < mesh_MA->lines.size(); i++ )
@@ -347,8 +428,9 @@ void GLArea::passToDrawable(
 		color_data[ i * 2 * 3 + 3 + 1 ] = edge_color[ 1 ];
 		color_data[ i * 2 * 3 + 3 + 2 ] = edge_color[ 2 ];
 	}
-	cout << "Setting color for MA lines..." << endl;
+	std::cout << "Setting color for MA lines..." << std::endl;
 	ma_line_drawer_ptr->setPerVertColor( color_data, mesh_MA->lines.size() * 2 );
+	//m_PickRectDrawer->setPerVertColor(color_data, mesh_MA->lines.size() * 2);
 	delete[] color_data;
 	
 	// clear the history data in GPU managed by line/point drawers
@@ -358,17 +440,25 @@ void GLArea::passToDrawable(
 	// need to re-compute steinergraph every time a new mesh loaded
 	//this->stg = NULL; 
 
+	
+
+
 	// update the geometry scale of the other drawers
 	std::dynamic_pointer_cast<PointDrawer>(m_pointDrawer)->setScale(s);
+	std::dynamic_pointer_cast<MeshDrawer>(m_PickSphereDrawer)->setScale(s);
 	std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer)->setScale(s);
 	std::dynamic_pointer_cast<LineDrawer>(m_dynamic_dualLineDrawer)->setScale(s);
 	std::dynamic_pointer_cast<LineDrawer>(m_burntEdgesDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setScale(s);
-	std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer )->setScale( s );
+	std::dynamic_pointer_cast<LineDrawer>(m_MALineDrawer )->setScale( s );
+	std::dynamic_pointer_cast<LineDrawer>(m_PickRectDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_FinerMAStaticDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_MAFinnerDynamicDrawer)->setScale(s);
 	std::dynamic_pointer_cast<SphereDrawer>(m_MPDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_origDrawer)->setScale(s);
+	std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer)->setScale(s);
+	std::dynamic_pointer_cast<MeshDrawer>(m_SelectMaxMinSphereDrawer)->setScale(s);
+	std::dynamic_pointer_cast<PointDrawer>(m_SelectPointsDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_hsFaceDrawer)->setScale(s);
 	std::dynamic_pointer_cast<LineDrawer>(m_hsLineDrawer)->setScale(s);
 	std::dynamic_pointer_cast<MeshDrawer>(m_isoSurfDrawer)->setScale(s);
@@ -423,6 +513,523 @@ void GLArea::drawMCProxy(bool _draw_or_not)
 	updateGL();
 }
 
+void GLArea::initSphereMesh()
+{
+	std::string sphere_mesh_dir = "./shaders/sphere_mesh.ply";
+	m_sphereMesh = shared_ptr<TriMesh>(MyMesh::read(sphere_mesh_dir));
+	m_sphereMesh->need_normals();
+	if (!m_sphereMesh)
+	{
+		std::cout << "Error reading file " << sphere_mesh_dir << std::endl;
+		// CreateSphereMeshSuccess = false;
+	}
+	else {
+		// CreateSphereMeshSuccess = true;
+		auto spherePtr = std::dynamic_pointer_cast<MeshDrawer>(m_PickSphereDrawer);
+		spherePtr->setRenderMode(MeshDrawer::PER_FACE);
+		spherePtr->setMeshToDraw(m_sphereMesh);
+
+		Color sphere_color(0.3, 0.7, 0.5);
+		std::vector<Color> sphere_colors;
+		for (unsigned fi = 0; fi < m_sphereMesh->faces.size(); ++fi)
+		{
+			sphere_colors.push_back(sphere_color);
+			// for (unsigned j = 0; j < 3; ++j)
+			// {
+			// 	sphere_colors.push_back(sphere_color);
+			// }
+		}
+		// std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertColor(color_data, m_meshMA->faces.size()*3);
+		// spherePtr->setPerVertColor((float*)sphere_colors.data(), m_sphereMesh->faces.size() * 3);
+		spherePtr->setPerFaceColor((float*)sphere_colors.data(), m_sphereMesh->faces.size() );
+
+	}
+}
+
+bool GLArea::updatePickedSphereVertices(float radius)
+{
+	picked_sphere_radius = radius;
+	auto pickedSpherePtr = std::dynamic_pointer_cast<MeshDrawer>(m_PickSphereDrawer);
+	//pickedSpherePtr->setCenter(pickedPoints, sphereRaduis);
+	//if (pickedSpherePtr->m_renderMode == MeshDrawer::PER_VERT)
+	{
+		auto origin_vertices = m_sphereMesh->vertices;
+		for (auto& p : origin_vertices)
+		{
+			p = p * picked_sphere_radius + picked_sphere_center;
+		}
+		pickedSpherePtr->setPoints(origin_vertices);
+	} 
+	//if (m_sphereMesh->m_renderMode == MeshDrawer::PER_FACE)
+	{
+		auto verts_data = new GLfloat[m_sphereMesh->faces.size() * 3 * 3];
+		for (unsigned fi = 0; fi < m_sphereMesh->faces.size(); fi ++)
+		{
+			TriFace f = m_sphereMesh->faces[fi];
+			for (unsigned i = 0; i < 3; ++i)
+			{
+				trimesh::point p = m_sphereMesh->vertices[f[i]] * picked_sphere_radius + picked_sphere_center;
+
+				verts_data[(3*fi + i)*3 + 0] = p[0];
+				verts_data[(3*fi + i)*3 + 1] = p[1];
+				verts_data[(3*fi + i)*3 + 2] = p[2];
+			}
+		}
+		pickedSpherePtr->setPointsPerFace(verts_data, m_sphereMesh->faces.size()*3*3);
+		delete [] verts_data;
+	}
+
+	return true;
+}
+
+
+bool GLArea::changePickedSphereRadius(float radius)
+{
+	updatePickedSphereVertices(radius);
+	updateGL();
+	return true;
+}
+
+QRect GLArea::makeRectangle( const QPoint& first, const QPoint& second )
+{
+  if( second.x() >= first.x() && second.y() >= first.y() )
+    return QRect( first, second );
+  else if( second.x() < first.x() && second.y() >= first.y() )
+    return QRect( QPoint( second.x(), first.y() ), QPoint( first.x(), second.y() ) );
+  else if( second.x() < first.x() && second.y() < first.y() )
+    return QRect( second, first );
+  else if( second.x() >= first.x() && second.y() < first.y() )
+    return QRect( QPoint( first.x(), second.y() ), QPoint( second.x(), first.y() ) );
+
+  return QRect();
+}
+
+void GLArea::getMAVerticesAndFacesInRect(QRect& selectRect)
+{
+	int s_width = width();
+	int s_height = height();
+
+	float halfVpw = s_width / 2.0f;
+	float halfVph = s_height / 2.0f;
+	
+	double x_left = selectRect.left();
+	x_left = (x_left - halfVpw) / halfVpw;
+  	double x_right = selectRect.right();
+	x_right = (x_right - halfVpw) / halfVpw;
+  	double y_bottom = selectRect.bottom();
+	y_bottom = (halfVph - y_bottom ) / halfVph;
+  	double y_top = selectRect.top();
+	y_top  = (halfVph - y_top ) / halfVph;
+
+	/*double x_min = x_left < x_right ? x_left : x_right;
+	double x_max = x_left > x_right ? x_left : x_right; 
+	double y_min = y_bottom < y_top ? y_bottom : y_top;
+	double y_max = y_bottom > y_top ? y_bottom : y_top;*/
+	
+	double x_min = max(x_left, -1.0);
+	double x_max = min(x_right, 1.0);
+	double y_min = max(-1.0, y_bottom);
+	double y_max = min(1.0, y_top);
+
+	const auto& track_ball = dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->getCamera();
+	auto model_mat = track_ball->getModelMatrix();
+	auto cam_mat = track_ball->getViewMatrix()*track_ball->getCamMatrix();
+	//auto model_view = track_ball->getModelViewMatrix();
+	float s = dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->getGeometryScale();
+	auto perspectiveMat = CameraMatrix<float>::PerspectiveX(
+		Degrees(60), double(width())/ height(), (0.01f)*s, 1000.0f*s
+		);
+	// dynamic_pointer_cast<LineDrawer>(m_MALineDrawer)->getPerspectiveProjMat();
+	auto model_view = perspectiveMat * cam_mat * model_mat;
+	QMatrix4x4 perspectiveMatQ(model_view.Data());
+	bool inversible = false;
+	auto perspectiveMatQInverse = perspectiveMatQ.inverted(&inversible);
+
+	auto ma_ptr = std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer);
+	const auto& maFaces = m_meshMA->faces;
+	const auto& maVertices = m_meshMA->vertices; 
+	std::vector<trimesh::point> selectedPoints;
+	std::vector<TriFace> selectedFaces;
+
+	/*QImage image(width(), height(), QImage::Format_ARGB32);
+	auto img_bits = image.bits();
+	for (size_t r_id = 0; r_id < height(); ++r_id)
+	{
+		for (size_t c_id = 0; c_id < width(); ++c_id)
+		{
+			size_t index = (height() - r_id - 1) * width() + c_id;
+			float current_depth = depthFrameBuffer[index];
+			img_bits[0] = current_depth * 255;
+			img_bits[1] = current_depth * 255;
+			img_bits[2] = current_depth * 255;
+			img_bits[3] = 100;
+			img_bits += 4;
+		}
+	}
+	image.save("depth.png");*/	
+
+	const auto& maRenderFaceIndices = ma_ptr->getRenderFacesIndices();
+	std::set<unsigned> vids;
+	std::vector<trimesh::point> reversePts;
+
+	GLArea::VertFieldType vert_field =
+		get_MA_vert_dist_type(ui->visMADistCombo->currentIndex());
+	std::vector<float> field_vals;
+	if(vert_field != 0) getVertDistMetricMA(vert_field, field_vals);
+	float max_attr = numeric_limits<float>::min();
+	float min_attr = numeric_limits<float>::max();
+	int max_attr_vid = -1;
+	int min_attr_vid = -1;
+
+	for(auto fi : maRenderFaceIndices )
+	{
+		const auto& face = maFaces[fi];
+		vids.insert(face[0]);
+		vids.insert(face[1]);
+		vids.insert(face[2]);
+	}
+	std::set<unsigned> selectVids;
+	for(auto v_id : vids)
+	{
+		trimesh::point triPoint = maVertices[v_id];
+		QVector4D p4d(triPoint[0], triPoint[1], triPoint[2], 1.0);
+		p4d = perspectiveMatQ * p4d;
+		p4d = p4d / p4d.w();
+		if(p4d.x() < x_min || p4d.x() > x_max) continue;
+		if(p4d.y() < y_min || p4d.y() > y_max) continue;
+		int x_cord = p4d.x() * halfVpw + halfVpw;
+		int y_cord = p4d.y() * halfVph + halfVph;
+		//int y_cord = halfVph - p4d.y() * halfVph;
+
+		if(!depthFrameBuffer.empty())
+		{
+			int index = y_cord * s_width + x_cord;
+			float current_depth = depthFrameBuffer[index];
+			current_depth = (current_depth - 0.5) / 0.5;
+			//QVector4D s_p(p4d.x(), p4d.y(), current_depth, 1.0);
+			//auto new_p = perspectiveMatQInverse * s_p;
+			//new_p = new_p / new_p.w();
+			//trimesh::point re_p(new_p.x(), new_p.y(), new_p.z());
+			//reversePts.push_back(re_p);
+			if( p4d.z() - current_depth > 0.000025) continue;
+		}
+		if(!field_vals.empty() && v_id < field_vals.size() )
+		{
+			float cur_attr = field_vals[v_id];
+			if(cur_attr > max_attr)
+			{
+				max_attr_vid = v_id;
+				max_attr = cur_attr; 
+			}
+			if(cur_attr < min_attr)
+			{
+				min_attr_vid = v_id;
+				min_attr = cur_attr;
+			}
+		}
+	
+		selectedPoints.push_back(triPoint);
+		selectVids.insert(v_id);
+		//if (selectedPoints.size() > 5)  break;
+	}
+	if(max_attr_vid != -1)
+	{
+		QString max_attr_str = QString::number(max_attr);
+		ui->MaxAttrVal->setText(max_attr_str);
+	}
+
+	if(min_attr_vid != -1)
+	{
+		QString min_attr_str = QString::number(min_attr);
+		ui->MinAttrVal->setText(min_attr_str);
+	}
+
+	std::vector<unsigned> select_f_ids;
+	for(auto fi : maRenderFaceIndices )
+	{
+		const auto& face = maFaces[fi];
+		if(selectVids.find(face[0]) == selectVids.end()) continue;
+		if(selectVids.find(face[1]) == selectVids.end()) continue;
+		if(selectVids.find(face[2]) == selectVids.end()) continue;
+		select_f_ids.push_back(fi);
+	}
+	TriColor selectFaceColor(0.6, 0.1, 0.1);
+	auto new_face_colors = ma_mesh_colors;
+	if(!select_f_ids.empty() && !ma_mesh_colors.empty())
+	{
+		for(auto f_id : select_f_ids)
+		{
+			if(f_id < ma_mesh_colors.size())
+			{
+				if (new_face_colors.size() == m_meshMA->faces.size())
+				{
+					new_face_colors[f_id] = selectFaceColor;
+				}
+				else if (new_face_colors.size() == m_meshMA->faces.size() * 3)
+				{
+					new_face_colors[f_id * 3 + 0] = selectFaceColor;
+					new_face_colors[f_id * 3 + 1] = selectFaceColor;
+					new_face_colors[f_id * 3 + 2] = selectFaceColor;
+				}
+				
+			} 
+		}
+		if (new_face_colors.size() == m_meshMA->faces.size())
+		{
+			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerFaceColor((float*)new_face_colors.data(), m_meshMA->faces.size());
+		}
+		else if (new_face_colors.size() == m_meshMA->faces.size() * 3)
+		{
+			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertColor((float*)new_face_colors.data(), m_meshMA->faces.size() * 3);
+		}
+		
+	}
+
+	if (!selectedPoints.empty())
+	{
+
+		auto sPtsDrawer = std::dynamic_pointer_cast<PointDrawer>(m_SelectPointsDrawer);
+
+		sPtsDrawer->setPoints(selectedPoints);
+		float* color_data = new float[selectedPoints.size() * 3];
+		for (unsigned i = 0; i < selectedPoints.size(); ++i)
+		{
+			color_data[3 * i + 0] = 1.0f;
+			color_data[3 * i + 1] = 0.0f;
+			color_data[3 * i + 2] = 0.0f;
+		}
+		sPtsDrawer->setPerVertColor(color_data, selectedPoints.size());
+		delete[] color_data;
+	}
+	if (max_attr_vid != -1 && min_attr_vid != -1)
+	{
+		selectedPoints.clear();
+		selectedPoints.push_back(maVertices[max_attr_vid]);
+		selectedPoints.push_back(maVertices[min_attr_vid]);
+		//ma_ptr->setFaces(selectedFaces, true);
+		auto sPtDrawer = std::dynamic_pointer_cast<MeshDrawer>(m_SelectMaxMinSphereDrawer);
+		picked_sphere_radius = 2.0;
+		std::vector<TriColor> faceColors;
+		std::vector<trimesh::point> vertices;
+		std::vector<trimesh::point> faceVertices;
+		std::vector<TriFace> faces;
+		std::vector<trimesh::vec3> faceNormals;
+		TriColor faceColor0(1.0, 1.0, 1.0);
+		TriColor faceColor1(0.0, 0.0, 0.0);
+		for (unsigned i = 0; i < selectedPoints.size(); ++i)
+		{
+			auto origin_vertices = m_sphereMesh->vertices;
+			for (auto& p : origin_vertices)
+			{
+				p = p * picked_sphere_radius + selectedPoints[i];
+				//vertices.push_back(p);
+			}
+			
+			unsigned face_incre = 3 * m_sphereMesh->faces.size() * i;
+			
+			// auto verts_data = new GLfloat[m_sphereMesh->faces.size() * 3 * 3];
+			for (unsigned fi = 0; fi < m_sphereMesh->faces.size(); fi ++)
+			{
+				TriFace f = m_sphereMesh->faces[fi];
+				trimesh::vec3 f_n = trimesh::normalize(trimesh::trinorm(
+				origin_vertices[f[0]], origin_vertices[f[1]], origin_vertices[f[2]]
+				));
+				faceNormals.push_back(f_n);
+				
+				TriFace new_f(fi * 3 + face_incre, fi * 3 + 1 + face_incre, fi * 3 + 2 + face_incre );
+				if(i == 0)
+				{
+					faceColors.push_back(faceColor0);
+				} else {
+					faceColors.push_back(faceColor1);
+				}
+				
+				for (unsigned i = 0; i < 3; ++i)
+				{
+					faceVertices.push_back(origin_vertices[f[i]]);
+				}
+				faces.push_back(new_f);
+			}
+			//if(i > 2) break;
+		}
+		sPtDrawer->setRenderMode(MeshDrawer::PER_FACE);
+		sPtDrawer->setPointsPerFace((float*)faceVertices.data(), faces.size()*3*3);
+		sPtDrawer->setPerFaceColor((float*)faceColors.data(), faces.size());
+		sPtDrawer->setPerFaceNormal((float*)faceNormals.data(), faces.size() );
+		sPtDrawer->setFaces(faces, true);
+	}
+} 
+
+void GLArea::recoverMAColor()
+{
+	if(!ma_mesh_colors.empty())
+	{
+		if (ma_mesh_colors.size() == m_meshMA->faces.size())
+		{
+			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerFaceColor((float*)ma_mesh_colors.data(), m_meshMA->faces.size());
+		}
+		else if (ma_mesh_colors.size() == m_meshMA->faces.size() * 3)
+		{
+			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertColor((float*)ma_mesh_colors.data(), m_meshMA->faces.size() * 3);
+		}
+	}
+	updateGL();
+}
+
+bool GLArea::setRectToDraw(QRect& selectRect)
+{
+	int s_width = width();
+	int s_height = height();
+
+	float halfVpw = s_width / 2.0f;
+	float halfVph = s_height / 2.0f;
+	
+	double x_left = selectRect.left();
+  	double x_right = selectRect.right();
+  	double y_bottom = selectRect.bottom();
+  	double y_top = selectRect.top();
+
+	const auto& track_ball = dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->getCamera();
+	auto model_view = track_ball->getModelViewMatrix();
+	float s = m_meshOrig->bbox.size().max();
+	auto perspectiveMat = CameraMatrix<float>::PerspectiveX(
+		Degrees(60), double(width()) / height(), (0.01f)*s, 1000.0f*s
+	);
+	
+	// auto perspectiveMat = dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->getPerspectiveProjMat();
+	model_view = perspectiveMat * model_view;
+	QMatrix4x4 perspectiveMatQ(model_view.Data());
+
+	bool inversible = false;
+	auto perspectiveMatQInverse = perspectiveMatQ.inverted(&inversible);
+	if (!inversible)
+	{
+		return false;
+	}
+	float depth = -0.999;
+	QVector4D leftUpCorner((x_left - halfVpw) / halfVpw, -1 * (y_top - halfVph) / halfVph,depth,1.0);
+	QVector4D leftBottomCorner((x_left - halfVpw) / halfVpw, -1 * (y_bottom - halfVph) / halfVph, depth, 1.0);
+	QVector4D rightBottomCorner((x_right - halfVpw) / halfVpw, -1 * (y_bottom - halfVph) / halfVph, depth, 1.0);
+	QVector4D rightUpCorner((x_right - halfVpw) / halfVpw, -1 * (y_top - halfVph) / halfVph,depth,1.0);
+	
+	std::vector<QVector4D> temp_vertices4d = {leftUpCorner, leftBottomCorner, rightBottomCorner, rightUpCorner};
+	std::vector<trimesh::point> temp_vertices;
+	for(auto p4d : temp_vertices4d)
+	{
+		auto p4d_pos = perspectiveMatQInverse * p4d;
+		p4d_pos = p4d_pos / p4d_pos.w();
+		trimesh::point p3d(p4d_pos.x(), p4d_pos.y(), p4d_pos.z());
+		temp_vertices.push_back(p3d); 
+	}
+	auto pickRectPtr = std::dynamic_pointer_cast<LineDrawer>( m_PickRectDrawer );
+	TriEdge left_e(0,1);
+	TriEdge bottom_e(1,2);
+	TriEdge right_e(2,3);
+	TriEdge top_e(3,0);
+	std::vector<TriEdge>rectEdges = {left_e, bottom_e, right_e, top_e};
+	uploadLinesToDrawer(temp_vertices, rectEdges, pickRectPtr);
+	std::vector<TriColor> lineColors;
+	TriColor rectColor(192/255.0,192/255.0,192/255.0);
+	for(size_t i = 0; i < rectEdges.size() * 2; ++i)
+	{
+		lineColors.push_back(rectColor);
+	}
+	pickRectPtr->setPerVertColor((float*)lineColors.data(), rectEdges.size() * 2 );
+	return true;
+}
+
+bool GLArea::calPickedSphereCenter(float mouse_x, float mouse_y)
+{
+	int s_width = width();
+	int s_height = height();
+
+	qreal halfVpw = s_width / 2;
+	qreal halfVph = s_height / 2;
+	// mouse position in NDC space, one point on near plane and one point on far plane
+	QVector4D near4d(
+		(mouse_x - halfVpw) / halfVpw,
+		-1 * (mouse_y - halfVph) / halfVph,
+		-1,
+		1.0);
+
+	QVector4D far4d(
+		(mouse_x - halfVpw) / halfVpw,
+		-1 * (mouse_y - halfVph) / halfVph,
+		1,
+		1.0);
+
+	const auto& track_ball = dynamic_pointer_cast<LineDrawer>(m_MALineDrawer)->getCamera();
+	auto model_view = track_ball->getModelViewMatrix();
+	auto perspectiveMat = dynamic_pointer_cast<LineDrawer>(m_MALineDrawer)->getPerspectiveProjMat();
+	model_view = perspectiveMat * model_view;
+	QMatrix4x4 perspectiveMatQ(model_view.Data());
+
+	bool inversible = false;
+	auto perspectiveMatQInverse = perspectiveMatQ.inverted(&inversible);
+	if (!inversible)
+	{
+		return false;
+	}
+
+	auto near_point4d = perspectiveMatQInverse * near4d;
+	auto far_point4d = perspectiveMatQInverse * far4d;
+	near_point4d = near_point4d / near_point4d.w();
+	far_point4d = far_point4d / far_point4d.w();
+
+	auto near_point3d = near_point4d.toVector3D();
+	auto far_point3d = far_point4d.toVector3D();
+	std::vector<trimesh::point> temp_vertices;
+	trimesh::point near_p_m(near_point3d.x(), near_point3d.y(), near_point3d.z());
+	trimesh::point far_p_m(far_point3d.x(), far_point3d.y(), far_point3d.z());
+
+	temp_vertices.push_back(near_p_m);
+	temp_vertices.push_back(far_p_m);
+
+	int face_id = -1;
+	TriColor c(1.0, 0.0, 1.0);
+	TriColor temp_c(0.0, 0.0, 1.0);
+	auto m_MADrawer_ptr = std::dynamic_pointer_cast<MeshDrawer>(this->m_MADrawer);
+	auto ma_mesh = m_MADrawer_ptr->getMesh();
+	trimesh::point intersectPoint;
+
+	auto ma_ptr = std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer);
+	const auto& maRenderFaceIndices = ma_ptr->getRenderFacesIndices();
+	if (calPickedTriangle(temp_vertices, ma_mesh, maRenderFaceIndices, face_id, intersectPoint))
+	{
+		valid_intersect_point = true;
+		picked_sphere_center = intersectPoint;
+		updatePickedSphereVertices(picked_sphere_radius);
+		TriColor picked_color(0.0, 0.0, 1.0);
+		if (ma_mesh_colors.size() > 0)
+		{
+			GLArea::VertFieldType vert_field =
+				get_MA_vert_dist_type(ui->visMADistCombo->currentIndex());
+			GLArea::FaceFieldType face_field =
+				get_MA_face_dist_type(ui->visMADistCombo->currentIndex());
+			//GLArea::VertFieldType vert_field = this->parent.get_MA_face_dist_type(this->parent.visMADistCombo->currentIndex()),
+			std::vector<float> field_vals;
+			getVertDistMetricMA(vert_field, field_vals);
+
+			std::vector<float> attr_vals;
+			float va_attr = field_vals[m_meshMA->faces[face_id][0]];
+			float vb_attr = field_vals[m_meshMA->faces[face_id][1]];
+			float vc_attr = field_vals[m_meshMA->faces[face_id][2]];
+			attr_vals.push_back(va_attr);
+			attr_vals.push_back(vb_attr);
+			attr_vals.push_back(vc_attr);
+
+			auto va = m_meshMA->vertices[m_meshMA->faces[face_id][0]];
+			auto vb = m_meshMA->vertices[m_meshMA->faces[face_id][1]];
+			auto vc = m_meshMA->vertices[m_meshMA->faces[face_id][2]];
+			std::vector<trimesh::point> triPoints;
+			float pickedPointAttr = barycentricInterpolation(va, vb, vc, intersectPoint, attr_vals);
+			QString pickedPointAttrVal = QString::number(pickedPointAttr);
+			ui->pickedPointAttrVal->setText(pickedPointAttrVal);
+		}
+	}
+	return true;
+}
+
 bool GLArea::obtainDualLineStructure( 
 	bool _only_unburnt, int _edge_dual_method_idx, int _poly_dual_method_idx, bool _stop_burn_at_junction)
 {
@@ -437,12 +1044,12 @@ bool GLArea::obtainDualLineStructure(
 			/*line_drawer->setPoints(stg->st_vts);
 			line_drawer->setLines(stg->st_edges);*/
 
-			cout << "collecting burnt steiner edges... " << endl;
+			std::cout << "collecting burnt steiner edges... " << std::endl;
 			vector<std::pair<TriEdge, int> > burntE_assocF_list;
 			vector< std::pair<size_t,list<TriEdge>> > faces_w_crossed_paths;
 			stg->getBurnedStEdgesFromBurnTree(burntE_assocF_list, nullptr/*&faces_w_crossed_paths*/);
 
-			cout << "dualizing the planar subdivision... " << endl;
+			std::cout << "dualizing the planar subdivision... " << std::endl;
 			m_meshMA->need_bbox();
 			float eps = m_meshMA->bbox.size().max()*1e-3f;
 			stg->dualizeFacesWithBurnPaths(
@@ -450,13 +1057,13 @@ bool GLArea::obtainDualLineStructure(
 				static_cast<SteinerGraph::DualOpt>(_edge_dual_method_idx),
 				static_cast<SteinerGraph::DualOpt>(_poly_dual_method_idx),
 				eps);
-			cout << "Done! # dual vts/edges " 
-				<<stg->dual_vts.size()<<"/"<<stg->dual_edges.size()<< endl;
+			std::cout << "Done! # dual vts/edges " 
+				<<stg->dual_vts.size()<<"/"<<stg->dual_edges.size()<< std::endl;
 			
 #ifdef PROFILE_SPEED
 			auto t2 = clock();
 			auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
-			cout << "Medial-curve creation took: " << t_ms << " ms." << endl;
+			std::cout << "Medial-curve creation took: " << t_ms << " ms." << std::endl;
 #endif // PROFILE_SPEED
 
 			// upload geometry & color of burnt st edges to drawer
@@ -486,46 +1093,46 @@ bool GLArea::obtainDualLineStructure(
 			char cycle_file[] = "dual_cycles.txt";
 			std::ofstream out_file(cycle_file);
 			if (!out_file.good())
-				cout << "Error: couldn't open file "<< cycle_file << endl;
+				std::cout << "Error: couldn't open file "<< cycle_file << std::endl;
 			else
 			{
 				stg->debug_dualline_cycles(
 					stg->dual_vts.size(), stg->dual_edges, stg->m_dualEdge_from_which_face, true, /*&out_file*/nullptr);
 				out_file.close();
-				cout << "debug_dualline_cycles() finished!" << endl;
+				std::cout << "debug_dualline_cycles() finished!" << std::endl;
 			}
 
 			// debug conn. cmpnt.s in dual network
 			char cc_file[] = "dual_cc.txt";
 			out_file = std::ofstream(cc_file);
 			if (!out_file.good())
-				cout << "Error: couldn't open file "<< cc_file << endl;
+				std::cout << "Error: couldn't open file "<< cc_file << std::endl;
 			else
 			{
 				stg->debug_dualline_conn_comp(
 					stg->dual_vts.size(), stg->dual_edges, stg->m_dualEdge_from_which_face, true, /*&out_file*/nullptr);
 				out_file.close();
-				cout << "debug_dualline_conn_comp() finished!" << endl;
+				std::cout << "debug_dualline_conn_comp() finished!" << std::endl;
 			}
 
 			// debug cycles in burn network
 			//char file_name[] = "burn_cycles.txt";
 			//out_file = std::ofstream(file_name);
 			//if (!out_file.good())
-			//	cout << "Error: couldn't open file "<< file_name << endl;
+			//	std::cout << "Error: couldn't open file "<< file_name << std::endl;
 			//else
 			//{
 			//	stg->debug_burnline_cycles(
 			//		stg->m_stSubdiv.getAllVts(), burntE_assocF_list, true, /*&out_file*/nullptr);
 			//	out_file.close();
-			//	cout << "debug_burnline_cycles() finished!" << endl;
+			//	std::cout << "debug_burnline_cycles() finished!" << std::endl;
 			//}
 
 			// clean up
 			burntE_assocF_list.clear();burntE_assocF_list.shrink_to_fit();
 			faces_w_crossed_paths.clear();faces_w_crossed_paths.shrink_to_fit();
 
-			cout << "components & cycles analysis done!" << endl << endl;
+			std::cout << "components & cycles analysis done!" << std::endl << std::endl;
 
 			//this->m_drawMC = true;
 			return true;
@@ -562,7 +1169,7 @@ bool GLArea::burnCurveNetwork(
 #ifdef PROFILE_SPEED
 	auto t2 = clock();
 	auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
-	cout << "Medial-curve burning took: " << t_ms << " ms." << endl;
+	std::cout << "Medial-curve burning took: " << t_ms << " ms." << std::endl;
 #endif // PROFILE_SPEED
 
 	return true;
@@ -627,7 +1234,7 @@ bool GLArea::setUpMCDistMetricForPruning(DistMC _metric, float& _min, float& _ma
 
 bool GLArea::visDualLineStructure(DistMC _dist_type, int _type)
 {
-	cout << "visDualLineStructure()..." << endl;
+	std::cout << "visDualLineStructure()..." << std::endl;
 	if (stg)
 	{
 		try {
@@ -740,7 +1347,7 @@ bool GLArea::visDualLineStructure(DistMC _dist_type, int _type)
 					colors[i*3 + 2] = c[2];
 				}
 				// debug
-				cout << "medial curve dist range: ["<<min_dist<<","<<max_dist<<"]"<<endl;
+				std::cout << "medial curve dist range: ["<<min_dist<<","<<max_dist<<"]"<<std::endl;
 			}
 			else
 			{
@@ -755,13 +1362,13 @@ bool GLArea::visDualLineStructure(DistMC _dist_type, int _type)
 				delete dist_to_vis;
 
 			// upload line data to GPU
-			cout << "visDualLineStructure(): uploading to GPU for render... " << endl;
+			std::cout << "visDualLineStructure(): uploading to GPU for render... " << std::endl;
 			shared_ptr<LineDrawer> line_drawer = std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer);
 			line_drawer->setPoints(all_vts);
 			line_drawer->setLines(all_edges);
 			line_drawer->setPerVertColor(colors, all_vts.size());
 			delete [] colors;
-			cout << "Done!" << endl;
+			std::cout << "Done!" << std::endl;
 
 			//this->m_drawMC = true;
 		}
@@ -791,7 +1398,7 @@ bool GLArea::visDualLineStructure(DistMC _dist_type, int _type)
 	this->resizeGL(width(), height());
 	updateGL();
 
-	cout << "visDualLineStructure() returns." << endl;
+	std::cout << "visDualLineStructure() returns." << std::endl;
 
 	return this->m_drawMC;
 }
@@ -802,7 +1409,7 @@ bool GLArea::colorMCEdgeBy(
 	float _min_alpha, float _alpha_exp, 
 	int _update_opt)
 {
-	cout << "colorMCEdgeBy()... " << endl;
+	std::cout << "colorMCEdgeBy()... " << std::endl;
 	if (stg)
 	{
 		try {
@@ -876,10 +1483,10 @@ bool GLArea::colorMCEdgeBy(
 					colors[ei*2*3 + 3 + 2] = c[2];
 				}*/
 				// debug
-				cout << "medial curve dist range: ["<<min_dist<<","<<max_dist<<"]"<<endl;
+				std::cout << "medial curve dist range: ["<<min_dist<<","<<max_dist<<"]"<<std::endl;
 
 				// upload color data to GPU
-				cout << "visDistOnMC(): uploading to GPU for render... " << endl;
+				std::cout << "visDistOnMC(): uploading to GPU for render... " << std::endl;
 				shared_ptr<LineDrawer> line_drawer = std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer);
 				line_drawer->setPerVertColor(colors, n_total_vts);
 				// also populate the color buffer for dynamic part of MC
@@ -931,7 +1538,7 @@ bool GLArea::colorMCEdgeBy(
 
 				}*/
 				// debug
-				//cout << "medial curve dist range: ["<<min_dist<<","<<max_dist<<"]"<<endl;
+				//std::cout << "medial curve dist range: ["<<min_dist<<","<<max_dist<<"]"<<std::endl;
 
 				shared_ptr<LineDrawer> line_drawer = std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer);
 				// upload saliency data
@@ -940,7 +1547,7 @@ bool GLArea::colorMCEdgeBy(
 				std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer)->setPerVertSaliency(saliency_data, n_total_vts);
 				delete [] saliency_data;
 			}
-			cout << "Done!" << endl;
+			std::cout << "Done!" << std::endl;
 
 			//this->m_drawMC = true;
 		}
@@ -970,7 +1577,7 @@ bool GLArea::colorMCEdgeBy(
 	this->resizeGL(width(), height());
 	updateGL();
 
-	cout << "colorMCEdgeBy() returns" << endl;
+	std::cout << "colorMCEdgeBy() returns" << std::endl;
 
 	return this->m_drawMC;
 }
@@ -1048,8 +1655,8 @@ bool GLArea::pruneMedialCurve( double _t, bool _preserve_topo )
 				}
 			}
 		}
-		/*cout << "# ends not in queue "<< ends_not_in_q<<endl;
-		cout << "_t "<< _t<<endl;*/
+		/*std::cout << "# ends not in queue "<< ends_not_in_q<<std::endl;
+		std::cout << "_t "<< _t<<std::endl;*/
 
 		//	start pruning iterations:
 		//
@@ -1114,7 +1721,7 @@ bool GLArea::pruneMedialCurve( double _t, bool _preserve_topo )
 				continue;
 			m_remained_MC.push_back(ei);
 		}
-		//cout << "# remained MC edges: " << m_remained_MC.size() << endl;
+		//std::cout << "# remained MC edges: " << m_remained_MC.size() << std::endl;
 	}
 	else
 	{
@@ -1145,7 +1752,7 @@ bool GLArea::pruneMedialCurve( double _t, bool _preserve_topo )
 		if (*it == 1)
 			cnt_openEnds++;
 	}
-	cout << "# open ends: "<<cnt_openEnds<<endl;*/
+	std::cout << "# open ends: "<<cnt_openEnds<<std::endl;*/
 
 	return true;
 }
@@ -1225,15 +1832,15 @@ void GLArea::visSphere(vector<unsigned> _vid_list)
 
 void GLArea::printMAOriginalVert(size_t _vid)
 {
-	cout << "----vertex "<<_vid<<" info----"<<endl;
-	cout << "topo type: "<<topo_type_str[stg->getTopoType(_vid)]<<endl;
-	cout << "bt2: "<<stg->bt2MA_vert[_vid]<<endl;
+	std::cout << "----vertex "<<_vid<<" info----"<<std::endl;
+	std::cout << "topo type: "<<topo_type_str[stg->getTopoType(_vid)]<<std::endl;
+	std::cout << "bt2: "<<stg->bt2MA_vert[_vid]<<std::endl;
 }
 
 void GLArea::printMAOriginalVerts(vector<unsigned> _vid_list)
 {
 	m_meshMA->need_bbox();
-	cout << "MA mesh bounding volume r: "<<m_meshMA->bbox.radius()<<endl;
+	std::cout << "MA mesh bounding volume r: "<<m_meshMA->bbox.radius()<<std::endl;
 	float avg_len = 0.0f;
 	for (auto it = stg->m_origG->edges.begin(); it != stg->m_origG->edges.end(); ++it)
 	{
@@ -1242,27 +1849,27 @@ void GLArea::printMAOriginalVerts(vector<unsigned> _vid_list)
 		avg_len += trimesh::len(u-v);
 	}
 	avg_len /= stg->m_origG->edges.size();
-	cout << "MA mesh edges' average length: "<<avg_len<<endl;
+	std::cout << "MA mesh edges' average length: "<<avg_len<<std::endl;
 
 	std::streamsize ss = std::cout.precision();
-	auto flgs = cout.flags();
-	cout.setf(ios::left, ios::adjustfield);
-	cout.precision(numeric_limits<float>::max_digits10);
+	auto flgs = std::cout.flags();
+	std::cout.setf(ios::left, ios::adjustfield);
+	std::cout.precision(numeric_limits<float>::max_digits10);
 	for (size_t i = 0; i < _vid_list.size(); ++i)
 	{
 		auto vi = _vid_list[i];
-		cout << "sample vert ";
-		cout << setw(8) << vi;
-		cout <<" ("<< topo_type_str[stg->getTopoType(vi)]<<") burnt time\t";
-		cout <<stg->bt2MA_vert[vi]<<endl;
+		std::cout << "sample vert ";
+		std::cout << setw(8) << vi;
+		std::cout <<" ("<< topo_type_str[stg->getTopoType(vi)]<<") burnt time\t";
+		std::cout <<stg->bt2MA_vert[vi]<<std::endl;
 	}
 	for (size_t i = 0; i < _vid_list.size(); ++i)
 	{
 		auto vi = _vid_list[i];
-		cout << vi<<": "<<stg->m_origG->vts[vi]<<endl;
+		std::cout << vi<<": "<<stg->m_origG->vts[vi]<<std::endl;
 	}
-	cout.precision(ss);
-	cout.setf(flgs);
+	std::cout.precision(ss);
+	std::cout.setf(flgs);
 }
 
 bool GLArea::uploadLinesToDrawer(const vector<TriPoint>& _vts, const vector<TriEdge>& _edges, 
@@ -1282,7 +1889,7 @@ bool GLArea::uploadLinesToDrawer(const vector<TriPoint>& _vts, const vector<TriE
 		}
 
 		// upload line data to GPU
-		/*cout << "showRemainedMedialCurve(): uploading to GPU for render... " << endl;*/
+		/*std::cout << "showRemainedMedialCurve(): uploading to GPU for render... " << std::endl;*/
 		shared_ptr<LineDrawer> line_drawer = std::dynamic_pointer_cast<LineDrawer>(_line_drawer);
 		line_drawer->setPoints(vts);
 		line_drawer->setLines(edges);
@@ -1353,7 +1960,7 @@ bool GLArea::uploadRemainedMCtoProxyDrawer()
 
 		dynamic_pointer_cast<LineDrawer>(m_linesProxyDrawer)->setLinesAdjacency(adjacency);*/
 
-		//cout << "remained MC size: "<<m_remained_MC.size() << endl;
+		//std::cout << "remained MC size: "<<m_remained_MC.size() << std::endl;
 		std::dynamic_pointer_cast<LineDrawer>(m_linesProxyDrawer)->setLines(m_remained_MC);
 
 		return true;
@@ -1427,10 +2034,10 @@ void GLArea::printRemainedMCStats()
 	}
 	std_dev = std::sqrt(std_dev / vts.size());
 
-	cout << "stats of cur dist field on MC: "<<endl;
-	cout << "range: ["<<min_val<<","<<max_val<<"]"<<endl;
-	cout << "avg: "<<avg<<endl;
-	cout << "std dev: "<<std_dev<<endl;
+	std::cout << "stats of cur dist field on MC: "<<std::endl;
+	std::cout << "range: ["<<min_val<<","<<max_val<<"]"<<std::endl;
+	std::cout << "avg: "<<avg<<std::endl;
+	std::cout << "std dev: "<<std_dev<<std::endl;
 }
 
 void GLArea::setDrawFlag(GLArea::DrawFlag _obj_to_draw, bool _draw)
@@ -1473,6 +2080,12 @@ void GLArea::setDrawFlag(GLArea::DrawFlag _obj_to_draw, bool _draw)
 		break;
 	case GLArea::DRAW_QMAT:
 		m_drawQMAT = _draw;
+		break;
+	case GLArea::DRAW_PICKED_FACE:
+		m_drawPickedSphere = _draw;
+		break;
+	case GLArea::SELECTION_ACTIVE_MODE:
+		m_selectionActive = _draw;
 		break;
 	default:
 		break;
@@ -1523,7 +2136,7 @@ bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, do
 	stg.reset();
 	//_burn_sch = SteinerGraph::STEINER_ONLY;
 	if ( _burn_sch == SteinerGraph::STEINER_ONLY )
-		cout << "burn-scheme: steiner-only." << endl;
+		std::cout << "burn-scheme: steiner-only." << std::endl;
 	stg = shared_ptr<SteinerGraph>( new SteinerGraph(
 		graph_ptr,
 		radii/*vector<float>()*/,
@@ -1534,15 +2147,15 @@ bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, do
 		) );
 #ifdef PROFILE_SPEED
 	t_duration = clock() - t_start;
-	cout << "PROFIELING SPEED: SteinerGraph() took " << t_duration * 1000.0f / CLOCKS_PER_SEC << " ms."<<endl;
+	std::cout << "PROFIELING SPEED: SteinerGraph() took " << t_duration * 1000.0f / CLOCKS_PER_SEC << " ms."<<std::endl;
 #endif
 
-	cout << "estimating radii for all faces..."<<endl;
+	std::cout << "estimating radii for all faces..."<<std::endl;
 	stg->computeDist2SurfForFaces(radii);
-	cout << "done." << endl;
-	cout << "computing difference measure for faces..."<<endl;
+	std::cout << "done." << std::endl;
+	std::cout << "computing difference measure for faces..."<<std::endl;
 	stg->computeDiffDist();
-	cout << "done." << endl;
+	std::cout << "done." << std::endl;
 
 	// stg is created, thus init the hybrid skeleton
 	// - setup basic info to initialize hybrid skeleton 
@@ -1554,9 +2167,9 @@ bool GLArea::burn(SteinerGraph::BurnScheme _burn_sch, SubdivScheme _subd_sch, do
 		return false;
 
 	// upload finner triangulation of MA before interactive session like iso-countour begins
-	cout << "uploading finner MA triangulation data..."<<endl;
+	std::cout << "uploading finner MA triangulation data..."<<std::endl;
 	uploadFinerMAStaticGeom();
-	cout << "finner MA upload done!" <<endl;
+	std::cout << "finner MA upload done!" <<std::endl;
 
 	this->resizeGL(width(), height());
 	updateGL();
@@ -1811,14 +2424,14 @@ bool GLArea::cleanTopo(std::string& _out_file /* = "" */, bool& _hasunburnt)
 	unsigned index = _out_file.find_last_of(".");
 	_out_file.replace(index, 1, ".clean.");
 
-	cout << "writing the topo-cleaned mesh to file: " << _out_file << endl;
+	std::cout << "writing the topo-cleaned mesh to file: " << _out_file << std::endl;
 	auto meshMA_cpy = *m_meshMA;
 	auto trans_cpy = m_trans_mat;
 	trimesh::invert(trans_cpy);
 	trimesh::apply_xform(&meshMA_cpy, trans_cpy);
 	//meshMA_cpy.write(_out_file);
 	MyMesh::write( _out_file, &meshMA_cpy );
-	cout << "writing done." << endl;
+	std::cout << "writing done." << std::endl;
 
 	return true;
 }
@@ -1827,24 +2440,24 @@ void GLArea::precomputeForMeasures()
 {
 	if (!stg)
 		return;
-//	cout << "estimating radii for all MA points (steiner points)..."<<endl;
+//	std::cout << "estimating radii for all MA points (steiner points)..."<<std::endl;
 //	stg->computeDist2SurfForFaces(radii);
-//	cout << "done." << endl;
+//	std::cout << "done." << std::endl;
 //// 	vector<TriPoint> closest2pts;
 //// 	find2Closest(m_meshMA, m_meshOrig, closest2pts);
-//// 	cout << "Done." << endl;
+//// 	std::cout << "Done." << std::endl;
 //// 	stg->computeDist2SurfForFaces(closest2pts);
-//	cout << "computing difference measure..."<<endl;
+//	std::cout << "computing difference measure..."<<std::endl;
 //	stg->computeDiffDist();
-//	cout << "done." << endl;
+//	std::cout << "done." << std::endl;
 	
-	cout << "estimating foot points for all MA faces..."<<endl;
+	std::cout << "estimating foot points for all MA faces..."<<std::endl;
 	stg->computeIntersectionsForFaces(m_meshOrig, radii);
-	cout << "done." << endl;
+	std::cout << "done." << std::endl;
 
-	cout << "setting up diffuser for MA face scalar field..."<<endl;
+	std::cout << "setting up diffuser for MA face scalar field..."<<std::endl;
 	stg->setupDiffuserForMA(m_diffuser_MA);
-	cout << "diffuser setup."<<endl;
+	std::cout << "diffuser setup."<<std::endl;
 }
 
 void GLArea::getFaceDistMetricMA(
@@ -1884,26 +2497,26 @@ void GLArea::getFaceDistMetricMA(
 
 		if ( _face_field == ANGLE_f )
 		{
-			cout << "computing angles..." << endl;
+			std::cout << "computing angles..." << std::endl;
 			stg->computeAngleMetricForFaces( stg->m_footPtsForMAFaces, _dist_per_face );
-			cout << "done" << endl;
+			std::cout << "done" << std::endl;
 		}
 		else if ( _face_field == LAMBDA_f )
 		{
-			cout << "computing lambda metric..." << endl;
+			std::cout << "computing lambda metric..." << std::endl;
 			stg->computeLambdaMetricForFaces( stg->m_footPtsForMAFaces, _dist_per_face );
-			cout << "done" << endl;
+			std::cout << "done" << std::endl;
 		}
 		else
 		{
-			cout << "computing geodesic metric..." << endl;
+			std::cout << "computing geodesic metric..." << std::endl;
 			QString cache = QString( this->m_medialAxisFile.c_str() ).remove( ".clean" ).replace( ".off", "_geoDCache.txt" );
 			stg->computeGeodMetricForFaces( this->m_meshOrig, stg->m_footPtsForMAFaces, _dist_per_face, cache.toStdString() );
-			cout << "done" << endl;
+			std::cout << "done" << std::endl;
 		}
 
 		// debug begin:
-		cout << "getFaceDistMetricMA (per-face), before diffusion: " << endl;
+		std::cout << "getFaceDistMetricMA (per-face), before diffusion: " << std::endl;
 		auto min_f_val = *_dist_per_face.begin();
 		auto max_f_val = *_dist_per_face.begin();
 		for ( unsigned fi = 0; fi < _dist_per_face.size(); ++fi )
@@ -1913,7 +2526,7 @@ void GLArea::getFaceDistMetricMA(
 			min_f_val = std::min( min_f_val, _dist_per_face[ fi ] );
 			max_f_val = std::max( max_f_val, _dist_per_face[ fi ] );
 		}
-		std::cout << "face field range: " << min_f_val << "," << max_f_val << endl;
+		std::cout << "face field range: " << min_f_val << "," << max_f_val << std::endl;
 		// debug end:
 
 		if ( _do_face_diffusion )
@@ -1921,7 +2534,7 @@ void GLArea::getFaceDistMetricMA(
 			m_diffuser_MA.solve( _dist_per_face );
 
 			// debug begin:
-			cout << "getFaceDistMetricMA (per-face), after diffusion: " << endl;
+			std::cout << "getFaceDistMetricMA (per-face), after diffusion: " << std::endl;
 			min_f_val = *_dist_per_face.begin();
 			max_f_val = *_dist_per_face.begin();
 			for ( unsigned fi = 0; fi < _dist_per_face.size(); ++fi )
@@ -1931,12 +2544,12 @@ void GLArea::getFaceDistMetricMA(
 				min_f_val = std::min( min_f_val, _dist_per_face[ fi ] );
 				max_f_val = std::max( max_f_val, _dist_per_face[ fi ] );
 			}
-			std::cout << "face field range: " << min_f_val << "," << max_f_val << endl;
+			std::cout << "face field range: " << min_f_val << "," << max_f_val << std::endl;
 			// debug end:
 
-			/*cout << "outputting diffusion system to Mathematica file..."<<endl;
+			/*std::cout << "outputting diffusion system to Mathematica file..."<<std::endl;
 			m_diffuser_MA.outputDiffuseSystem(_dist_per_face);
-			cout << "Done: outputting diffusion system to Mathematica file"<<endl;*/
+			std::cout << "Done: outputting diffusion system to Mathematica file"<<std::endl;*/
 		}
 
 		break;
@@ -1952,7 +2565,7 @@ void GLArea::getFaceDistMetricMA(
 	bool _do_face_diffusion,
 	vector<vector<float> >& _vert_dist_per_sheet)
 {
-	cout << "face field: " << _face_field << endl;
+	std::cout << "face field: " << _face_field << std::endl;
 	const auto& vts = m_meshMA->vertices;
 	// by default BT2 per vert per sheet
 	_vert_dist_per_sheet.assign(
@@ -2024,7 +2637,7 @@ void GLArea::getFaceDistMetricMA(
 		}
 
 		//// debug begin:
-		//std::cout << "after conversion: "<<endl;
+		//std::cout << "after conversion: "<<std::endl;
 		//auto min_s_val = *( _per_sheet.begin()->begin() );
 		//auto max_s_val = *( _per_sheet.begin()->begin() );
 		//for (unsigned vi = 0; vi < _per_sheet.size(); ++vi)
@@ -2038,7 +2651,7 @@ void GLArea::getFaceDistMetricMA(
 		//		max_s_val = std::max(max_s_val, persheet_cur_vert[si]);
 		//	}
 		//}
-		//std::cout << "per-sheet range: "<<min_s_val<<","<<max_s_val<<endl;
+		//std::cout << "per-sheet range: "<<min_s_val<<","<<max_s_val<<std::endl;
 		//// debug end:
 	};
 
@@ -2099,26 +2712,26 @@ void GLArea::getFaceDistMetricMA(
 
 			if (_face_field == ANGLE_f)
 			{
-				cout << "computing angles..." << endl;
+				std::cout << "computing angles..." << std::endl;
 				stg->computeAngleMetricForFaces(stg->m_footPtsForMAFaces, dist_per_face);
-				cout << "done" << endl;
+				std::cout << "done" << std::endl;
 			}
 			else if (_face_field == LAMBDA_f)
 			{
-				cout << "computing lambda metric..." << endl;
+				std::cout << "computing lambda metric..." << std::endl;
 				stg->computeLambdaMetricForFaces(stg->m_footPtsForMAFaces, dist_per_face);
-				cout << "done" << endl;
+				std::cout << "done" << std::endl;
 			}
 			else
 			{
-				cout << "computing geodesic metric..." << endl;
+				std::cout << "computing geodesic metric..." << std::endl;
 				QString cache = QString(this->m_medialAxisFile.c_str()).remove(".clean").replace(".off", "_geoDCache.txt");
 				stg->computeGeodMetricForFaces(this->m_meshOrig, stg->m_footPtsForMAFaces, dist_per_face, cache.toStdString());
-				cout << "done" << endl;
+				std::cout << "done" << std::endl;
 			}
 
 			// debug begin:
-			cout << "getFaceDistMetricMA (per-face), before diffusion: "<<endl;
+			std::cout << "getFaceDistMetricMA (per-face), before diffusion: "<<std::endl;
 			auto min_f_val = *dist_per_face.begin();
 			auto max_f_val = *dist_per_face.begin();
 			for (unsigned fi = 0; fi < dist_per_face.size(); ++fi)
@@ -2128,13 +2741,13 @@ void GLArea::getFaceDistMetricMA(
 				min_f_val = std::min(min_f_val, dist_per_face[fi]);
 				max_f_val = std::max(max_f_val, dist_per_face[fi]);
 			}
-			std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<endl;
+			std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<std::endl;
 			// debug end:
 
 			m_diffuser_MA.solve(dist_per_face);
 
 			// debug begin:
-			cout << "getFaceDistMetricMA (per-face), after diffusion: "<<endl;
+			std::cout << "getFaceDistMetricMA (per-face), after diffusion: "<<std::endl;
 			min_f_val = *dist_per_face.begin();
 			max_f_val = *dist_per_face.begin();
 			for (unsigned fi = 0; fi < dist_per_face.size(); ++fi)
@@ -2144,7 +2757,7 @@ void GLArea::getFaceDistMetricMA(
 				min_f_val = std::min(min_f_val, dist_per_face[fi]);
 				max_f_val = std::max(max_f_val, dist_per_face[fi]);
 			}
-			std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<endl;
+			std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<std::endl;
 
 			convert_to_vert_field(dist_per_face, _vert_dist_per_sheet);
 
@@ -2252,7 +2865,7 @@ void GLArea::colorMAFaceBy(
 		getFaceDistMetricMA(_type, _do_face_diffusion, vertDist_per_sheet);
 
 		//// debug begin:
-		//cout << "colorMAFaceBy() (per-sheet): "<<endl;
+		//std::cout << "colorMAFaceBy() (per-sheet): "<<std::endl;
 		//auto min_s_val = *( vertDist_per_sheet.begin()->begin() );
 		//auto max_s_val = *( vertDist_per_sheet.begin()->begin() );
 		//for (unsigned vi = 0; vi < vertDist_per_sheet.size(); ++vi)
@@ -2266,7 +2879,7 @@ void GLArea::colorMAFaceBy(
 		//		max_s_val = std::max(max_s_val, persheet_cur_vert[si]);
 		//	}
 		//}
-		//std::cout << "per-sheet range: "<<min_s_val<<","<<max_s_val<<endl;
+		//std::cout << "per-sheet range: "<<min_s_val<<","<<max_s_val<<std::endl;
 		//// debug end:
 
 		float min_val = numeric_limits<float>::max();
@@ -2286,13 +2899,13 @@ void GLArea::colorMAFaceBy(
 			}
 		}
 
-		cout << "Visualize: using face dist measure "<<_type
-			<<", min_val & max_val: " << min_val<<", "<<max_val<< endl; //debug
+		std::cout << "Visualize: using face dist measure "<<_type
+			<<", min_val & max_val: " << min_val<<", "<<max_val<< std::endl; //debug
 		if (_use_new_range)
 		{
 			min_val = _min;
 			max_val = _max;
-			cout << "rescale enabled: " << min_val <<", "<< max_val <<endl;
+			std::cout << "rescale enabled: " << min_val <<", "<< max_val <<std::endl;
 		}
 
 		if (!_use_new_range) // then update dist range
@@ -2303,11 +2916,12 @@ void GLArea::colorMAFaceBy(
 
 		if (_update_opt == 1 || _update_opt == 3)
 		{
-			cout << "updating color..." << endl;
-			float* color_data = new float[m_meshMA->faces.size()*3*3];
+			std::cout << "updating color..." << std::endl;
+			//float* color_data = new float[m_meshMA->faces.size()*3*3];
 			TriColor color;
 			float s;
 
+			ma_mesh_colors.clear();
 			for (unsigned fi = 0; fi < m_meshMA->faces.size(); ++fi)
 			{
 				f = m_meshMA->faces[fi];
@@ -2320,7 +2934,7 @@ void GLArea::colorMAFaceBy(
 					//assert(tei >= 0);
 					if (tei < 0)
 					{
-						cout << "Fatal Error: cannot find topo sheet containing face "<<fi<<endl;
+						std::cout << "Fatal Error: cannot find topo sheet containing face "<<fi<<std::endl;
 						exit(-1);
 					}
 					s = vertDist_per_sheet[ vi ][tei];
@@ -2330,15 +2944,16 @@ void GLArea::colorMAFaceBy(
 					color = invalid_color ? TriColor( 0.0f, 0.0f, 0.0f ) 
 						: util::GetColour( s, min_val, max_val );
 
-					color_data[ 9*fi+3*j+0 ] = color[0];
+					/*color_data[ 9*fi+3*j+0 ] = color[0];
 					color_data[ 9*fi+3*j+1 ] = color[1];
-					color_data[ 9*fi+3*j+2 ] = color[2];
+					color_data[ 9*fi+3*j+2 ] = color[2];*/
+					ma_mesh_colors.push_back(color);
 				}
 			}
-			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertColor(color_data, m_meshMA->faces.size()*3);
-
-			delete [] color_data;
-			cout << "updating color done." << endl;
+			// std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertColor(color_data, m_meshMA->faces.size()*3);
+			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertColor((float*)ma_mesh_colors.data(), m_meshMA->faces.size() * 3);
+			//delete [] color_data;
+			std::cout << "updating color done." << std::endl;
 		}
 		if (_update_opt == 2 || _update_opt == 3)
 		{
@@ -2372,10 +2987,10 @@ void GLArea::colorMAFaceBy(
 			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerVertSaliency(saliency_data, m_meshMA->faces.size()*3);
 			delete [] saliency_data;
 		}
-		cout << "uploading MA finer static colors... " << endl;
+		std::cout << "uploading MA finer static colors... " << std::endl;
 		// don't forget to update colors of fine MA triangulation in case fine pruning is to perform
 		this->uploadMAFinerStaticColors(vertDist_per_sheet, min_val, max_val);
-		cout << "Done: uploading MA finer static colors." << endl;
+		std::cout << "Done: uploading MA finer static colors." << std::endl;
 	}
 	else
 	{
@@ -2393,7 +3008,7 @@ void GLArea::colorMAFaceBy(
 		getFaceDistMetricMA(_type, _do_face_diffusion, cur_MA_visDist_f);
 
 		//// debug begin:
-		//cout << "colorMAFaceBy() (per-face): "<<endl;
+		//std::cout << "colorMAFaceBy() (per-face): "<<std::endl;
 		//auto min_f_val = *cur_MA_visDist_f.begin();
 		//auto max_f_val = *cur_MA_visDist_f.begin();
 		//for (unsigned fi = 0; fi < cur_MA_visDist_f.size(); ++fi)
@@ -2403,7 +3018,7 @@ void GLArea::colorMAFaceBy(
 		//	min_f_val = std::min(min_f_val, cur_MA_visDist_f[fi]);
 		//	max_f_val = std::max(max_f_val, cur_MA_visDist_f[fi]);
 		//}
-		//std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<endl;
+		//std::cout << "face field range: "<<min_f_val<<","<<max_f_val<<std::endl;
 		//// debug end
 
 		float min_val = numeric_limits<float>::max();
@@ -2423,13 +3038,13 @@ void GLArea::colorMAFaceBy(
 			max_val = std::max(*s_iter, max_val);
 		}*/
 		
-		cout << "Visualize: using face dist measure "<<_type
-			<<", min_val & max_val: " << min_val<<", "<<max_val<< endl; //debug
+		std::cout << "Visualize: using face dist measure "<<_type
+			<<", min_val & max_val: " << min_val<<", "<<max_val<< std::endl; //debug
 		if (_use_new_range)
 		{
 			min_val = _min;
 			max_val = _max;
-			cout << "rescale enabled: " << min_val <<", "<< max_val <<endl;
+			std::cout << "rescale enabled: " << min_val <<", "<< max_val <<std::endl;
 		}
 
 		if (!_use_new_range) // then update dist range
@@ -2440,25 +3055,28 @@ void GLArea::colorMAFaceBy(
 
 		if (_update_opt == 1 || _update_opt == 3)
 		{
-			float* color_data = new float[m_meshMA->faces.size()*3];
+			//float* color_data = new float[m_meshMA->faces.size()*3];
 			TriColor color;
-			float s;			
+			float s;
+			ma_mesh_colors.clear();			
 			for (unsigned fi = 0; fi < m_meshMA->faces.size(); ++fi)
 			{
-			const auto& f = m_meshMA->faces[fi];
-			s = cur_MA_visDist_f[fi];
+				const auto& f = m_meshMA->faces[fi];
+				s = cur_MA_visDist_f[fi];
 
-			color = s >= 0.0f ? util::GetColour(
-			s, min_val, max_val
-			) : TriColor(0.0f, 0.0f, 0.0f);
-			color_data[ 3*fi+0 ] = color[0];
-			color_data[ 3*fi+1 ] = color[1];
-			color_data[ 3*fi+2 ] = color[2];
+				color = s >= 0.0f ? util::GetColour(
+				s, min_val, max_val
+				) : TriColor(0.0f, 0.0f, 0.0f);
+				ma_mesh_colors.push_back(color);
+				// color_data[ 3*fi+0 ] = color[0];
+				// color_data[ 3*fi+1 ] = color[1];
+				// color_data[ 3*fi+2 ] = color[2];
 			}
-			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerFaceColor(color_data, m_meshMA->faces.size());
+			// std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerFaceColor(color_data, m_meshMA->faces.size());
+			std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setPerFaceColor((float*)ma_mesh_colors.data(), m_meshMA->faces.size());
 			
 
-			delete [] color_data;
+			// delete [] color_data;
 		}
 		if (_update_opt == 2 || _update_opt == 3)
 		{
@@ -2504,15 +3122,15 @@ void GLArea::colorMAVertBy(
 		max_val = std::max(max_val, (field_vals)[i]);
 	}
 
-	//cout << "Visualize: using vert dist measure "<<_type
-	//	<<", min_val & max_val: " << min_val<<", "<<max_val<< endl; //debug
+	//std::cout << "Visualize: using vert dist measure "<<_type
+	//	<<", min_val & max_val: " << min_val<<", "<<max_val<< std::endl; //debug
 	if (_use_new_range)
 	{
 		/*min_val = std::max(min_val, _min);
 		max_val = std::min(max_val, _max);*/
 		min_val = _min;
 		max_val = _max;
-		cout << "clamped enabled: " << min_val <<", "<< max_val <<endl;
+		std::cout << "clamped enabled: " << min_val <<", "<< max_val <<std::endl;
 	}
 
 	if (!_use_new_range)
@@ -2526,6 +3144,7 @@ void GLArea::colorMAVertBy(
 	{
 		float* color_data = new float[m_meshMA->vertices.size() * 3];
 		TriColor color;
+		ma_vertex_colors.clear();
 
 		for (unsigned i = 0; i < m_meshMA->vertices.size(); ++i)
 		{
@@ -2537,7 +3156,9 @@ void GLArea::colorMAVertBy(
 			color_data[3*i+0] = color[0];
 			color_data[3*i+1] = color[1];
 			color_data[3*i+2] = color[2];
+			//ma_vertex_colors.push_back(color);
 		}
+		//m_MADrawer->setPerVertColor((float*)ma_vertex_colors.data(), m_meshMA->vertices.size());
 		m_MADrawer->setPerVertColor(color_data, m_meshMA->vertices.size());
 		delete [] color_data;
 	}
@@ -2749,8 +3370,8 @@ void GLArea::setupMAFacePrune( FaceFieldType _type, float& _min, float& _max, in
 	_min = min_val; 
 	_max = max_val;
 
-	cout << "Prune: using face dist measure "<<_type
-		<<"[" << _min<<", "<<_max<<"]"<< endl; //debug
+	std::cout << "Prune: using face dist measure "<<_type
+		<<"[" << _min<<", "<<_max<<"]"<< std::endl; //debug
 }
 
 float GLArea::getMAPruneValue(float _ratio)
@@ -2867,7 +3488,7 @@ void GLArea::pruneMA(float _t1, float _t2)
 		}
 	}
 
-	cout << "MA faces left: " << _faces.size() << endl;
+	std::cout << "MA faces left: " << _faces.size() << std::endl;
 	this->drawMeshSubset(std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer), _faces);
 }
 
@@ -3044,7 +3665,7 @@ void GLArea::visMP()
 			pts.push_back(mp);
 			mp_drawer->setCenter(pts, r);
 
-			cout << "MP drawn: center "<< mp << "radius "<<r<<endl;
+			std::cout << "MP drawn: center "<< mp << "radius "<<r<<std::endl;
 
 			break;
 		}
@@ -3083,7 +3704,7 @@ void GLArea::outputMCwMeasure( const std::string & _meas_name ) const
 		mc_os << v[ 0 ] << " " << v[ 1 ] << " " << v[ 2 ] << std::endl;
 	}
 	mc_os.close();
-	cout << "Done: MC geometry output to file " << mc_file_name << endl;
+	std::cout << "Done: MC geometry output to file " << mc_file_name << std::endl;
 
 	// output measure
 	auto meas_type = DistMC::BT2_MC;
@@ -3102,7 +3723,7 @@ void GLArea::outputMCwMeasure( const std::string & _meas_name ) const
 		meas_os << s << std::endl;
 	}
 	meas_os.close();
-	cout << "Done: MC measure output to file " << meas_file_name << endl;
+	std::cout << "Done: MC measure output to file " << meas_file_name << std::endl;
 
 	// output mc vert order defined by burning
 	const auto& mc_v_order = stg->burnNext_medialCurve;
@@ -3114,14 +3735,14 @@ void GLArea::outputMCwMeasure( const std::string & _meas_name ) const
 		mc_v_order_os << i << " " << ( mc_v_order[ i ] < 0 ? i : mc_v_order[ i ] ) << std::endl;
 	}
 	mc_v_order_os.close();
-	cout << "Done: MC verts order output to file " << mc_v_order_filename << endl;
+	std::cout << "Done: MC verts order output to file " << mc_v_order_filename << std::endl;
 }
 
 void GLArea::usePerFaceRender(bool _is_perFace)
 {
 	//_is_perFace ? 
-	//	cout << "use per face render" << endl : 
-	//	cout << "use per vert render" << endl; // debug
+	//	std::cout << "use per face render" << std::endl : 
+	//	std::cout << "use per vert render" << std::endl; // debug
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->setRenderMode(
 		_is_perFace? MeshDrawer::PER_FACE : MeshDrawer::PER_VERT);
 }
@@ -3174,13 +3795,13 @@ void GLArea::createHS()
 #endif // PROFILE_SPEED
 
 	auto& hs = m_hs;
-	cout << "Preprocessing data for hybrid skeleton..." << endl;
+	std::cout << "Preprocessing data for hybrid skeleton..." << std::endl;
 	hs->preprocess();
-	cout << "Done: hybrid skeleton preprocess." << endl;
+	std::cout << "Done: hybrid skeleton preprocess." << std::endl;
 	/*hs->prepareFaceExtraction(stg->dual_vts, stg->dual_edges);
-	cout << "Done: preparing for face extraction" << endl;
+	std::cout << "Done: preparing for face extraction" << std::endl;
 	hs->extractPolyFaces();
-	cout << "Done: extracting poly faces" << endl;*/
+	std::cout << "Done: extracting poly faces" << std::endl;*/
 
 	// now assign values to HS elements 
 	vector<vector<float>> orig_persheet_bt2bt3diff;
@@ -3192,17 +3813,17 @@ void GLArea::createHS()
 	vector<float> dual_vts_bt1bt2diff;
 	vector<float> dual_vts_bt1bt2reldiff;
 	getPerSheetDistMetricMA(DIFF_v, orig_persheet_bt2bt3diff);
-	//cout << "orig_persheet_bt2bt3diff obtained" << endl;
+	//std::cout << "orig_persheet_bt2bt3diff obtained" << std::endl;
 	getPerSheetDistMetricMA(DIFF_REL_v, orig_persheet_bt2bt3reldiff);
-	//cout << "orig_persheet_bt2bt3reldiff obtained" << endl;
+	//std::cout << "orig_persheet_bt2bt3reldiff obtained" << std::endl;
 	getVertDistMetricMA(DIFF_v, orig_vts_bt2bt3diff);
-	//cout << "orig_vts_bt2bt3diff obtained" << endl;
+	//std::cout << "orig_vts_bt2bt3diff obtained" << std::endl;
 	getVertDistMetricMA(DIFF_REL_v, orig_vts_bt2bt3reldiff);
-	//cout << "orig_vts_bt2bt3reldiff obtained" << endl;
+	//std::cout << "orig_vts_bt2bt3reldiff obtained" << std::endl;
 	getMCDistMetric(BT1_BT2_MC, dual_vts_bt1bt2diff);
-	//cout << "dual_vts_bt1bt2diff obtained" << endl;
+	//std::cout << "dual_vts_bt1bt2diff obtained" << std::endl;
 	getMCDistMetric(BT1_BT2_REL_MC, dual_vts_bt1bt2reldiff);
-	//cout << "dual_vts_bt1bt2reldiff obtained" << endl;
+	//std::cout << "dual_vts_bt1bt2reldiff obtained" << std::endl;
 	getMCDistMetric(BT2_BT3_MC, dual_vts_bt2bt3diff);
 	getMCDistMetric(BT2_BT3_REL_MC, dual_vts_bt2bt3reldiff);
 
@@ -3211,12 +3832,12 @@ void GLArea::createHS()
 		orig_vts_bt2bt3diff, orig_vts_bt2bt3reldiff,
 		dual_vts_bt2bt3diff, dual_vts_bt2bt3reldiff,
 		dual_vts_bt1bt2diff, dual_vts_bt1bt2reldiff);
-	cout << "Done: assigning element values" << endl;
+	std::cout << "Done: assigning element values" << std::endl;
 
 #ifdef PROFILE_SPEED
 	auto t2 = clock();
 	auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
-	cout << "Skeleton preprocessing took: " << t_ms << " ms." << endl;
+	std::cout << "Skeleton preprocessing took: " << t_ms << " ms." << std::endl;
 #endif // PROFILE_SPEED
 }
 
@@ -3236,7 +3857,7 @@ void GLArea::uploadHS( bool _smooth_curves, int _n_smooths )
 		util::smoothCurves( vts_hs, edges_hs, _n_smooths );
 
 	//this->m_drawHS = true;
-	cout << "hs faces left: " << tri_faces_hs.size() << endl;
+	std::cout << "hs faces left: " << tri_faces_hs.size() << std::endl;
 	vector<TriColor> edge_color( 1, TriColor( 0, 0, 0 ) );
 	vector<TriColor> face_color( 1, m_use_constColor_for_MA ? m_constColor_MA : TriColor( 1.0f, 98.0f / 255.0f, 0.0f ) );
 	uploadSimplicialComplex(vts_hs, edges_hs, tri_faces_hs, &edge_color/*nullptr*/, &face_color/*nullptr*/, m_hsLineDrawer, m_hsFaceDrawer);
@@ -3253,7 +3874,7 @@ void GLArea::uploadHS( bool _smooth_curves, int _n_smooths )
 //
 //	auto hs_face_drawer_ptr = std::dynamic_pointer_cast<MeshDrawer>(this->m_hsFaceDrawer);
 //	hs_face_drawer_ptr->setPointsPerFace(vts_hs, tri_faces_hs);
-//	cout << "setPointsPerFace done!" << endl;
+//	std::cout << "setPointsPerFace done!" << std::endl;
 //
 //	// TODO: color the HS face and line according to the cur dist metrics
 //	// now just use default uniform color
@@ -3303,7 +3924,7 @@ void GLArea::uploadHS( bool _smooth_curves, int _n_smooths )
 //	/*hs_line_drawer_ptr->setPoints(vts_hs);
 //	hs_line_drawer_ptr->setLines(edges_hs);*/
 //	uploadLinesToDrawer(vts_hs, edges_hs, hs_line_drawer_ptr);
-//	cout << "setPoints & setLines done!"<<endl;
+//	std::cout << "setPoints & setLines done!"<<std::endl;
 //
 //	color_data = new float[edges_hs.size() * 2 * 3];
 //	for (unsigned i = 0; i < edges_hs.size() * 2 * 3; i += 3)
@@ -3313,11 +3934,11 @@ void GLArea::uploadHS( bool _smooth_curves, int _n_smooths )
 //		color_data[i + 2] = edge_color[2];
 //	}
 //	//stg->m_hs.getEdgeDiffValColor(color_data);
-//	cout << "GLArea::setting line color ..."<<endl;
+//	std::cout << "GLArea::setting line color ..."<<std::endl;
 //	hs_line_drawer_ptr->setPerVertColor(color_data, edges_hs.size() * 2);
 //	delete [] color_data;
 //	color_data = nullptr;
-//	cout << "LineDrawer::setPerVertColor done!"<<endl;
+//	std::cout << "LineDrawer::setPerVertColor done!"<<std::endl;
 //
 //	updateGL();
 //}
@@ -3339,7 +3960,7 @@ void GLArea::pruneHS(
 #ifdef PROFILE_SPEED
 	auto t2 = clock();
 	auto t_ms = ( t2 - t1 ) * 1000.0 / CLOCKS_PER_SEC;
-	cout << "Skeleton creation took: " << t_ms << " ms." << endl;
+	std::cout << "Skeleton creation took: " << t_ms << " ms." << std::endl;
 #endif // PROFILE_SPEED
 }
 
@@ -3354,9 +3975,9 @@ void GLArea::computeSurfFuncCorrespondence(SurfFuncCorrespScheme _scheme, float 
 		this->m_surfF->computeCorrespondenceWithKNNSearch(_k);
 	}
 
-	/*cout << "setting up diffusion system..."<<endl;
+	/*std::cout << "setting up diffusion system..."<<std::endl;
 	m_surfF->setupDiffusionSystem();
-	cout << "diffusion system setup."<<endl;*/
+	std::cout << "diffusion system setup."<<std::endl;*/
 }
 
 void GLArea::projectFunctionOnSurf(int _idx, float _smooth_ratio, bool _do_diffuse/* = false*/)
@@ -3386,7 +4007,7 @@ void GLArea::projectFunctionOnSurf(int _idx, float _smooth_ratio, bool _do_diffu
 		min_val = std::min(min_val, scalars_per_vert[i]);
 		max_val = std::max(max_val, scalars_per_vert[i]);
 	}
-	cout << "project value on surf. range of values: "<<min_val<<", "<<max_val<<endl;
+	std::cout << "project value on surf. range of values: "<<min_val<<", "<<max_val<<std::endl;
 
 	// color each vert of the orig 3d mesh by the scalars obtained above
 	float* color = new float[scalars_per_vert.size() * 3];
@@ -3409,7 +4030,7 @@ void GLArea::projectFunctionOnSurf(int _idx, float _smooth_ratio, bool _do_diffu
 	std::dynamic_pointer_cast<MeshDrawer>(this->m_origDrawer)->setPerVertColor(color, scalars_per_vert.size());
 	delete [] color;
 
-	cout << "Surface function projection done."<<endl;
+	std::cout << "Surface function projection done."<<std::endl;
 
 	updateGL();
 }
@@ -3420,7 +4041,7 @@ void GLArea::setupIsoSurface()
 	m_iso_surf->setup(stg, m_meshOrig, m_isoSurfDrawer);
 	m_iso_surf->precompute();
 
-	cout << "iso-surface setup." << endl;
+	std::cout << "iso-surface setup." << std::endl;
 }
 
 void GLArea::refineIsoSurface(bool _is_recursive)
@@ -3452,7 +4073,7 @@ void GLArea::setupIsoContour(float min_alpha, float exp_alpha, const float* cons
 	this->setUpMCDistMetricForPruning(GLArea::BT2_MC, min_val, max_val);
 	*/
 
-	cout << "iso-contour object setup." << endl;
+	std::cout << "iso-contour object setup." << std::endl;
 }
 
 void GLArea::uploadIsoContour(float _t, bool _hide_past_faces, bool _show_exposed_mc)
@@ -3636,8 +4257,25 @@ bool GLArea::changeOrigColor(float * _color)
 		color_data[ 3 * i + 1 ] = _color[ 1 ];
 		color_data[ 3 * i + 2 ] = _color[ 2 ];
 	}
-	orig_drawer->setRenderMode( MeshDrawer::PER_FACE );
+	
+	orig_drawer->setRenderMode(MeshDrawer::PER_FACE);
+	
+	
 	orig_drawer->setPerFaceColor( color_data, m_meshOrig->faces.size() );
+
+	if (m_meshOrig->faces.size() == 0)
+	{
+		std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer)->setPoints(m_meshOrig->vertices);
+		float* color_data = new float[m_meshOrig->vertices.size() * 3];
+		for (unsigned i = 0; i < m_meshOrig->vertices.size(); ++i)
+		{
+			color_data[3 * i + 0] = _color[0];
+			color_data[3 * i + 1] = _color[1];
+			color_data[3 * i + 2] = _color[2];
+		}
+		std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer)->setPerVertColor(color_data, m_meshOrig->vertices.size());
+		delete[] color_data;
+	}
 	/*for (unsigned i = 0; i < m_meshOrig->vertices.size(); ++i)
 	{
 		color_data[3*i+0] = _color[0];
@@ -3647,6 +4285,28 @@ bool GLArea::changeOrigColor(float * _color)
 	m_origDrawer->setPerVertColor(color_data, m_meshOrig->vertices.size());*/
 	delete [] color_data;
 
+	updateGL();
+	return true;
+}
+
+bool GLArea::changePickSphereColor(float * _color)
+{
+	if ( !m_sphereMesh )
+		return false;
+
+	auto& pick_sphere_drawer = std::dynamic_pointer_cast<MeshDrawer>( m_PickSphereDrawer);
+	//float* color_data = new float[m_meshOrig->vertices.size() * 3];
+	auto color_data = new float[ m_sphereMesh->faces.size() * 3 ];
+	for ( unsigned i = 0; i < m_sphereMesh->faces.size(); ++i )
+	{
+		color_data[ 3 * i + 0 ] = _color[ 0 ];
+		color_data[ 3 * i + 1 ] = _color[ 1 ];
+		color_data[ 3 * i + 2 ] = _color[ 2 ];
+	}
+	
+	pick_sphere_drawer->setRenderMode(MeshDrawer::PER_FACE);
+	pick_sphere_drawer->setPerFaceColor( color_data, m_sphereMesh->faces.size() );
+	delete [] color_data;
 	updateGL();
 	return true;
 }
@@ -3663,33 +4323,40 @@ bool GLArea::changeConstColorMA(float * _color, bool _color_vert)
 		return false;
 
 	auto& MA_drawer = std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer);
-	float* color_data;
+	// float* color_data;
+	TriColor new_c(_color[0], _color[1], _color[2]);
 	if (_color_vert)
 	{
-		color_data = new float[m_meshMA->vertices.size() * 3];
-		for (unsigned i = 0; i < m_meshMA->vertices.size(); ++i)
-		{
-			color_data[3*i+0] = _color[0];
-			color_data[3*i+1] = _color[1];
-			color_data[3*i+2] = _color[2];
-		}
+		ma_mesh_colors.clear();
+		ma_mesh_colors = std::vector<TriColor>(m_meshMA->vertices.size(), new_c);
+		//color_data = new float[m_meshMA->vertices.size() * 3];
+		// for (unsigned i = 0; i < m_meshMA->vertices.size(); ++i)
+		// {
+		// 	color_data[3*i+0] = _color[0];
+		// 	color_data[3*i+1] = _color[1];
+		// 	color_data[3*i+2] = _color[2];
+		// }
 		MA_drawer->setRenderMode(MeshDrawer::PER_VERT);
-		MA_drawer->setPerVertColor(color_data, m_meshMA->vertices.size());
+		//MA_drawer->setPerVertColor(color_data, m_meshMA->vertices.size());
+		MA_drawer->setPerVertColor((float*)ma_mesh_colors.data(), m_meshMA->vertices.size());
 	}
 	else
 	{
-		color_data = new float[m_meshMA->faces.size() * 3];
-		for (unsigned i = 0; i < m_meshMA->faces.size(); ++i)
-		{
-			color_data[3*i+0] = _color[0];
-			color_data[3*i+1] = _color[1];
-			color_data[3*i+2] = _color[2];
-		}
+		//color_data = new float[m_meshMA->faces.size() * 3];
+		//ma_mesh_colors.clear();
+		ma_mesh_colors = std::vector<TriColor>( m_meshMA->faces.size(), new_c);
+		// for (unsigned i = 0; i < m_meshMA->faces.size(); ++i)
+		// {
+		// 	// color_data[3*i+0] = _color[0];
+		// 	// color_data[3*i+1] = _color[1];
+		// 	// color_data[3*i+2] = _color[2];
+		// }
 		MA_drawer->setRenderMode(MeshDrawer::PER_FACE);
-		MA_drawer->setPerFaceColor(color_data, m_meshMA->faces.size());
+		//MA_drawer->setPerFaceColor(color_data, m_meshMA->faces.size());
+		MA_drawer->setPerFaceColor((float*)ma_mesh_colors.data(), m_meshMA->faces.size());
 	}
-	delete [] color_data;
-
+	//delete [] color_data;
+	float *color_data;
 	// change color of the 1-cell in input MA
 	color_data = new float[ m_meshMA->lines.size() * 2 * 3 ];
 	for ( auto ei = 0; ei < m_meshMA->lines.size(); ++ei )
@@ -3703,8 +4370,22 @@ bool GLArea::changeConstColorMA(float * _color, bool _color_vert)
 		color_data[ ei * 2 * 3 + 3 + 1 ] = _color[ 1 ];
 		color_data[ ei * 2 * 3 + 3 + 2 ] = _color[ 2 ];
 	}
+
 	std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer )->setPerVertColor( color_data, m_meshMA->lines.size() * 2 );
-	delete[] color_data;
+	
+	/*for (auto ei = 0; ei < m_meshMA->lines.size(); ++ei)
+	{
+		const auto& e = m_meshMA->lines[ei];
+		color_data[ei * 2 * 3 + 0 + 0] = 0.0;
+		color_data[ei * 2 * 3 + 0 + 1] = 0.0;
+		color_data[ei * 2 * 3 + 0 + 2] = 1.0;
+
+		color_data[ei * 2 * 3 + 3 + 0] = 0.0;
+		color_data[ei * 2 * 3 + 3 + 1] = 0.0;
+		color_data[ei * 2 * 3 + 3 + 2] = 1.0;
+	}*/
+	//std::dynamic_pointer_cast<LineDrawer>(m_PickRectDrawer)->setPerVertColor(color_data, m_meshMA->lines.size() * 2);
+	//delete[] color_data;
 
 	// also update color of finer MA 
 	uploadMAFinerStaticColors( TriColor(_color) );
@@ -3816,6 +4497,23 @@ bool GLArea::changeOrigTransparency(float _alpha)
 	}
 	drawer->setTransparencyEnabled(m_OrigTransparent);
 
+	if (m_meshOrig->faces.size() == 0)
+	{
+		auto pointDrawer = std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer);
+		if (_alpha > 0.9f)
+		{
+			m_OrigTransparent = false;
+		}
+		else
+		{
+			m_OrigTransparent = true;
+			/*drawer->setPerVertConstantSaliency(_alpha, this->m_meshOrig->vertices.size());*/
+			pointDrawer->setShaderSaliency(&_alpha);
+			pointDrawer->setPointSize(5 * _alpha);
+		}
+		pointDrawer->setTransparencyEnabled(m_OrigTransparent);
+	}
+
 	updateGL();
 	return true;
 }
@@ -3908,7 +4606,8 @@ void GLArea::setLinesOffset(float _r)
 {
 	std::dynamic_pointer_cast<LineDrawer>(m_dualLinesDrawer)->setZFightOffset(_r);
 	std::dynamic_pointer_cast<LineDrawer>(m_hsLineDrawer)->setZFightOffset(_r);
-	std::dynamic_pointer_cast<LineDrawer>( m_MALineDrawer )->setZFightOffset( _r );
+	std::dynamic_pointer_cast<LineDrawer>(m_MALineDrawer)->setZFightOffset( _r );
+	std::dynamic_pointer_cast<LineDrawer>(m_PickRectDrawer)->setZFightOffset(_r);
 	std::dynamic_pointer_cast<LineDrawer>(m_dynamic_dualLineDrawer)->setZFightOffset(_r);
 
 	if (m_iso_cont)
@@ -3927,7 +4626,7 @@ bool GLArea::outputToWenping()
 	auto _file_name = temp.toStdString();
 	if (radii.empty())
 	{
-		cout << "all radii are 0s" << endl;
+		std::cout << "all radii are 0s" << std::endl;
 		ret_code = stg->outputToWenping(_file_name.c_str(), vector<float>(m_meshMA->vertices.size(), 0.0f));
 	}
 	else
@@ -3939,21 +4638,21 @@ bool GLArea::outputToWenping()
 
 bool GLArea::readQMATFile(std::string _filename)
 {
-	cout << "reading medial structure from qmat file "<<_filename<<endl;
+	std::cout << "reading medial structure from qmat file "<<_filename<<std::endl;
 	vector<float> r;
 	auto mesh = MyMesh::readQMATFile( _filename, r );
 	if ( !mesh )
 	{
-		cout << "Error: cannot read qmat file " << _filename << endl;
+		std::cout << "Error: cannot read qmat file " << _filename << std::endl;
 		return false;
 	}
-	cout << "Done: reading qmat file."<<endl;
+	std::cout << "Done: reading qmat file."<<std::endl;
 
 	// draw this simplicial complex
-	cout << "uploading qmat data to GPU for rendering..."<<endl;
+	std::cout << "uploading qmat data to GPU for rendering..."<<std::endl;
 	this->m_drawQMAT = true;
 	uploadSimplicialComplex(mesh->vertices, mesh->lines, mesh->faces, nullptr, nullptr, m_qmatEdgeDrawer, m_qmatFaceDrawer);
-	cout << "uploading qmat data to GPU done!"<<endl;
+	std::cout << "uploading qmat data to GPU done!"<<std::endl;
 	
 	delete mesh;
 
@@ -3972,7 +4671,7 @@ void GLArea::exportPerVertexET()
 //{
 //	if (stg->setPerVertexBT(_filename) == false)
 //	{
-//		cout << "failed to set per-vertex BT from file "<< _filename<<endl;
+//		std::cout << "failed to set per-vertex BT from file "<< _filename<<std::endl;
 //		return false;
 //	}
 //
@@ -4010,7 +4709,7 @@ void GLArea::exportSkeleton( bool _do_smoothing /*= false*/, int _smooth_cnt /*=
 
 void GLArea::initializeGL(void)
 {
-	cout << "Initializing GL... " << endl; // debug
+	std::cout << "Initializing GL... " << std::endl; // debug
 
 	// init gl wrangler, e.g. glew
 	oglplus::GLAPIInitializer gl_init_obj;
@@ -4039,7 +4738,17 @@ void GLArea::initializeGL(void)
 	m_MALineDrawer = std::shared_ptr<LineDrawer>(
 		new LineDrawer( m_linesProg, track_ball )
 		);
+
+	m_PickRectDrawer = std::shared_ptr<LineDrawer>(
+		new LineDrawer(m_linesProg, track_ball)
+		);
 	m_origDrawer = std::shared_ptr<MeshDrawer>(
+		new MeshDrawer(width(), height(), m_simpProg, m_edgeProg, track_ball)
+		);
+	/*m_PickSphereDrawer = std::shared_ptr<MeshDrawer>(
+		new MeshDrawer(width(), height(), m_simpProg, m_edgeProg, track_ball)
+		);*/
+	m_PickSphereDrawer = std::shared_ptr<MeshDrawer>(
 		new MeshDrawer(width(), height(), m_simpProg, m_edgeProg, track_ball)
 		);
 	m_FinerMAStaticDrawer = std::shared_ptr<MeshDrawer>(
@@ -4050,6 +4759,15 @@ void GLArea::initializeGL(void)
 		);
 	m_pointDrawer = std::shared_ptr<PointDrawer>(
 		new PointDrawer(m_pointsProg, track_ball)
+		);
+	m_origPointDrawer = std::shared_ptr<PointDrawer>(
+		new PointDrawer(m_pointsProg2, track_ball)
+		);
+	m_SelectPointsDrawer = std::shared_ptr<PointDrawer>(
+		new PointDrawer(m_pointsProg2, track_ball)
+		);
+	m_SelectMaxMinSphereDrawer = std::shared_ptr<MeshDrawer>(
+		new MeshDrawer(width(), height(), m_simpProg, m_edgeProg, track_ball)
 		);
 	m_dualLinesDrawer = std::shared_ptr<LineDrawer>(
 		new LineDrawer(m_linesProg, track_ball)
@@ -4079,9 +4797,14 @@ void GLArea::initializeGL(void)
 
 	m_drawers.clear();
 	m_drawers.push_back(m_origDrawer);
+	m_drawers.push_back(m_origPointDrawer);
+	m_drawers.push_back(m_SelectMaxMinSphereDrawer);
+	m_drawers.push_back(m_SelectPointsDrawer);
 	m_drawers.push_back(m_MADrawer);
 	m_drawers.push_back( m_MALineDrawer );
+	m_drawers.push_back(m_PickRectDrawer);
 	m_drawers.push_back(m_pointDrawer);
+	m_drawers.push_back(m_PickSphereDrawer);
 	m_drawers.push_back(m_dualLinesDrawer);
 	m_drawers.push_back(m_dynamic_dualLineDrawer);
 	m_drawers.push_back(m_linesProxyDrawer);
@@ -4111,7 +4834,7 @@ void GLArea::initializeGL(void)
 		new LineDrawer(m_linesProg, track_ball)
 		);
     m_glInitialized = true;
-	cout << "Done!" << endl; // debug
+	std::cout << "Done!" << std::endl; // debug
     
 }
 
@@ -4121,14 +4844,28 @@ void GLArea::resizeGL(int _w, int _h)
 	_h = max(_h, 0);
 
 	//assert(m_MADrawer);
-	//cout << "GLArea::resizeGL()"<< endl;
+	//std::cout << "GLArea::resizeGL()"<< std::endl;
 	if (m_drawOrig)
+	{
 		m_origDrawer->reshape(_w, _h);
+		m_origPointDrawer->reshape(_w, _h);
+	}
+	if (m_drawPickedSphere)
+	{
+		m_PickSphereDrawer->reshape(_w, _h);
+	}
+	if(m_selectionActive)
+	{
+		m_PickRectDrawer->reshape(_w, _h);
+		m_SelectMaxMinSphereDrawer->reshape(_w, _h);
+		m_SelectPointsDrawer->reshape(_w, _h);
+	}
 	if (m_drawMA)
 	{
 		m_MADrawer->reshape( _w, _h );
 		m_MALineDrawer->reshape( _w, _h );
 	}
+	
 	if (m_drawMAFinnerStatic)
 	{
 		m_FinerMAStaticDrawer->reshape(_w, _h);
@@ -4170,15 +4907,16 @@ void GLArea::resizeGL(int _w, int _h)
 
 	//resizeOIT(_w, _h);
 	resizeDP(_w, _h);
-	//cout << "GLArea::resizeGL() done." << endl;
+	//std::cout << "GLArea::resizeGL() done." << std::endl;
 }
 
+
 void GLArea::paintGL(void)
-{
+{	
 	try
 	{
 		assert(m_MADrawer);
-		//cout << "GLArea::paintGL()"<< endl;
+		//std::cout << "GLArea::paintGL()"<< std::endl;
 		transparent_draws.clear();
 		opaque_draws.clear();
 
@@ -4192,7 +4930,9 @@ void GLArea::paintGL(void)
 			}
 			else
 			{
+				
 				opaque_draws.push_back( std::make_pair(m_MADrawer, true) );
+				
 				//m_MADrawer->render(0.0);
 			}
 			if ( m_drawMALines )
@@ -4208,6 +4948,37 @@ void GLArea::paintGL(void)
 			}
 			//m_MADrawer->render(0.0);
 		}
+		if (m_drawPickedSphere && valid_intersect_point)
+		{
+			if (m_lineTransparent)
+			{
+				//transparent_draws.push_back(std::make_pair(m_PickRectDrawer, false));
+				//std::dynamic_pointer_cast<PointDrawer>(m_pointDrawer)->setPointSize(5);
+				transparent_draws.push_back(std::make_pair(m_PickSphereDrawer, true));
+			}
+			else
+			{
+				//opaque_draws.push_back(std::make_pair(m_PickRectDrawer, false));
+				opaque_draws.push_back(std::make_pair(m_PickSphereDrawer, true));
+			}
+		}
+		if(m_selectionActive)
+		{
+			if (m_lineTransparent)
+			{
+				transparent_draws.push_back(std::make_pair(m_PickRectDrawer, true));
+				std::dynamic_pointer_cast<PointDrawer>(m_SelectPointsDrawer)->setPointSize(3);
+				transparent_draws.push_back(std::make_pair(m_SelectMaxMinSphereDrawer, true));
+				transparent_draws.push_back(std::make_pair(m_SelectPointsDrawer, true));
+			}
+			else
+			{
+				opaque_draws.push_back(std::make_pair(m_PickRectDrawer, true));
+				std::dynamic_pointer_cast<PointDrawer>(m_SelectPointsDrawer)->setPointSize(3);
+				opaque_draws.push_back(std::make_pair(m_SelectMaxMinSphereDrawer, true));
+				opaque_draws.push_back(std::make_pair(m_SelectPointsDrawer, true));
+			}
+		}
 
 		if (m_drawOrig)
 		{
@@ -4216,12 +4987,23 @@ void GLArea::paintGL(void)
 				/*gl.Enable(Capability::Blend);
 				gl.Disable(Capability::DepthTest);*/
 				transparent_draws.push_back(std::make_pair(m_origDrawer, true));
+				if (m_meshOrig->faces.size() == 0)
+				{
+					std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer)->setPointSize(3);
+					transparent_draws.push_back(std::make_pair(m_origPointDrawer, true));
+				}
+				
 			}
 			else
 			{
 				/*gl.Enable(Capability::DepthTest);
 				gl.Disable(Capability::Blend);*/
 				opaque_draws.push_back(std::make_pair(m_origDrawer, true));
+				if (m_meshOrig->faces.size() == 0)
+				{
+					std::dynamic_pointer_cast<PointDrawer>(m_origPointDrawer)->setPointSize(3);
+					opaque_draws.push_back(std::make_pair(m_origPointDrawer, true));
+				}
 				//m_origDrawer->render(0.0);
 			}
 			//m_origDrawer->render(0.0);
@@ -4266,7 +5048,7 @@ void GLArea::paintGL(void)
 			}
 			if (m_drawLinesAsProxy)
 			{
-				//cout << "GLArea::paintGL(), drawing lines as proxy..."<< endl;
+				//std::cout << "GLArea::paintGL(), drawing lines as proxy..."<< std::endl;
 
 				m_linesProxyProg->Use();
 
@@ -4311,8 +5093,7 @@ void GLArea::paintGL(void)
 				//m_linesProxyDrawer->render(0.0);
 
 				Program::UseNone();
-
-				//cout << "GLArea::paintGL(), drawing lines as proxy done."<< endl;
+				//std::cout << "GLArea::paintGL(), drawing lines as proxy done."<< std::endl;
 			}
 		}
 
@@ -4334,14 +5115,14 @@ void GLArea::paintGL(void)
 			//m_MPDrawer->render(0.0);
 			opaque_draws.push_back(std::make_pair(m_MPDrawer, true));
 
-			//cout << "m_drawMP = true"<<endl;
+			//std::cout << "m_drawMP = true"<<std::endl;
 		}
 
 		if (m_drawIsoSurf)
 		{
 			//m_isoSurfDrawer->render(0.0);
 			opaque_draws.push_back(std::make_pair(m_isoSurfDrawer, true));
-			//cout << "GLArea::paintGL() - iso surf rendered!" << endl; //debug
+			//std::cout << "GLArea::paintGL() - iso surf rendered!" << std::endl; //debug
 		}
 
 		if (m_drawIsoCont)
@@ -4353,7 +5134,7 @@ void GLArea::paintGL(void)
 
 		if (m_drawQMAT)
 		{
-			//cout << "qmat rendered." << endl;
+			//std::cout << "qmat rendered." << std::endl;
 			opaque_draws.push_back( std::make_pair(m_qmatEdgeDrawer, false));
 			opaque_draws.push_back( std::make_pair(m_qmatFaceDrawer, true));
 		}
@@ -4505,8 +5286,18 @@ void GLArea::paintGL(void)
 			gl.ClearDepth(1.0f);
 			gl.ClearColor(bg_color[0], bg_color[1], bg_color[2], 1.0);
 			gl.Clear().ColorBuffer().DepthBuffer();
-
-			for (auto iter = opaque_draws.begin(); iter != opaque_draws.end(); ++iter)
+			
+			auto iter = opaque_draws.begin();
+			if (iter != opaque_draws.end())
+			{
+				(iter->first)->render(0.0);
+				// to acquire MA mesh render depth
+				depthFrameBuffer.resize(width()*height());
+				glReadPixels(0, 0, width(), height(), GL_DEPTH_COMPONENT, GL_FLOAT, depthFrameBuffer.data());
+				++iter;
+			}
+			
+			for (; iter != opaque_draws.end(); ++iter)
 			{
 				//if ( (iter)->second ) // this render-call draws faces
 				//{
@@ -4517,9 +5308,11 @@ void GLArea::paintGL(void)
 				//	gl.Disable(Capability::PolygonOffsetFill);
 				//}
 				(iter->first)->render(0.0);
+
 			}
 			/* Then draw transparent stuff to update Accum and Count texture
 			disable depth-writing, keep accum fbo bound */
+
 			gl.Enable(Capability::DepthTest);
 			gl.DepthMask(false);
 			gl.Enable(Capability::Blend);
@@ -4557,7 +5350,7 @@ void GLArea::paintGL(void)
 		//	opaque_vao.Unbind();*/
 		//}
 		//m_bigQuad_vao->Unbind();
-		//cout << "GLArea::paintGL() done." << endl;
+		//std::cout << "GLArea::paintGL() done." << std::endl;
 	}
 	catch(oglplus::Error& err)
 	{
@@ -4576,61 +5369,120 @@ void GLArea::paintGL(void)
 			"General error: " <<
 			se.what() << std::endl;
 	}
+
+	
 }
 
 void GLArea::mouseMoveEvent(QMouseEvent *_evnt)
 {
 	assert(m_MADrawer && m_origDrawer);
-	
-	m_MADrawer->MouseMove(
+	if(QApplication::keyboardModifiers() != Qt::ShiftModifier || !m_selectionActive )
+	{
+		m_MADrawer->MouseMove(
 		_evnt->x(), 
 		height() - _evnt->y(),
 		width(),
 		height()
 		);
+	}
+	
+	
+	if( m_selectionActive && _evnt->buttons() & Qt::LeftButton )
+	{
+		if(QApplication::keyboardModifiers() == Qt::ShiftModifier)
+		{
+			selectionEndPos = _evnt->pos();
+
+			QRect selectRect = makeRectangle(selectionStartPos, selectionEndPos);
+
+			setRectToDraw(selectRect);
+			getMAVerticesAndFacesInRect(selectRect);
+		}
+	} 
 
 	updateGL();
-	/*cout << "qmouse: " << height() - _evnt->y() << endl;*/
+	/*std::cout << "qmouse: " << height() - _evnt->y() << std::endl;*/
 }
 
 void GLArea::mousePressEvent(QMouseEvent *_evnt)
 {
-	m_MADrawer->MousePress(_evnt);
+	if (QApplication::keyboardModifiers() != Qt::ShiftModifier || !m_selectionActive)
+	{
+
+		m_MADrawer->MousePress(_evnt);
+
+	}
+	
+	
+	if (QApplication::keyboardModifiers() == Qt::ControlModifier)
+	{
+		if (_evnt->button() == Qt::LeftButton)
+		{
+			float mouse_x = _evnt->x();
+			float mouse_y = _evnt->y();
+			//showPickedBall(mouse_x, mouse_y);
+			calPickedSphereCenter(mouse_x, mouse_y);
+	 
+			//std::cout << "ShiftKey + MOuseLeftButton" << std::endl;
+			//return;
+		}
+	}
+	if(m_selectionActive && _evnt->button() == Qt::LeftButton && QApplication::keyboardModifiers() == Qt::ShiftModifier)
+	{
+		selectionStartPos    = _evnt->pos();
+    	selectionEndPos      = selectionStartPos; // Deletes the old selection
+    	// selectionFinished_ = false;           // As long as this is set, the rectangle will be drawn
+	}
+
 	updateGL();
 }
 
 void GLArea::mouseReleaseEvent(QMouseEvent *_evnt)
 {
 	m_MADrawer->MouseRelease(_evnt);
+
+	if( m_selectionActive && _evnt->button() == Qt::LeftButton && QApplication::keyboardModifiers() == Qt::ShiftModifier)
+	{
+		selectionEndPos      = _evnt->pos();
+		//selectionFinished_ = true; // Will force the painter to stop drawing the
+								// selection rectangle
+		//this->processSelection();
+	}
+
 	updateGL();
 }
 
+
 void GLArea::mouseDoubleClickEvent(QMouseEvent *_evnt)
 {
+	/*float mouse_x = _evnt->x();
+	float mouse_y = _evnt->y();
+	showPickedBall(mouse_x, mouse_y);*/
+
 	//if (m_fullMode== false)
 	//{
-	//	cout << "setting to full..." << endl;
+	//	std::cout << "setting to full..." << std::endl;
 	//	m_enOrigWindowFlags = this->windowFlags();
 	//	m_pSize = this->size();
 	//	m_pParent = (QWidget*)this->parent();
-	//	cout << "changing parent to 0..." << endl;
+	//	std::cout << "changing parent to 0..." << std::endl;
 	//	this->setParent(0);
-	//	/*cout << "inserting window flags..." << endl;
+	//	/*std::cout << "inserting window flags..." << std::endl;
 	//	this->setWindowFlags( Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);*/
-	//	cout << "going full..." << endl;
+	//	std::cout << "going full..." << std::endl;
 	//	this->showMaximized();
 	//	m_fullMode = true;
 	//}
 	//else
 	//{
-	//	cout << "setting back to normal size..." << endl;
-	//	cout << "changing parent back..." << endl;
+	//	std::cout << "setting back to normal size..." << std::endl;
+	//	std::cout << "changing parent back..." << std::endl;
 	//	this->setParent(m_pParent);
-	//	cout << "changing sizes back..." << endl;
+	//	std::cout << "changing sizes back..." << std::endl;
 	//	this ->resize(m_pSize);
-	//	/*cout << "changing window flags back..." << endl;
+	//	/*std::cout << "changing window flags back..." << std::endl;
 	//	this->overrideWindowFlags(m_enOrigWindowFlags);*/
-	//	cout << "showing..." << endl;
+	//	std::cout << "showing..." << std::endl;
 	//	this->show();
 	//	m_fullMode =  false;
 	//}
@@ -4643,11 +5495,15 @@ void GLArea::initShaders()
 	try {
 		m_simpProg = glslProgram("./shaders/DiffuseOnly.vert.glsl", 
 			"./shaders/DiffuseOnly.frag.glsl");
+		m_simpProg2 = glslProgram("./shaders/DiffuseOnly2.vert.glsl",
+			"./shaders/DiffuseOnly2.frag.glsl");
 		m_edgeProg = glslProgram("./shaders/DiffuseWithEdges.vert.glsl", 
 			"./shaders/DiffuseWithEdges.geom.glsl", 
 			"./shaders/DiffuseWithEdges.frag.glsl");
 		m_pointsProg = glslProgram("./shaders/DrawPoints.vert.glsl", 
 			"./shaders/DrawPoints.frag.glsl");
+		m_pointsProg2 = glslProgram("./shaders/DrawPoints2.vert.glsl",
+			"./shaders/DrawPoints2.frag.glsl");
 		m_linesProg = glslProgram("./shaders/DrawLines.vert.glsl", 
 			"./shaders/DrawLines.frag.glsl");
 		m_linesProxyProg = glslProgram("./shaders/realCylinder.vert.glsl",
@@ -4810,7 +5666,7 @@ void GLArea::initOIT()
 	catch(oglplus::Error& err)
 	{
 		std::cerr << 
-			"GLArea::initOIT()" << endl <<
+			"GLArea::initOIT()" << std::endl <<
 			"GL error (in " << err.GLSymbol() << ", " <<
 			err.ClassName() << ": '" <<
 			err.ObjectDescription() << "'): " <<
@@ -4822,7 +5678,7 @@ void GLArea::initOIT()
 	catch(const std::exception& se)
 	{
 		std::cerr <<
-			"GLArea::initOIT()" << endl <<
+			"GLArea::initOIT()" << std::endl <<
 			"General error: " <<
 			se.what() << std::endl;
 	}
@@ -5024,12 +5880,12 @@ void GLArea::initDP()
 			*post_prog, "BGColorTex"
 			).Set(bg_tex_unit);
 
-		cout << "DP uniform samplers setup." << endl;
+		std::cout << "DP uniform samplers setup." << std::endl;
 	}
 	catch(oglplus::Error& err)
 	{
 		std::cerr << 
-			"GLArea::initOIT()" << endl <<
+			"GLArea::initOIT()" << std::endl <<
 			"GL error (in " << err.GLSymbol() << ", " <<
 			err.ClassName() << ": '" <<
 			err.ObjectDescription() << "'): " <<
@@ -5041,7 +5897,7 @@ void GLArea::initDP()
 	catch(const std::exception& se)
 	{
 		std::cerr <<
-			"GLArea::initOIT()" << endl <<
+			"GLArea::initOIT()" << std::endl <<
 			"General error: " <<
 			se.what() << std::endl;
 	}
@@ -5154,7 +6010,7 @@ void GLArea::uploadSimplicialComplex(
 	const vector<TriColor>* _e_colors, const vector<TriColor>* _f_colors,
 	shared_ptr<Drawable>& _edge_drawer, shared_ptr<Drawable>& _face_drawer )
 {
-	cout << "uploading simplicial complex to GPU..." << endl;
+	std::cout << "uploading simplicial complex to GPU..." << std::endl;
 	// obtain edges and faces of HS
 	const auto& vts_hs = _vts;
 	const auto& edges_hs = _edges;
@@ -5162,7 +6018,7 @@ void GLArea::uploadSimplicialComplex(
 
 	auto hs_face_drawer_ptr = std::dynamic_pointer_cast<MeshDrawer>(_face_drawer);
 	hs_face_drawer_ptr->setPointsPerFace(vts_hs, tri_faces_hs);
-	cout << "setPointsPerFace done!" << endl;
+	std::cout << "setPointsPerFace done!" << std::endl;
 
 	// TODO: color the HS face and line according to the cur dist metrics
 	// now just use default uniform color
@@ -5212,7 +6068,7 @@ void GLArea::uploadSimplicialComplex(
 	/*hs_line_drawer_ptr->setPoints(vts_hs);
 	hs_line_drawer_ptr->setLines(edges_hs);*/
 	uploadLinesToDrawer(vts_hs, edges_hs, hs_line_drawer_ptr);
-	cout << "setPoints & setLines done!"<<endl;
+	std::cout << "setPoints & setLines done!"<<std::endl;
 
 	color_data = new float[ edges_hs.size() * 2 * 3 ];
 	for ( unsigned i = 0; i < edges_hs.size(); i++ )
@@ -5226,13 +6082,13 @@ void GLArea::uploadSimplicialComplex(
 		color_data[ i * 2 * 3 + 3 + 2 ] = edge_color[ 2 ];
 	}
 	//stg->m_hs.getEdgeDiffValColor(color_data);
-	cout << "GLArea::setting line color ..."<<endl;
+	std::cout << "GLArea::setting line color ..."<<std::endl;
 	hs_line_drawer_ptr->setPerVertColor(color_data, edges_hs.size() * 2);
 	delete [] color_data;
 	color_data = nullptr;
-	cout << "LineDrawer::setPerVertColor done!"<<endl;
+	std::cout << "LineDrawer::setPerVertColor done!"<<std::endl;
 
-	cout << "uploading simplicial complex done!" << endl;
+	std::cout << "uploading simplicial complex done!" << std::endl;
 
 	updateGL();
 }

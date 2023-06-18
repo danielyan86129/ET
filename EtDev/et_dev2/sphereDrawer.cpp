@@ -281,8 +281,12 @@ void SphereDrawer::setRadius(float _r)
 
 void SphereDrawer::setColor(const TriColor& _c)
 {
+	m_sphereProg->Use();
 	LazyUniform<oglplus::Vec3f> uniform_color(*m_sphereProg, "Color");
-	uniform_color.Set(oglplus::Vec3f(1.0f, 0.0f, 0.0f));
+	uniform_color.Set(oglplus::Vec3f(_c[0], _c[1], _c[2]));
+	//uniform_color.Set(oglplus::Vec3f(1.0f, 0.0f, 1.0f));
+	Program::UseNone();
+	//uniform_color.Set(oglplus::Vec3f(_c[0], _c[1], _c[2]));
 }
 
 void SphereDrawer::setColor(float* _color_data, int _n)

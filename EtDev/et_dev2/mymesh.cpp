@@ -11,6 +11,7 @@
 using std::string;
 
 #include <plyall.h>
+#include <QVector3D>
 #include "mymesh.h"
 
 struct internal{
@@ -275,4 +276,122 @@ READ_QMAT_FAIL:
 	if ( mesh )
 		delete mesh;
 	return nullptr;
+}
+
+
+// return t value in order to get nearest point from ray origin for future use
+bool intersectPlaneT(const trimesh::vec3& p_normal, const trimesh::vec3& p_point,
+	const trimesh::vec3& ray_ori, const trimesh::vec3& ray_dir, float& t)
+{
+	float dot_res = ray_dir.dot(p_normal);
+	//if (dot_res > 0) return -1.0;
+	if (abs(dot_res) == 0.0) return -1.0; // -1.0 means invalid intersection. 
+	t = (p_point - ray_ori).dot(p_normal) / dot_res;
+	if (t < 0) return false;
+	return true;
+}
+
+bool isInsideTriangle(const trimesh::vec3& a,
+	const trimesh::vec3& b,
+	const trimesh::vec3& c,
+	const trimesh::vec3& normal,
+	const trimesh::vec3& p)
+{
+	auto ap = p - a;
+	auto ab = b - a;
+	float sign_val = normal.dot(ab.cross(ap));
+	if (sign_val < 0) return false;
+
+	auto bp = p - b;
+	auto bc = c - b;
+	sign_val = normal.dot(bc.cross( bp));
+	//normal.dot(bc.cross(bp));
+	if (sign_val < 0) return false;
+
+	auto cp = p - c;
+	auto ca = a - c;
+	sign_val = normal.dot(ca.cross(cp));
+	if (sign_val < 0) return false;
+	return true;
+}
+
+bool calPickedTriangle(const std::vector<trimesh::point>& line_points,
+	std::shared_ptr<TriMesh> mesh, const std::vector<unsigned>& faceIds, int& face_id,
+			trimesh::point& intersectPoint)
+// bool MyMesh::calPickedTriangle(const std::vector<trimesh::point>& line_points, int& face_id)
+{
+	auto line_dir = line_points[1] - line_points[0];
+	line_dir = trimesh::normalize(line_dir);
+	float min_t = std::numeric_limits<float>::max();
+	for(size_t i = 0; i < faceIds.size(); ++i)
+	{ 
+		const auto& f  = mesh->faces[faceIds[i]];
+		const auto& va = mesh->vertices[f[0]];
+		const auto& vb = mesh->vertices[f[1]];
+		const auto& vc = mesh->vertices[f[2]];
+
+		auto ab = vb - va;
+		auto bc = vc - va;
+		auto normal = ab.cross(bc);
+		normal = trimesh::normalize(normal);
+
+		float dist_t = -1.0;
+		if (!intersectPlaneT(normal, va, line_points[0], line_dir, dist_t)) continue;
+		if (dist_t < 0) continue;
+
+		auto interP = line_points[0] + dist_t * line_dir;
+		if (isInsideTriangle(va, vb, vc, normal, interP))
+		{
+			if (min_t > dist_t)
+			{
+				min_t = dist_t;
+				face_id = faceIds[i];
+			}
+		}
+	}
+	if (min_t == std::numeric_limits<float>::max())
+	{
+		return false;
+	}
+	intersectPoint = line_points[0] + min_t * line_dir;
+	return true;
+}
+
+float triangleArea(float a, float b, float c)
+{
+	float s = (a + b + c) / 2.0;
+	float A_squared = s * (s - a) * (s - b) * (s - c);
+	return std::sqrtf(A_squared);
+}
+
+float barycentricInterpolation(const trimesh::vec3& A, const trimesh::vec3& B,
+	const trimesh::vec3& C, const trimesh::vec3& p_point, const std::vector<float>& attrValues)
+{
+	/*auto AB = triPoints[1] - triPoints[0];
+	auto BC = triPoints[2] - triPoints[1];
+	auto CA = triPoints[0] - triPoints[2];*/
+
+	auto AB = B - A;
+	auto BC = C - B;
+	auto CA = A - C;
+
+	float ab = trimesh::len(AB);
+	float bc = trimesh::len(BC);
+	float ca = trimesh::len(CA);
+
+	auto PA = A - p_point;
+	auto PB = B - p_point;
+	auto PC = C - p_point;
+
+	float pa = trimesh::len(PA);
+	float pb = trimesh::len(PB);
+	float pc = trimesh::len(PC);
+	
+	float A_pab = triangleArea(pa, pb, ab);
+	float A_pbc = triangleArea(pb, pc, bc);
+	float A_pca = triangleArea(pc, pa, ca);
+
+	float A_sum = A_pab + A_pbc + A_pca;
+	float attr_value_sum = A_pab * attrValues[2] + A_pbc * attrValues[0] + A_pca * attrValues[1];
+	return attr_value_sum / A_sum;
 }

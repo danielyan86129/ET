@@ -26,6 +26,9 @@ public:
 	static MyMesh * readQMATFile( std::string _filename, vector<float>& _radii );
 	static void write( const char *_fname, const MyMesh* _m );
 	static void write( const std::string& _fname, const MyMesh* _m );
+
+	
+	
 protected:
 	static MyMesh * read_ply_helper( const char * _fname );
 	static bool write_ply_helper( const char* _fname, const MyMesh* _m );
@@ -36,3 +39,11 @@ public:
 	// measure assoc. on element
 	vector<float> msure_face;
 };
+
+bool calPickedTriangle(const std::vector<trimesh::point>& line_points,
+						std::shared_ptr<TriMesh> mesh, const std::vector<unsigned>& faceIds,int& face_id,
+						trimesh::point& intersectPoint);
+float barycentricInterpolation(const trimesh::vec3& A, const trimesh::vec3& B,
+	const trimesh::vec3& C, const trimesh::vec3& p_point, const std::vector<float>& attrValues);
+
+//float barycentricInterpolation(const std::vector<trimesh::point>& triPoints, float *attrValues);
