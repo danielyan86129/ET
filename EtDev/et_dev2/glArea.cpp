@@ -395,7 +395,8 @@ void GLArea::passToDrawable(
 	std::dynamic_pointer_cast<MeshDrawer>(m_MADrawer)->initCameraPosAndLens();
 	m_meshOrig->need_bbox();
 	float s = m_meshOrig->bbox.size().max();
-
+	// if the input file is point clouds
+	// prepare m_origPointDrawer to draw the point clouds 
 	if (mesh_3d->faces.size() == 0)
 	{
 		ui->colorPerFace->setChecked(false);
