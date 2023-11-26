@@ -22,5 +22,5 @@ void main(void)
 		max(dot(normal_ws.xyz, lightDir), 0.0));
 
 	fragColor = fragColor * min((diffuse + ambient), 0.99) * 0.001 + vec4(vertColor, vertSaliency + Alpha);
-	//fragColor = vec4(vertColor, Alpha);
+	//fragColor = vec4(1.0, 1.0, 0.0, 1.0);
 }

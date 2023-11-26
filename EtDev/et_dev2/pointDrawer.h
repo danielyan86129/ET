@@ -29,6 +29,7 @@ public:
 	void setPoints(const vector<TriPoint>& _pts);
 	void setPointSize(float size);
 	void setPerVertColor(float* _color_data, int _n);
+	void setShaderSaliency(float* _scalars);
 
 	void reshape(GLuint _w, GLuint _h);
 	void render(double _time);

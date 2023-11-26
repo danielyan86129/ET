@@ -71,6 +71,8 @@ public:
 	const Vec2f getNearFar() const;
 	std::shared_ptr<TrackBall> getCamera();
 
+	CameraMatrix<float> getPerspectiveProjMat() const;
+
 private:
 	// current gl context
 	oglplus::Context gl;

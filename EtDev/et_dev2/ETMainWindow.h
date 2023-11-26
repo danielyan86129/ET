@@ -15,7 +15,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <string>
-#include "ui_compact.h"
+#include <ui_compact.h>
 #include "geometryRepresentation.h"
 
 class ETMainWindow : public QMainWindow
@@ -62,6 +62,8 @@ public slots:
 	void onDrawStPointsChecked(int _state);
 	void onPointSizeSpun(double _value);
 	void onHideMAChanged(int _state);
+	void onShowPickedFaceChanged(int _state);
+	void onSelectionActiveModeChanged(int _state);
 	void onHideMALineChanged( int _state );
 	void onHideOrigChanged(int _state);
 	void onHideMCChanged(int _state);
@@ -79,6 +81,8 @@ public slots:
 	void onPruneMASlided_2(int _value);
 	void onPruneMASpun_2(double _value);
 	void onOrigTransparentSlided(int _value);
+	void onSphereRadiusSlided(int _value);
+	void onPickedSphereRadius(double _value);
 	// listen to either min_alpha or exp_alpha change
 	void onMATransparentSlided(int _value);
 	void onMCTransparentSlided(int _value);
@@ -88,12 +92,14 @@ public slots:
 	//void onColorPerFaceChecked(int _state);
 
 	void onOrigColorClicked();
+	void onSphereColorClicked();
 	void onMAColorClicked();
 	void onMCColorClicked();
 	void onChangeBGColorClicked();
 	void onColorPerVertBtnClicked();
 	void onColorPerFaceBtnClicked();
 	void onVisDistMAComboChanged(int _idx);
+	void onFilDistMAComboChanged(int _idx);
 	void onClampMADistBoxChanged(int _state);
 	void onMaxVisDistMASpun(double _value);
 	void onMinVisDistMASpun(double _value);

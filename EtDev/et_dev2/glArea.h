@@ -71,7 +71,8 @@ public:
 	// draw flags:
 	enum DrawFlag {
 		DRAW_MA=1, DRAW_ORIG=2, DRAW_MC=4, DRAW_HS=8, DRAW_MP=16, DRAW_ISOSURF=32, DRAW_ISOCONT=64, 
-		DRAW_BURNT_EDGES=128, DRAW_POINTS = 256, DRAW_MA_FINE = 512, DRAW_QMAT = 1024, DRAW_MA_LINE = 2048
+		DRAW_BURNT_EDGES=128, DRAW_POINTS = 256, DRAW_MA_FINE = 512, DRAW_QMAT = 1024, 
+		DRAW_MA_LINE = 2048, DRAW_PICKED_FACE = 4096, SELECTION_ACTIVE_MODE = 4097
 	};
 	// possible scalar fields on vts of MC
 	enum DistMC {BT3_MC, BT2_MC, BT2_BT3_MC, BT2_BT3_REL_MC, BT1_MC, BT1_BT2_MC, BT1_BT2_REL_MC};
@@ -310,6 +311,7 @@ public:
 
 	// set & update
 	bool changeOrigColor(float * _color);
+	bool changePickSphereColor(float * _color);
 	void setUseConstColorMA( bool _use_constColor_for_MA, const TriColor& _c );
 	bool changeConstColorMA(float * _color, bool _color_vert);
 	bool changeConstColorMC(float * _color);
@@ -341,6 +343,15 @@ public:
 	/// export skeleton to file
 	void exportSkeleton( bool _do_smoothing = false, int _smooth_cnt = 0 );
 
+	// to calculate a selected point on MA mesh, and Draw a sphere at that point
+	bool calPickedSphereCenter(float mouse_x, float mouse_y);
+	// when a new point picked, translate the sphere vertices to that point 
+	bool updatePickedSphereVertices(float radius); 
+	bool changePickedSphereRadius(float radius);
+	// if MA select mode is disabled, recover the MA original visualization color 
+	void recoverMAColor();
+	//void paintEvent( QPaintEvent* /* paintEvent */ );
+	
 public:
 	Ui::MainWindow* ui;
 
@@ -357,6 +368,8 @@ private:
 	/// helpers
 	// initialize shader programs that different drawers use
 	void initShaders();
+
+	void initSphereMesh();
 
 	/// rendering related general helpers
 	void bindTexture2D(Texture& _name, int _unit,
@@ -405,10 +418,21 @@ private:
 		const vector<TriColor>* _e_colors, const vector<TriColor>* _f_colors,
 		shared_ptr<Drawable>& _edge_drawer, shared_ptr<Drawable>& _face_drawer );
 
+	// when MA select mode is enabled, calculate the mouse selected rectangle  
+	QRect makeRectangle( const QPoint& first, const QPoint& second );
+	// draw a mouse selelcted rectangle on screen in real time 
+	bool setRectToDraw(QRect& selectRect);
+	// get the MA vertices and faces inside the selected rectangle
+	// only visible vertices and faces will be selected
+	// MA mesh vertices filtered by filter measure and behind MA render depth frame will be ignored  
+	void getMAVerticesAndFacesInRect(QRect& selectRect);
+	
 private:
 	std::shared_ptr<Drawable> m_origDrawer;
+	
 	std::shared_ptr<Drawable> m_MADrawer;
 	std::shared_ptr<Drawable> m_MALineDrawer;
+	//std::shared_ptr<Drawable> m_MALineDrawer2;
 	std::shared_ptr<Drawable> m_FinerMAStaticDrawer;
 	std::shared_ptr<Drawable> m_MAFinnerDynamicDrawer;
 	std::shared_ptr<Drawable> m_pointDrawer;
@@ -429,8 +453,16 @@ private:
 	// the drawer for the screen vertex picking tool
 	std::shared_ptr<Drawable> m_drawerSVP;
 
+	// add this to draw the original mesh point cloud, if the input shape file is point clouds
+	std::shared_ptr<Drawable> m_origPointDrawer;
+	std::shared_ptr<Drawable> m_PickRectDrawer;
+	std::shared_ptr<Drawable> m_PickSphereDrawer;
+	std::shared_ptr<Drawable> m_SelectPointsDrawer;
+	std::shared_ptr<Drawable> m_SelectMaxMinSphereDrawer;
+
 	// opengl context managed by oglplus
 	oglplus::Context gl;
+	oglplus::Context::PixelOps glPixelOps;
 
 	// name of the MA file
 	std::string m_medialAxisFile;
@@ -438,6 +470,13 @@ private:
 	// the mesh structure for MA and original surface
 	std::shared_ptr<MyMesh> m_meshMA;
 	std::shared_ptr<TriMesh> m_meshOrig;
+
+	// info and struct for the visualization of the picked point on MA mesh 
+	std::shared_ptr<TriMesh> m_sphereMesh;
+	float picked_sphere_radius = 2.0;
+	trimesh::point picked_sphere_center;
+	float picked_point_attribute;
+	bool valid_intersect_point;
 	// the transformation used for orig & ma mesh
 	trimesh::XForm<double> m_trans_mat;
 
@@ -472,8 +511,10 @@ private:
 
 	/// glsl programs for different drawers
 	std::shared_ptr<oglplus::Program> m_simpProg;
+	std::shared_ptr<oglplus::Program> m_simpProg2;
 	std::shared_ptr<oglplus::Program> m_edgeProg;
 	std::shared_ptr<oglplus::Program> m_pointsProg;
+	std::shared_ptr<oglplus::Program> m_pointsProg2;
 	std::shared_ptr<oglplus::Program> m_linesProg;
 	std::shared_ptr<oglplus::Program> m_linesProxyProg;
 	// Depth-peeling (DP) programs
@@ -522,9 +563,9 @@ private:
 	// the SVP FBO
 	std::shared_ptr<oglplus::Framebuffer> SVP_fbo;
 
+
 	/// use track ball
 	shared_ptr<TrackBall> track_ball;
-
 	// extra info for going to full-screen and back
 	QWidget* m_pParent;
 	QSize m_pSize;
@@ -537,6 +578,7 @@ private:
 	/// flags
 	bool m_drawOrig;
 	bool m_drawMA, m_drawMALines;
+	bool m_drawPickLine;
 	bool m_drawMAFinnerStatic;
 	bool m_drawMC;
 	bool m_drawBurntEdges;
@@ -550,6 +592,14 @@ private:
 	bool m_MATransparent;
 	bool m_OrigTransparent;
 	bool m_lineTransparent;
+	bool m_drawPickedSphere;
+	bool m_selectionActive; 
+
+	// tracking the select rectangle on the screen
+	QPoint selectionStartPos;  
+	QPoint selectionEndPos;   
+	// MA render depth Buffer, used for filter selected vertices behind the scene  
+	std::vector<float> depthFrameBuffer;
 
 	/// const color for MA
 	bool m_use_constColor_for_MA;
@@ -563,6 +613,11 @@ private:
 	std::shared_ptr<SurfaceFunc> m_surfF;
 	/// hybrid skeleton
 	std::shared_ptr<HybridSkeleton> m_hs;
+
+	// to track the visualization color change of MA vertices, and restore the original color if needed
+	std::vector<TriColor> ma_vertex_colors;
+	std::vector<TriColor> ma_mesh_colors;
+
 
     bool m_glInitialized = false; // workaround for force OpenGL initialize (xlzhang)
 };

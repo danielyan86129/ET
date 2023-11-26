@@ -238,7 +238,7 @@ void MeshDrawer::setMeshToDraw(std::shared_ptr<TriMesh> _m)
 	try {
 		this->m = _m;
 		this->m_nFaces2Draw = m->faces.size();
-
+		
 		// set up rendering states
 		setTransparencyEnabled(false);
 
@@ -328,11 +328,13 @@ void MeshDrawer::setMeshToDraw(std::shared_ptr<TriMesh> _m)
 			saliency_data[fi] = 0.3f;
 		}
 
+		this->m_renderFaceIndices.clear(); 
 		for (unsigned fi = 0; fi < m->faces.size(); fi ++)
 		{
 			indices_data[3 * fi + 0] = fi*3+0;
 			indices_data[3 * fi + 1] = fi*3+1;
 			indices_data[3 * fi + 2] = fi*3+2;
+			this->m_renderFaceIndices.push_back(fi);
 		}
 
 		//cout << "set per face attributes ..." <<endl;
@@ -436,6 +438,7 @@ void MeshDrawer::setFaces(const vector<unsigned>& _face_indices)
 	this->m_nFaces2Draw = std::min(_face_indices.size(), m->faces.size());
 	//cout << "# faces to draw: " << this->m_nFaces2Draw << endl; // debug
 	GLuint* indices_data = new GLuint[m_nFaces2Draw * 3];
+	this->m_renderFaceIndices = _face_indices;
 
 	if (m_renderMode == PER_FACE)
 	{

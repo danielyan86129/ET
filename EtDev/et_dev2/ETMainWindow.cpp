@@ -38,7 +38,9 @@ ETMainWindow::ETMainWindow(QWidget *parent, Qt::WindowFlags flags)
 	QObject::connect( ui_compact.pointSizeSpin, SIGNAL(valueChanged(double)), this, SLOT(onPointSizeSpun(double)) );
 	QObject::connect( ui_compact.dualizeBtn, SIGNAL(clicked()), this, SLOT(onDualizeClicked()) );
 	QObject::connect( ui_compact.hideOrig, SIGNAL(stateChanged(int)), this, SLOT(onHideOrigChanged(int)) );
-	QObject::connect( ui_compact.hideMA, SIGNAL(stateChanged(int)), this, SLOT(onHideMAChanged(int)) );
+	QObject::connect( ui_compact.showPickedFace, SIGNAL(stateChanged(int)), this, SLOT(onShowPickedFaceChanged(int)) );
+	QObject::connect( ui_compact.selectionActiveMode, SIGNAL(stateChanged(int)), this, SLOT(onSelectionActiveModeChanged(int)) );
+	QObject::connect( ui_compact.hideMA, SIGNAL(stateChanged(int)), this, SLOT(onHideMAChanged(int)));
 	QObject::connect( ui_compact.hideMALine, SIGNAL( stateChanged( int ) ), this, SLOT( onHideMALineChanged( int ) ) );
 	QObject::connect( ui_compact.hideMC, SIGNAL(stateChanged(int)), this, SLOT(onHideMCChanged(int)) );
 	QObject::connect( ui_compact.visBurnt, SIGNAL(stateChanged(int)), this, SLOT(onVisBurntEdgesChanged(int)) );
@@ -63,6 +65,7 @@ ETMainWindow::ETMainWindow(QWidget *parent, Qt::WindowFlags flags)
 	QObject::connect( ui_compact.maxVisDistMASpin, SIGNAL(valueChanged(double)), this, SLOT(onMaxVisDistMASpun(double)) );
 					  
 	QObject::connect( ui_compact.colorOrigBtn, SIGNAL(clicked()), this, SLOT(onOrigColorClicked()) );
+	QObject::connect( ui_compact.sphereColorBtn, SIGNAL(clicked()), this, SLOT(onSphereColorClicked()) );
 	QObject::connect( ui_compact.colorBGBtn, SIGNAL(clicked()), this, SLOT(onChangeBGColorClicked()) );
 	QObject::connect( ui_compact.colorMABtn, SIGNAL(clicked()), this, SLOT(onMAColorClicked()) );
 	QObject::connect( ui_compact.colorMCBtn, SIGNAL(clicked()), this, SLOT(onMCColorClicked()) );
@@ -71,8 +74,13 @@ ETMainWindow::ETMainWindow(QWidget *parent, Qt::WindowFlags flags)
 	QObject::connect( ui_compact.colorPerFace, SIGNAL(toggled(bool)), this, SLOT(onColorPerFaceBtnClicked()) );
 	//QObject::connect( ui_compact.colorPerFace, SIGNAL(clicked()), this, SLOT(onColorPerFaceBtnClicked()) );
 	QObject::connect( ui_compact.visMADistCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onVisDistMAComboChanged(int)) );
+	QObject::connect( ui_compact.filMADistCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onFilDistMAComboChanged(int)) );
 	//QObject::connect( ui_compact.visMADistCombo, SIGNAL(activated(int)), this, SLOT(onVisDistMAComboChanged(int)) );
 	QObject::connect( ui_compact.origTransparentSlider, SIGNAL(valueChanged(int)), this, SLOT(onOrigTransparentSlided(int)) );
+	//QObject::connect( ui_compact.sphereRadiusSlider, SIGNAL(valueChanged(int)), this, SLOT(onSphereRadiusSlided(int)));
+	
+	QObject::connect( ui_compact.pickedSphereRadius, SIGNAL(valueChanged(double)), this, SLOT(onPickedSphereRadius(double)));
+
 	QObject::connect( ui_compact.MATransparentSlider, SIGNAL(valueChanged(int)), this, SLOT(onMATransparentSlided(int)) );
 	QObject::connect( ui_compact.MATransExpSlider, SIGNAL(valueChanged(int)), this, SLOT(onMATransparentSlided(int)) );
 	QObject::connect( ui_compact.MCAlphaSlider, SIGNAL(valueChanged(int)), this, SLOT(onMCTransparentSlided(int)) );
@@ -364,7 +372,8 @@ void ETMainWindow::onLoadFilesClicked()
 	prepareForStep(BURN_MA);
 	
 	// save the states in case other MA related geometry needs this color (i.e. finer MA)
-	TriColor color(1.0f, 0.2f, 0.2f);
+	// TriColor color(1.0f, 0.2f, 0.2f);
+	TriColor color(0.0f, 0.0f, 0.6f);
 	glarea->setUseConstColorMA( true, color );
 	glarea->changeConstColorMA(color, ui_compact.colorPerVert->isChecked());
 
@@ -598,6 +607,20 @@ void ETMainWindow::onHideMAChanged(int _state)
 	glarea->setDrawFlag( GLArea::DRAW_MA, _state != Qt::Checked );
 }
 
+
+void ETMainWindow::onShowPickedFaceChanged(int _state)
+{
+	glarea->setDrawFlag(GLArea::DRAW_PICKED_FACE, _state == Qt::Checked);
+}
+
+void ETMainWindow::onSelectionActiveModeChanged(int _state)
+{
+	glarea->setDrawFlag(GLArea::SELECTION_ACTIVE_MODE, _state == Qt::Checked);
+	if(_state != Qt::Checked) glarea->recoverMAColor();
+	
+}
+
+
 void ETMainWindow::onHideMALineChanged( int _state )
 {
 	glarea->setDrawFlag( GLArea::DRAW_MA_LINE, _state != Qt::Checked );
@@ -687,6 +710,21 @@ void ETMainWindow::onOrigColorClicked()
 		(float)chosen_color.greenF(), 
 		(float)chosen_color.blueF() };
 		glarea->changeOrigColor(color);
+}
+
+void ETMainWindow::onSphereColorClicked()
+{
+	const QString COLOR_STYLE("QPushButton { background-color : %1; color : %2; }");
+
+	QColor chosen_color = QColorDialog::getColor();
+	QColor text_color = getIdealTextColor(chosen_color);
+	ui_compact.sphereColorBtn->setStyleSheet(COLOR_STYLE.arg(chosen_color.name()).arg(text_color.name()));
+
+	float color[3] = { 
+		(float)chosen_color.redF(), 
+		(float)chosen_color.greenF(), 
+		(float)chosen_color.blueF() };
+		glarea->changePickSphereColor(color);
 }
 
 void ETMainWindow::onChangeBGColorClicked()
@@ -781,6 +819,16 @@ void ETMainWindow::onOrigTransparentSlided(int _value)
 		( ui_compact.origTransparentSlider->maximum() - (float)_value) /
 		(ui_compact.origTransparentSlider->maximum() - ui_compact.origTransparentSlider->minimum()) 
 		);
+}
+
+void ETMainWindow::onSphereRadiusSlided(int _value)
+{
+	glarea->changePickedSphereRadius(_value);
+}
+
+void ETMainWindow::onPickedSphereRadius(double _value)
+{
+	glarea->changePickedSphereRadius( float(_value));
 }
 
 void ETMainWindow::onMATransparentSlided(int _value)
@@ -984,7 +1032,7 @@ void ETMainWindow::onColorPerFaceBtnClicked()
 	// load the items into combo 
 	ui_compact.visMADistCombo->blockSignals(true);
 
-	ui_compact.visMADistCombo->clear();
+	ui_compact.visMADistCombo->clear(); 
 	ui_compact.visMADistCombo->addItem("burntime");
 	ui_compact.visMADistCombo->addItem("radius");
 	ui_compact.visMADistCombo->addItem("ET");
@@ -1025,6 +1073,36 @@ void ETMainWindow::onColorPerFaceBtnClicked()
 		Qt::ToolTipRole);*/
 
 	ui_compact.visMADistCombo->blockSignals(false);
+
+	// load the items into combo 
+	ui_compact.filMADistCombo->blockSignals(true);
+
+	ui_compact.filMADistCombo->clear();
+	ui_compact.filMADistCombo->addItem("burntime");
+	ui_compact.filMADistCombo->addItem("radius");
+	ui_compact.filMADistCombo->addItem("ET");
+	ui_compact.filMADistCombo->addItem("relative ET");
+
+	ui_compact.filMADistCombo->setCurrentIndex(-1);
+
+	ui_compact.filMADistCombo->setItemData(
+		0, 
+		"burn time on MA", 
+		Qt::ToolTipRole);
+	ui_compact.filMADistCombo->setItemData(
+		1, 
+		"radius field", 
+		Qt::ToolTipRole);
+	ui_compact.filMADistCombo->setItemData(
+		2, 
+		"erosion thickness", 
+		Qt::ToolTipRole);
+	ui_compact.filMADistCombo->setItemData(
+		3, 
+		"relative erosion thickness", 
+		Qt::ToolTipRole);
+
+	ui_compact.filMADistCombo->blockSignals(false);
 }
 
 void ETMainWindow::onVisDistMAComboChanged(int _idx)
@@ -1076,6 +1154,60 @@ void ETMainWindow::onVisDistMAComboChanged(int _idx)
 		ui_compact.minVisDistMASpin->setValue(visDistOnMA_min);
 		ui_compact.maxVisDistMASpin->setValue(visDistOnMA_max);
 	}
+
+	// also update prune dist msure for MA
+	// onPruneDistMAComboChanged_1( _idx );
+}
+
+void ETMainWindow::onFilDistMAComboChanged(int _idx)
+{
+	// cout << "current index: " << _idx << endl; //debug
+	// if (_idx < 0)
+	// 	return;
+
+	// bool clamp = ui_compact.clampMADistBox->isChecked();
+	// float visDistOnMA_min, visDistOnMA_max;
+	// if (clamp)
+	// {
+	// 	visDistOnMA_min = ui_compact.minVisDistMASpin->value();
+	// 	visDistOnMA_max = ui_compact.maxVisDistMASpin->value();
+	// }
+
+	// grab transparency params
+	// float min_alpha = ((float)ui_compact.MATransparentSlider->value() - ui_compact.MATransparentSlider->minimum()) / 
+	// 	(ui_compact.MATransparentSlider->maximum() - ui_compact.MATransparentSlider->minimum());
+	// int exp = ui_compact.MATransExpSlider->value();
+	// min_alpha = exp == 0 ? 1.0f : min_alpha;
+	// int update_option = 3;
+
+	// glarea->setUseConstColorMA( false, TriColor()/*dummy value*/ );
+	// if (ui_compact.colorPerFace->isChecked())
+	// {
+	// 	// process per-face distance
+	// 	glarea->usePerFaceRender(true);
+	// 	GLArea::FaceFieldType face_field = get_MA_face_dist_type(_idx);
+	// 	glarea->colorMAFaceBy(
+	// 		face_field, 
+	// 		visDistOnMA_min, visDistOnMA_max, clamp, 
+	// 		min_alpha, exp, 
+	// 		update_option, 
+	// 		ui_compact.doMAFaceScalarDiffusion->isChecked(),
+	// 		ui_compact.usePerSheetBox->isChecked());
+	// }
+	// else
+	// {
+	// 	// process per-vert distance
+	// 	glarea->usePerFaceRender(false);
+	// 	GLArea::VertFieldType vert_field = get_MA_vert_dist_type(_idx);
+	// 	glarea->colorMAVertBy(vert_field, visDistOnMA_min, visDistOnMA_max, clamp, min_alpha, exp, update_option);
+	// }
+
+	// update range of the cur distance metric
+	// if (!clamp)
+	// {
+	// 	ui_compact.minVisDistMASpin->setValue(visDistOnMA_min);
+	// 	ui_compact.maxVisDistMASpin->setValue(visDistOnMA_max);
+	// }
 
 	// also update prune dist msure for MA
 	onPruneDistMAComboChanged_1( _idx );
@@ -1185,6 +1317,10 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		ui_compact.hideMA->setChecked(true);
 		ui_compact.hideMA->blockSignals(false);
 		ui_compact.hideMA->setChecked(false);
+		ui_compact.showPickedFace->blockSignals(false);
+		ui_compact.showPickedFace->setChecked(false);
+		ui_compact.selectionActiveMode->blockSignals(false);
+		ui_compact.selectionActiveMode->setChecked(false);
 		ui_compact.hideMALine->blockSignals( true );
 		ui_compact.hideMALine->setChecked( true );
 		ui_compact.hideMALine->blockSignals( false );
@@ -1207,6 +1343,11 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		ui_compact.visMADistCombo->setCurrentIndex(1);
 		ui_compact.visMADistCombo->blockSignals(false);
 		ui_compact.visMADistCombo->setCurrentIndex(2);
+
+		ui_compact.filMADistCombo->blockSignals(true);
+		ui_compact.filMADistCombo->setCurrentIndex(1);
+		ui_compact.filMADistCombo->blockSignals(false);
+		ui_compact.filMADistCombo->setCurrentIndex(2);
 		// forcefully to emit a signal to set the measure to prune on ma to be "2"
 		ui_compact.pruneMADistCombo1->blockSignals(true);
 		ui_compact.pruneMADistCombo1->setCurrentIndex(1);
@@ -1224,6 +1365,10 @@ void ETMainWindow::prepareForStep(FineStep _stp)
 		ui_compact.hideMA->setChecked(true);
 		ui_compact.hideMA->blockSignals(false);
 		ui_compact.hideMA->setChecked(false);
+		ui_compact.showPickedFace->blockSignals(false);
+		ui_compact.showPickedFace->setChecked(false);
+		ui_compact.selectionActiveMode->blockSignals(false);
+		ui_compact.selectionActiveMode->setChecked(false);
 		if (!m_debugMode)
 		{
 			ui_compact.hsCreateGroup->setEnabled(true);
@@ -2012,6 +2157,7 @@ void ETMainWindow::resetWidgetsStates()
 	ui.drawStPoints->blockSignals(true);
 	ui.showMPBox->blockSignals(true);*/
 	ui_compact.hideMA->setCheckState(Qt::Unchecked);
+	ui_compact.showPickedFace->setCheckState(Qt::Unchecked);
 	ui_compact.hideMALine->setCheckState( Qt::Unchecked );
 	ui_compact.drawEdge->setCheckState(Qt::Unchecked);
 	ui_compact.drawStPoints->setCheckState(Qt::Unchecked);
@@ -2290,6 +2436,10 @@ void ETMainWindow::resetParams(FineStep _stp)
 	ui_compact.showMPBox->setChecked(true);
 	ui_compact.showMPBox->blockSignals(false);
 	ui_compact.showMPBox->setChecked(false);
+	ui_compact.showPickedFace->blockSignals(false);
+	ui_compact.showPickedFace->setChecked(false);
+	ui_compact.selectionActiveMode->blockSignals(false);
+	ui_compact.selectionActiveMode->setChecked(false);
 	ui_compact.enableFinePruneMA->blockSignals(true);
 	ui_compact.enableFinePruneMA->setChecked(true);
 	ui_compact.enableFinePruneMA->blockSignals(false);

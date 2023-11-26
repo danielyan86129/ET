@@ -816,59 +816,59 @@ static inline const T angle(const Vec<D,T> &v1, const Vec<D,T> &v2)
 }; // namespace trimesh
 
 
-#if (_MSC_VER != 1900) //(Visual Studio 2015)
-// POSIX / C99 compatibility functions for MSVS
-#ifdef _WIN32
-#ifdef cbrt
-# undef cbrt
-#endif
-inline float cbrt(float x)
-{
-	using namespace ::std;
-	return (x < 0.0f) ? -pow(-x, 1.0f / 3.0f) : pow(x, 1.0f / 3.0f);
-}
-inline double cbrt(double x)
-{
-	using namespace ::std;
-	return (x < 0.0) ? -pow(-x, 1.0 / 3.0) : pow(x, 1.0 / 3.0);
-}
-inline long double cbrt(long double x)
-{
-	using namespace ::std;
-	return (x < 0.0L) ? -pow(-x, 1.0L / 3.0L) : pow(x, 1.0L / 3.0L);
-}
-#ifdef round
-# undef round
-#endif
-inline float round(float x)
-{
-	return (x < 0.0f) ? float(int(x - 0.5f)) : float(int(x + 0.5f));
-}
-inline double round(double x)
-{
-	return (x < 0.0f) ? double(int(x - 0.5)) : double(int(x + 0.5));
-}
-inline long double round(long double x)
-{
-	return (x < 0.0f) ? (long double)(int(x - 0.5L)) : (long double)(int(x + 0.5L));
-}
-#ifdef trunc
-# undef trunc
-#endif
-inline float trunc(float x)
-{
-	return (x < 0.0f) ? float(int(x)) : float(int(x));
-}
-inline double trunc(double x)
-{
-	return (x < 0.0f) ? double(int(x)) : double(int(x));
-}
-inline long double trunc(long double x)
-{
-	return (x < 0.0f) ? (long double)(int(x)) : (long double)(int(x));
-}
-#endif // _WIN32
-#endif // MSC_VER != 1900
+//#if (_MSC_VER != 1900) //(Visual Studio 2015)
+//// POSIX / C99 compatibility functions for MSVS
+//#ifdef _WIN32
+//#ifdef cbrt
+//# undef cbrt
+//#endif
+//inline float cbrt(float x)
+//{
+//	using namespace ::std;
+//	return (x < 0.0f) ? -pow(-x, 1.0f / 3.0f) : pow(x, 1.0f / 3.0f);
+//}
+//inline double cbrt(double x)
+//{
+//	using namespace ::std;
+//	return (x < 0.0) ? -pow(-x, 1.0 / 3.0) : pow(x, 1.0 / 3.0);
+//}
+//inline long double cbrt(long double x)
+//{
+//	using namespace ::std;
+//	return (x < 0.0L) ? -pow(-x, 1.0L / 3.0L) : pow(x, 1.0L / 3.0L);
+//}
+//#ifdef round
+//# undef round
+//#endif
+//inline float round(float x)
+//{
+//	return (x < 0.0f) ? float(int(x - 0.5f)) : float(int(x + 0.5f));
+//}
+//inline double round(double x)
+//{
+//	return (x < 0.0f) ? double(int(x - 0.5)) : double(int(x + 0.5));
+//}
+//inline long double round(long double x)
+//{
+//	return (x < 0.0f) ? (long double)(int(x - 0.5L)) : (long double)(int(x + 0.5L));
+//}
+//#ifdef trunc
+//# undef trunc
+//#endif
+//inline float trunc(float x)
+//{
+//	return (x < 0.0f) ? float(int(x)) : float(int(x));
+//}
+//inline double trunc(double x)
+//{
+//	return (x < 0.0f) ? double(int(x)) : double(int(x));
+//}
+//inline long double trunc(long double x)
+//{
+//	return (x < 0.0f) ? (long double)(int(x)) : (long double)(int(x));
+//}
+//#endif // _WIN32
+//#endif // MSC_VER != 1900
 
 // Generic macros for declaring 1-, 2-, and 3- argument
 // componentwise functions on Vecs.

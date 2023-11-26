@@ -33,7 +33,9 @@ PointDrawer::PointDrawer(
 		Program::UseNone();
 
 		// enable point size
-		gl.Enable(Capability::ProgramPointSize);
+		// gl.Enable(Capability::ProgramPointSize);
+		glEnable(GL_PROGRAM_POINT_SIZE);
+		glEnable(GL_POINT_SMOOTH);
 		setPointSize(1.0f);
 	}
 	catch(oglplus::ProgramBuildError& pbe)
@@ -187,6 +189,34 @@ void PointDrawer::setPerVertColor(float* _color_data, int _n_vts)
 	m_pointsVAO.Unbind();
 }
 
+void PointDrawer::setShaderSaliency(float* _scalars)
+{
+	try
+	{
+		LazyUniform<GLfloat>* saliency;
+		m_drawPointsProg->Use();
+		saliency = new LazyUniform<GLfloat>(*m_drawPointsProg, "Saliency");
+		saliency->Set(*_scalars);
+	}
+	catch (oglplus::Error& err)
+	{
+		std::cerr <<
+			"GL error (in " << err.GLSymbol() << ", " <<
+			err.ClassName() << ": '" <<
+			err.ObjectDescription() << "'): " <<
+			err.what() <<
+			" [" << err.File() << ":" << err.Line() << "] ";
+		std::cerr << std::endl;
+		err.Cleanup();
+	}
+	catch (const std::exception& se)
+	{
+		std::cerr <<
+			"General error: " <<
+			se.what() << std::endl;
+	}
+}
+
 void PointDrawer::reshape(GLuint _w, GLuint _h)
 {
 	track_ball->setViewport(_w, _h);
@@ -211,14 +241,12 @@ void PointDrawer::render(double _time)
 {
 	if (!m_readyToDraw)
 		return;
-
 	using namespace oglplus;
-
 	try {
+		
 		LazyUniform<Mat4f>* cam_mat;
 		LazyUniform<Mat4f>* model_mat;
 		//LazyUniform<Vec3f>* light_pos;
-
 		//draw points
 		m_drawPointsProg->Use();
 		cam_mat = new LazyUniform<Mat4f>(*m_drawPointsProg, "CamMat");

@@ -25,6 +25,8 @@ Dependencies (more can be found in `ET/third_party/version.txt`):
 
 Visual Studio 2015 version: 14.0.25123.0
 
+New updated version supports Visual Studio 2017  
+
 How to build (windows only)
 ---------------------------
 1. All dependencies **except QT** is pre-shipped in the folder `third_party`. Therefore, the most effort amounts to installing QT of the right version (see above) on your machine. 

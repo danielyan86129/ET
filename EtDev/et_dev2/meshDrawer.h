@@ -129,6 +129,15 @@ public:
 	}
 
 	std::shared_ptr<TrackBall> getCamera(void);
+	const std::vector<unsigned>& getRenderFacesIndices()
+	{
+		return this->m_renderFaceIndices;
+	}
+
+	float getGeometryScale()
+	{
+		return s;
+	}
 
 	/// helpers
 private:
@@ -175,6 +184,7 @@ private:
 	float m_drawPointSize;
 	unsigned m_nFaces2Draw;
 	RenderMode m_renderMode;
+	std::vector<unsigned> m_renderFaceIndices;
 
 	// geometry scale info
 	float s;

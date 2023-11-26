@@ -400,6 +400,11 @@ void LineDrawer::reshape(GLuint _w, GLuint _h)
 	//cout << "LineDrawer::reshape() done." << endl;
 }
 
+
+CameraMatrix<float> LineDrawer::getPerspectiveProjMat() const
+{
+	return m_perspectiveProjMat;
+}
 void LineDrawer::render(double _time)
 {
 	if (!m_readyToDraw)
